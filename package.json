@@ -1,0 +1,24 @@
+{
+	"name": "conspiracy-ai",
+	"version": "1.0.0",
+	"description": "An open-source rewrite of Conspiracy AI programmed in Node.js.",
+	"author": "viral32111",
+	"license": "AGPL-3.0-only"
+	"main": "main.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/conspiracy-servers/conspiracy-ai"
+	},
+	"keywords": [
+		"discord",
+		"discord-js",
+    		"discord-bot",
+		"discord-api",
+		"discord-app",
+		"node-js",
+		"conspiracy-servers"
+	],
+}
