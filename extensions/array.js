@@ -1,1 +1,4 @@
-/* This is a temporary placeholder file, code will be added at a later date. */
+// Choose a random item from an array
+Array.prototype.random = function() {
+	return this[ Math.floor( ( Math.random() * this.length ) ) ]
+}
