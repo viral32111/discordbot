@@ -34,6 +34,7 @@ require( "./extensions/array.js" )
 
 // Configs & data
 const existingAttachmentShortURLs = require( "./attachment-short-urls.json" )
+const existingImageHistory = require( "./image-history.json" ) // yes i know this is a really shit way to do this, i'm still learning :/
 
 // Create the client
 console.log( "Loading..." )
@@ -312,6 +313,57 @@ client.on( "ready", async function() {
 } )
 
 client.on( "message", async function( message ) {
+	// Repost detector
+	
+	// Loop through each attachment
+	for ( const attachment of message.attachments.array() ) {
+		// Skip attachments that aren't images or videos
+		if ( attachment.width === undefined ) continue
+
+		// Request the attachment
+		const response = await axios.get( attachment.url ).catch( console.error )
+
+		// Hash the bytes of the attachment
+		const hash = crypto.createHash( "sha1" ).update( response.data ).digest( "hex" )
+
+		// Check if it exists in the image history data
+		if ( existingImageHistory[ hash ] !== undefined ) {
+			// Add the author to the repost author if they aren't the original author or already in repost authors
+			if ( existingImageHistory[ hash ].author !== message.author.id && existingImageHistory[ hash ].reposters[ message.author.id ] === undefined ) {
+				existingImageHistory[ hash ].reposters.push( message.author.id )
+			}
+
+			// Fetch original poster
+			const originalAuthor = client.users.fetch( existingImageHistory[ hash ].author )
+			
+			// Send a message i suppose
+			/* await message.reply( `I've seen that image/video ${ existingImageHistory[ hash ].count } time(s) before!\n\nI first saw this posted by ${ originalAuthor.tag } (\`${ existingImageHistory[ hash ] }\`), here's a link: <${ existingImageHistory[ hash ].link }>.`, {
+				disableMentions: false
+			} ) */
+			await message.reply( `I've seen that image/video ${ existingImageHistory[ hash ].count } time(s) before! (<${ existingImageHistory[ hash ].link }>)` )
+
+			// Increment the counter
+			existingImageHistory[ hash ].count += 1
+		} else {
+			// Add the new short URL to the image history data
+			existingImageHistory[ hash ] = {
+				author: message.author.id,
+				link: message.url,
+				timestamp: message.createdTimestamp,
+				reposters: [],
+				count: 1
+			}
+		}
+	}
+
+	// Check if there were any attachments
+	if ( message.attachments.size > 0 ) {
+		// Resave image history
+		fs.writeFile( "image-history.json", JSON.stringify( existingImageHistory ), function( err ) {
+			if ( err ) throw err
+		} )
+	}
+
 	/* Relay changes:
 	1) https://discordapp.com/channels/240167618575728644/509871330104049684/709807239837253642
 	2) https://discordapp.com/channels/240167618575728644/509871330104049684/709846833865818275
@@ -320,7 +372,7 @@ client.on( "message", async function( message ) {
 
 	// Is the message in the Sandbox server relay channel?
 	// (Is actually my private development channel for now, so I don't clog up the main relay channel)
-	if ( message.channel.id == "420369246363844613" ) {
+	/*if ( message.channel.id == "420369246363844613" ) {
 		// Variable for the final message after we've made all our changes
 		let finalMessage = ""
 
@@ -413,7 +465,7 @@ client.on( "message", async function( message ) {
 				if ( err ) throw err
 			} )
 		}
-	}
+	}*/
 } )
 
 // Message edited
