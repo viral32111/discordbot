@@ -545,6 +545,9 @@ client.on( "messageUpdate", async function( oldMessage, newMessage ) {
 		// We can see everything! :D
 	}
 
+	// fix a smol bug
+	if ( oldMessage.content === newMessage.content ) return
+
 	const fetchedOldMessage = await oldMessage.fetch()
 	console.log( "#", oldMessage.channel.name, ":", oldMessage.cleanContent, "[", oldMessage.id, "]", "-->", "#", newMessage.channel.name, ":", newMessage.cleanContent, "[", newMessage.id, "]" )
 	console.log( "#", fetchedOldMessage.channel.name, ":", fetchedOldMessage.cleanContent, "[", fetchedOldMessage.id, "]", "-->", "#", newMessage.channel.name, ":", newMessage.cleanContent, "[", newMessage.id, "]" )
