@@ -429,6 +429,20 @@ client.on( "message", async function( message ) {
 		} )
 	}
 
+	// dadbot thing
+	// this is reallllllllllyyyy crap i'll redo it with regex at some point
+	if ( message.cleanContent.toLowerCase().startsWith( "i'm " ) ) {
+		const restOfTheMessage = message.cleanContent.substring( 4 )
+
+		await message.channel.send( `Hi ${ restOfTheMessage }, I'm dad!` )
+	}
+
+	if ( message.cleanContent.toLowerCase().startsWith( "im " ) ) {
+		const restOfTheMessage = message.cleanContent.substring( 3 )
+
+		await message.channel.send( `Hi ${ restOfTheMessage }, I'm dad!` )
+	}
+
 	/* Relay changes:
 	1) https://discordapp.com/channels/240167618575728644/509871330104049684/709807239837253642
 	2) https://discordapp.com/channels/240167618575728644/509871330104049684/709846833865818275
