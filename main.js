@@ -345,47 +345,79 @@ client.on( "ready", async function() {
 	stream.pipe(  )*/
 } )
 
+// I'LL MOVE THIS SOMEWHERE BETTER LATERRRRRR
+async function doRepostThing( url, message ) {
+	// Request the attachment
+	const response = await axios.get( url ).catch( console.error )
+
+	// Check if it is something we care about
+	const contentType = response.headers[ "content-type" ]
+	if ( contentType.includes( "video/" ) === false && contentType.includes( "audio/" ) === false && contentType.includes( "image/" ) === false ) {
+		// no
+		return
+	}
+
+	// Hash the bytes of the attachment
+	const hash = crypto.createHash( "sha1" ).update( response.data ).digest( "hex" )
+
+	console.log( `${url} is a thing we care about!! ${hash}` )
+
+	// Check if it exists in the image history data
+	if ( existingImageHistory[ hash ] !== undefined ) {
+		// Check if the author isn't the original author and they aren't already in the reposters section
+		if ( existingImageHistory[ hash ].author !== message.author.id && existingImageHistory[ hash ].reposters[ message.author.id ] === undefined ) {
+			// Add the author to the reposters section
+			existingImageHistory[ hash ].reposters.push( message.author.id )
+		}
+
+		// Fetch original poster
+		//const originalAuthor = client.users.fetch( existingImageHistory[ hash ].author )
+		
+		// Send a message
+		await message.reply( `I've seen that ${ existingImageHistory[ hash ].count } time(s) before! (<${ existingImageHistory[ hash ].link }>)` )
+		
+		/* await message.reply( `I've seen that image/video ${ existingImageHistory[ hash ].count } time(s) before!\n\nI first saw this posted by ${ originalAuthor.tag } (\`${ existingImageHistory[ hash ] }\`), here's a link: <${ existingImageHistory[ hash ].link }>.`, {
+			disableMentions: false
+		} ) */
+	
+		// Increment the counter
+		existingImageHistory[ hash ].count += 1
+	} else {
+		// Add the new hash to the image history data
+		existingImageHistory[ hash ] = {
+			author: message.author.id,
+			link: message.url,
+			timestamp: message.createdTimestamp,
+			reposters: [],
+			count: 1
+		}
+	}
+}
+
 client.on( "message", async function( message ) {
 	// Repost detector
-	
+
 	// Loop through each attachment
 	for ( const attachment of message.attachments.array() ) {
 		// Skip attachments that aren't images or videos
 		if ( attachment.width === undefined ) continue
 
-		// Request the attachment
-		const response = await axios.get( attachment.url ).catch( console.error )
+		// Do the repost thing
+		await doRepostThing( attachment.url, message )
+	}
 
-		// Hash the bytes of the attachment
-		const hash = crypto.createHash( "sha1" ).update( response.data ).digest( "hex" )
+	// Find all URLs in the message
+	const urlMatches = message.content.match( /(https?:\/\/[^\s]+)/g )
 
-		// Check if it exists in the image history data
-		if ( existingImageHistory[ hash ] !== undefined ) {
-			// Add the author to the repost author if they aren't the original author or already in repost authors
-			if ( existingImageHistory[ hash ].author !== message.author.id && existingImageHistory[ hash ].reposters[ message.author.id ] === undefined ) {
-				existingImageHistory[ hash ].reposters.push( message.author.id )
-			}
+	matchedURLs = []
+	if ( urlMatches !== null ) {
+		for ( const url of urlMatches ) {
+			// check we ain't already scanned it
+			if ( matchedURLs.includes( url ) ) continue
+			matchedURLs.push( url )
 
-			// Fetch original poster
-			const originalAuthor = client.users.fetch( existingImageHistory[ hash ].author )
-			
-			// Send a message i suppose
-			/* await message.reply( `I've seen that image/video ${ existingImageHistory[ hash ].count } time(s) before!\n\nI first saw this posted by ${ originalAuthor.tag } (\`${ existingImageHistory[ hash ] }\`), here's a link: <${ existingImageHistory[ hash ].link }>.`, {
-				disableMentions: false
-			} ) */
-			await message.reply( `I've seen that image/video ${ existingImageHistory[ hash ].count } time(s) before! (<${ existingImageHistory[ hash ].link }>)` )
-
-			// Increment the counter
-			existingImageHistory[ hash ].count += 1
-		} else {
-			// Add the new short URL to the image history data
-			existingImageHistory[ hash ] = {
-				author: message.author.id,
-				link: message.url,
-				timestamp: message.createdTimestamp,
-				reposters: [],
-				count: 1
-			}
+			// Do the repost thing
+			await doRepostThing( url, message )
 		}
 	}
 
