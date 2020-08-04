@@ -85,7 +85,7 @@ with open( sys.path[ 0 ] + "/config/secrets.json", "r" ) as handle:
 
 # Open the pseudonames file
 with open( sys.path[ 0 ] + "/config/pseudonames.txt", "r" ) as handle:
-	
+
 	# Read each line into a list
 	pseudonames = handle.readlines()
 
