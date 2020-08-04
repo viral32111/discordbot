@@ -174,6 +174,7 @@ print( "Initalised global constants." )
 ##############################################
 
 # Check if a Discord object is valid
+# TO-DO: Destroy this shit, I hate it
 def isValid( obj ):
 
 	# Messages
