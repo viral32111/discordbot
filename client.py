@@ -28,6 +28,8 @@
 # :information_source:	Information / Help / Assistance
 # :recycle: 			Repost detected
 
+# TO-DO: stackoverflow.com/a/32107024
+
 ##############################################
 # Import required modules
 ##############################################
@@ -1616,8 +1618,8 @@ print( "Defined chat commands." )
 # Create the client
 client = discord.Client(
 
-	# Set initial status to invisible to indicate not ready yet
-	status = discord.Status.invisible,
+	# Set initial status to idle to indicate not ready yet
+	status = discord.Status.dnd if len( sys.argv ) > 1 else discord.Status.idle,
 	
 	# Max messages to cache internally
 	max_messages = 10000,
@@ -1674,7 +1676,7 @@ async def chooseRandomActivity():
 		await client.change_presence(
 
 			# Use a specific status
-			status = discord.Status.online,
+			status = discord.Status.dnd if len( sys.argv ) > 1 else discord.Status.online,
 
 			# Use the randomly chosen activity
 			activity = discord.Activity(
@@ -1926,13 +1928,67 @@ async def on_message( message ):
 				lastDadJoke = unixTimestampNow
 
 			# Are we sending a message in a relay channel?
-			if str( message.channel.id ) in settings[ "channels" ][ "relays" ].keys() and safeContent != "":
+			if str( message.channel.id ) in settings[ "channels" ][ "relays" ].keys():
+
+				# The message to send
+				relayContent = re.sub( r"<a?:([A-Za-z0-9_-]+):\d{18}\\?>", r":\1:", safeContent )
+
+				# Loop through all attachments
+				for attachment in message.attachments:
+
+					# Download the attachment
+					path = downloadWebMedia( attachment.url )
+
+					# Skip if the download failed
+					if path == None: continue
+
+					# Get the checksum of the file contents
+					checksum = fileChecksum( path )
+
+					# Query the database to fetch the link for this attachment
+					result = mysqlQuery( "SELECT Link FROM RelayShortlinks WHERE Checksum = '" + checksum + "';" )
+
+					# Placeholder for the shortlink
+					shortlink = ""
+
+					# Does it not exist in the database?
+					if len( result ) > 0:
+						
+						# Set the shortlink to the result from the database query
+						shortlink = "https://bit.ly/" + result[ 0 ][ 0 ]
+
+					# It does not exist in the database
+					else:
+
+						# Query the bit.ly and create a new link
+						bitlyRequest = requests.post( "https://api-ssl.bitly.com/v4/shorten", headers = {
+							"Accept": "application/json",
+							"Content-Type": "application/json",
+							"Authorization": "Bearer " + secrets[ "bitly" ][ "key" ],
+							"User-Agent": USER_AGENT_HEADER,
+							"From": settings[ "email" ]
+						}, json = {
+							"long_url": attachment.url,
+							"tags": [ "Discord Relay" ]
+						} )
+
+						# Set the shortlink to the newly created bit.ly link from the response
+						shortlink = bitlyRequest.json()[ "link" ]
+
+						# Remove the schema and host from the shortlink
+						identifier = shortlink.replace( "https://bit.ly/", "" )
+
+						# Add it to the database
+						mysqlQuery( "INSERT INTO RelayShortlinks ( Checksum, Link ) VALUES ( '" + checksum + "', '" + identifier + "' );" )
+
+					# Append the shortlink to to the message that will be sent
+					relayContent += ( " " if len( relayContent ) > 0 else "" ) + shortlink
 
 				# Is their message 127+ characters?
-				if len( safeContent ) >= 127:
+				if len( relayContent ) >= 127:
 
 					# Friendly message
-					await message.channel.send( ":grey_exclamation: Your message is too long to be relayed, please shorten it to below 127 characters.", delete_after = 10 )
+					await message.channel.send( ":grey_exclamation: Your message is too long to be relayed, please shorten it to below 127 characters\n*(Attachments count towards this limit.)*", delete_after = 10 )
 
 					# Prevent further execution
 					return
@@ -1948,7 +2004,7 @@ async def on_message( message ):
 
 				# Construct the request payload
 				payload = {
-					"message": safeContent,
+					"message": relayContent,
 					"author": message.author.display_name,
 					"role": {
 						"name": message.author.top_role.name,

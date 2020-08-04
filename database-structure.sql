@@ -22,8 +22,8 @@ CREATE TABLE `MemberStatistics` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `RelayShortlinks` (
-  `ID` varchar(64) CHARACTER SET ascii NOT NULL,
-  `Link` varchar(7) CHARACTER SET ascii NOT NULL
+  `Checksum` varchar(64) CHARACTER SET ascii NOT NULL,
+  `Link` varchar(8) CHARACTER SET ascii NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `RepostHistory` (
@@ -41,7 +41,7 @@ ALTER TABLE `MemberStatistics`
   ADD PRIMARY KEY (`Member`);
 
 ALTER TABLE `RelayShortlinks`
-  ADD PRIMARY KEY (`ID`),
+  ADD PRIMARY KEY (`Checksum`),
   ADD UNIQUE KEY `LINK` (`Link`) USING BTREE;
 
 ALTER TABLE `RepostHistory`
