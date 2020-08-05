@@ -1588,14 +1588,22 @@ class ChatCommands:
 		# Loop through each top statistic
 		for statistics in topStatistics:
 
-			# Parse/format each value
-			user = client.get_user( int( statistics[ 0 ] ) )
+			# The user's ID
+			userID = int( statistics[ 0 ] )
+
+			# Try to get the user from the client's cache
+			user = client.get_user( userID )
+
+			# Fetch basic user information via an API call if the user couldn't be found in the client's cache (they probably aren't on the guild)
+			if user == None: user = await client.fetch_user( userID )
+
+			# Format each statistic
 			messages = "{:,}".format( statistics[ 1 ] )
 			edits = "{:,}".format( statistics[ 2 ] )
 
 			# Add it to the embed description
-			embed.description += "• " + ( user.mention if user else "`" + str( statistics[ 0 ] ) + "`" ) + ": " + messages + " messages, " + edits + " edits.\n"
-				
+			embed.description += "• " + ( user.mention if user in message.guild.members else str( user ) ) + ": " + messages + " messages, " + edits + " edits.\n"
+
 		# Send the embed back
 		await message.channel.send( embed = embed )
 
@@ -1605,7 +1613,6 @@ class ChatCommands:
 
 	async def leaderboard( self, *arguments, **kwarguments ):
 		return await self.topstatistics( *arguments, **kwarguments )
-
 
 # Console message
 print( "Defined chat commands." )
