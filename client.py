@@ -28,8 +28,6 @@
 # :information_source:	Information / Help / Assistance
 # :recycle: 			Repost detected
 
-# TO-DO: stackoverflow.com/a/32107024
-
 ##############################################
 # Import required modules
 ##############################################
@@ -53,6 +51,7 @@ import pytz # Parsing timezone names/identifiers
 import inspect # View the code of a function
 import itertools # Chained iteration
 import urllib.parse # Parsing URLs
+import dotmap # Attribute style access to dictionary keys
 
 # Console message
 print( "Imported modules." )
@@ -70,8 +69,8 @@ with open( sys.path[ 0 ] + "/config/settings.json", "r" ) as handle:
 	# Strip all comments
 	stripped = re.sub( r"\/\*[^*]*\*\/| ?\/\/.*", "", contents )
 
-	# Parse JSON into a dictionary
-	settings = json.loads( stripped )
+	# Parse JSON into a map
+	settings = dotmap.DotMap( json.loads( stripped ) )
 
 # Open the secrets file
 with open( sys.path[ 0 ] + "/config/secrets.json", "r" ) as handle:
@@ -82,8 +81,8 @@ with open( sys.path[ 0 ] + "/config/secrets.json", "r" ) as handle:
 	# Strip all comments
 	stripped = re.sub( r"\/\*[^*]*\*\/| ?\/\/.*", "", contents )
 
-	# Parse JSON into a dictionary
-	secrets = json.loads( stripped )
+	# Parse JSON into a map
+	secrets = dotmap.DotMap( json.loads( stripped ) )
 
 # Open the pseudonames file
 with open( sys.path[ 0 ] + "/config/pseudonames.txt", "r" ) as handle:
@@ -159,14 +158,14 @@ randomActivityTask = None
 updateCategoryTask = None
 
 # Holds the latest status of each server - by default all are nothing
-latestServerStatus = { server: None for server in settings[ "garrysmod" ].keys() }
+latestServerStatus = { server: None for server in settings.garrysmod.keys() }
 
 ##############################################
 # Initalise global constants
 ##############################################
 
 # User agent header for HTTP requests
-USER_AGENT_HEADER = "Conspiracy AI/1.0.0 (Linux) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (Discord Bot; +https://github.com/conspiracy-servers/conspiracy-ai; " + settings[ "email" ] + ")"
+USER_AGENT_HEADER = "Conspiracy AI/1.0.0 (Linux) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (Discord Bot; +https://github.com/conspiracy-servers/conspiracy-ai; " + settings.email + ")"
 
 # Console message
 print( "Initalised global constants." )
@@ -246,10 +245,10 @@ def formatSeconds( secs ):
 async def log( title, description, **kwargs ):
 
 	# Fetch the logs channel
-	logsChannel = client.get_channel( settings[ "channels" ][ "logs" ][ "id" ] )
+	logsChannel = client.get_channel( settings.channels.logs.id )
 
 	# Create an embed
-	embed = discord.Embed( title = title, description = description, color = settings[ "color" ] )
+	embed = discord.Embed( title = title, description = description, color = settings.color )
 
 	# Set the footer to the current date & time
 	embed.set_footer( text = formatTimestamp() )
@@ -297,7 +296,7 @@ def prettyMapName( genericName ):
 def anonymousMessageHashes( anonymousMessage, directMessage ):
 
 	# Store the secret sauce
-	secretSauce = secrets[ "anonymous" ][ "sauce" ]
+	secretSauce = secrets.anonymous.sauce
 
 	# The message identifier, soon to be hashed!
 	messageIdentifier = str( anonymousMessage.id ).encode( "utf-8" )
@@ -328,11 +327,11 @@ def mysqlQuery( sql ):
 
 	# Connect to the database
 	connection = mysql.connector.connect(
-		host = settings[ "database" ][ "address" ],
-		port = settings[ "database" ][ "port" ],
-		user = secrets[ "database" ][ "user" ],
-		password = secrets[ "database" ][ "pass" ],
-		database = settings[ "database" ][ "name" ]
+		host = settings.database.address,
+		port = settings.database.port,
+		user = secrets.database.user,
+		password = secrets.database.passwd,
+		database = settings.database.name
 	)
 	
 	# Placeholder for the final results
@@ -386,10 +385,10 @@ def mysqlQuery( sql ):
 def downloadWebMedia( originalURL ):
 
 	# Does the downloads directory exist?
-	if not os.path.isdir( settings[ "downloads" ] ):
+	if not os.path.isdir( settings.downloads ):
 
 		# Create the downloads directory
-		os.mkdir( settings[ "downloads" ], 0o700 )
+		os.mkdir( settings.downloads, 0o700 )
 
 	# Get the current date & time in UTC
 	rightNow = datetime.datetime.utcnow()
@@ -398,7 +397,7 @@ def downloadWebMedia( originalURL ):
 	head = requests.head( originalURL, headers = {
 		"Accept": "*/*",
 		"User-Agent": USER_AGENT_HEADER,
-		"From": settings[ "email" ]
+		"From": settings.email
 	} )
 
 	# Store the headers except with lowercase field names
@@ -429,7 +428,7 @@ def downloadWebMedia( originalURL ):
 	hashedURL = hashlib.sha256( originalURL.encode( "utf-8" ) ).hexdigest()
 
 	# This is the local file's full path
-	path = settings[ "downloads" ] + "/" + hashedURL + extension
+	path = settings.downloads + "/" + hashedURL + extension
 
 	# Does the local file already exist and is the last modified header present?
 	if os.path.isfile( path ) and "last-modified" in headers:
@@ -444,7 +443,7 @@ def downloadWebMedia( originalURL ):
 	get = requests.get( originalURL, stream = True, headers = {
 		"Accept": "*/*",
 		"User-Agent": USER_AGENT_HEADER,
-		"From": settings[ "email" ]
+		"From": settings.email
 	} )
 
 	# Open the local file in binary write mode
@@ -517,13 +516,13 @@ def shouldLog( message ):
 	if message.guild == None: return False
 
 	# Return false if this message's channel is an excluded channel
-	if message.channel.id in settings[ "channels" ][ "logs" ][ "exclude" ]: return False
+	if message.channel.id in settings.channels.logs.exclude: return False
 
 	# Return false if this message's channel category is an excluded channel category
-	if message.channel.id in settings[ "channels" ][ "logs" ][ "exclude" ]: return False
+	if message.channel.id in settings.channels.logs.exclude: return False
 
 	# Is this not in a log exclusion channel?
-	if message.channel.category_id in settings[ "channels" ][ "logs" ][ "exclude" ]: return False
+	if message.channel.category_id in settings.channels.logs.exclude: return False
 
 	# Return true otherwise
 	return True
@@ -535,15 +534,15 @@ async def updateLocalServerStatus( name ):
 	global latestServerStatus
 
 	# Construct the API URL of this server
-	apiServerURL = "http://" + settings[ "garrysmod" ][ name ][ "address" ] + ":" + str( settings[ "garrysmod" ][ name ][ "port" ] ) + "/info"
+	apiServerURL = "http://" + settings.garrysmod[ name ].address + ":" + str( settings.garrysmod[ name ].port ) + "/info"
 
 	# Be safe!
 	try:
 
 		# Fetch current statistics and players from the API
 		serverRequest = requests.get( apiServerURL, timeout = 3, headers = {
-			"Authorization": secrets[ name ][ "key" ],
-			"From": settings[ "email" ],
+			"Authorization": secrets[ name ].key,
+			"From": settings.email,
 			"User-Agent": USER_AGENT_HEADER,
 			"Connection": "close"
 		} )
@@ -570,7 +569,7 @@ async def updateLocalServerStatus( name ):
 			raise Exception( "Received non-success API response: " + str( serverRequest.status_code ) + "\n" + str( serverRequest.text ) )
 
 		# Parse the response
-		server = Server( serverRequest, settings[ "garrysmod" ][ name ] )
+		server = Server( serverRequest, settings.garrysmod[ name ] )
 
 		# Update the global latest server status for this server
 		latestServerStatus[ name ] = server
@@ -621,7 +620,7 @@ async def updateServerCategoryStatusWithLocal( name ):
 		text = "Crashed"
 	
 	# Fetch the category channel
-	category = client.get_channel( settings[ "channels" ][ "statuses" ][ name ] )
+	category = client.get_channel( settings.channels.statuses[ name ] )
 
 	# Update the category name
 	await category.edit( name = "🔨 Sandbox (" + text + ")", reason = "Update server status in category name." )
@@ -687,7 +686,7 @@ class Server:
 		self.admins = [ Player( admin, serverConfig ) for admin in response[ "admins" ] ]
 		self.bots = [ Bot( bot ) for bot in response[ "bots" ] ]
 		self.mapPretty = prettyMapName( response[ "map" ] )
-		self.mapLink = "https://" + settings[ "maps" ][ response[ "map" ] ] if response[ "map" ] in settings[ "maps" ] else None
+		self.mapLink = "https://" + settings.maps[ response[ "map" ] ] if response[ "map" ] in settings.maps else None
 		self.tickrate = round( ( 1 / response[ "frametime" ] ), 2 )
 
 # Console message
@@ -728,7 +727,7 @@ class ChatCommands:
 	async def help( self, message, arguments, permissions ):
 
 		# Create an embed with help information
-		helpEmbed = discord.Embed( title = "", description = "", color = settings[ "color" ] )
+		helpEmbed = discord.Embed( title = "", description = "", color = settings.color )
 
 		# About field
 		helpEmbed.add_field(
@@ -746,7 +745,7 @@ class ChatCommands:
 		# Chat commands field
 		helpEmbed.add_field(
 			name = "Chat Commands",
-			value = "Type `" + settings[ "prefix" ] + "commands` for a list of usable chat commands. Try to keep command usage in <#241602380569772044> to avoid cluttering the discussion channels.",
+			value = "Type `" + settings.prefix + "commands` for a list of usable chat commands. Try to keep command usage in <#241602380569772044> to avoid cluttering the discussion channels.",
 			inline = False
 		)
 
@@ -789,7 +788,7 @@ class ChatCommands:
 		# Make the API search request
 		searchRequest = requests.get( apiURL, headers = {
 			"Accept": "application/xml",
-			"From": settings[ "email" ],
+			"From": settings.email,
 			"User-Agent": USER_AGENT_HEADER
 		} )
 
@@ -928,7 +927,7 @@ class ChatCommands:
 				availableChatCommands[ metadata[ 0 ] ][ definition ] = []
 
 		# Create a blank embed to be updated soon
-		embed = discord.Embed( title = "Chat Commands", description = "", color = settings[ "color" ] )
+		embed = discord.Embed( title = "Chat Commands", description = "", color = settings.color )
 
 		# Loop through all of the available chat command categories and their commands
 		for category, commands in availableChatCommands.items():
@@ -940,10 +939,10 @@ class ChatCommands:
 			for command, aliases in commands.items():
 
 				# Construct a string out of the list of command aliases
-				aliasesString = " *(" + ", ".join( [ "`" + settings[ "prefix" ] + alias + "`" for alias in aliases ] ) + ")*"
+				aliasesString = " *(" + ", ".join( [ "`" + settings.prefix + alias + "`" for alias in aliases ] ) + ")*"
 
 				# Append the command name and it's aliases (if any are available) to the final embed description
-				value += "• `" + settings[ "prefix" ] + command + "`" + ( aliasesString if len( aliases ) > 0 else "" ) + "\n"
+				value += "• `" + settings.prefix + command + "`" + ( aliasesString if len( aliases ) > 0 else "" ) + "\n"
 
 			# Add the field to the embed for this category
 			embed.add_field( name = "__" + category + "__", value = value, inline = False )
@@ -1129,7 +1128,7 @@ class ChatCommands:
 		# Make the API request
 		weatherRequest = requests.get( apiURL, headers = {
 			"Accept": "application/json",
-			"From": settings[ "email" ],
+			"From": settings.email,
 			"User-Agent": USER_AGENT_HEADER
 		} )
 
@@ -1292,7 +1291,7 @@ class ChatCommands:
 			return
 
 		# Fetch the timeout role
-		timeoutRole = message.channel.guild.get_role( settings[ "roles" ][ "timeout" ] )
+		timeoutRole = message.channel.guild.get_role( settings.roles.timeout )
 
 		# Loop through every mentioned member
 		for member in message.mentions:
@@ -1326,7 +1325,7 @@ class ChatCommands:
 			return
 
 		# Fetch the timeout role
-		timeoutRole = message.channel.guild.get_role( settings[ "roles" ][ "timeout" ] )
+		timeoutRole = message.channel.guild.get_role( settings.roles.timeout )
 
 		# Loop through every mentioned member
 		for member in message.mentions:
@@ -1367,7 +1366,7 @@ class ChatCommands:
 		malRequest = requests.get( apiURL, headers = {
 			"Accept": "application/json",
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings[ "email" ]
+			"From": settings.email
 		} )
 		
 		# Was the request unsuccessful?
@@ -1478,16 +1477,16 @@ class ChatCommands:
 		if len( arguments ) < 1:
 
 			# Friendly message
-			await message.channel.send( ":grey_exclamation: You must specify the ID of the <#" + str( settings[ "channels" ][ "anonymous" ] ) + "> message to delete.", delete_after = 30 )
+			await message.channel.send( ":grey_exclamation: You must specify the ID of the <#" + str( settings.channels.anonymous ) + "> message to delete.", delete_after = 30 )
 
 			# Prevent further execution
 			return
 
 		# Fetch the guild
-		guild = client.get_guild( settings[ "guild" ] )
+		guild = client.get_guild( settings.guild )
 
 		# Fetch the anonymous channel
-		anonymousChannel = guild.get_channel( settings[ "channels" ][ "anonymous" ] )
+		anonymousChannel = guild.get_channel( settings.channels.anonymous )
 
 		# Be safe!
 		try:
@@ -1517,7 +1516,7 @@ class ChatCommands:
 		except discord.NotFound:
 
 			# Friendly message
-			await message.channel.send( ":mag_right: I wasn't able to find a <#" + str( settings[ "channels" ][ "anonymous" ] ) + "> message with that ID.", delete_after = 30 )
+			await message.channel.send( ":mag_right: I wasn't able to find a <#" + str( settings.channels.anonymous ) + "> message with that ID.", delete_after = 30 )
 
 		# The specified ID wasn't really an ID
 		except ValueError:
@@ -1541,7 +1540,7 @@ class ChatCommands:
 			if not hasOwnership:
 
 				# Friendly message
-				await message.channel.send( ":no_entry_sign: The message has not been deleted because your ownership of it could not be verified.\n(Please note, <#" + str( settings[ "channels" ][ "anonymous" ] ) + "> messages sent before the 22nd July 2020 cannot be deleted as no ownership information exists for them.)", delete_after = 30 )
+				await message.channel.send( ":no_entry_sign: The message has not been deleted because your ownership of it could not be verified.\n(Please note, <#" + str( settings.channels.anonymous ) + "> messages sent before the 22nd July 2020 cannot be deleted as no ownership information exists for them.)", delete_after = 30 )
 
 				# Prevent further execution
 				return
@@ -1581,7 +1580,7 @@ class ChatCommands:
 		topStatistics = mysqlQuery( "SELECT Member, Messages, Edits FROM MemberStatistics ORDER BY Messages DESC LIMIT 20;" )
 
 		# Create a blank embed
-		embed = discord.Embed( title = "Top 20", description = "", color = settings[ "color" ] )
+		embed = discord.Embed( title = "Top 20", description = "", color = settings.color )
 
 		# Set a notice in the embed footer
 		embed.set_footer( text = "Statistics from before 02/08/2020 07:01:05 UTC may not be 100% accurate." )
@@ -1646,7 +1645,7 @@ async def chooseRandomActivity():
 	while not client.is_closed() and client.is_ready():
 
 		# Choose a random activity
-		activity = random.choice( settings[ "activities" ] )
+		activity = random.choice( settings.activities )
 
 		# Set the default activity type
 		activityType = discord.ActivityType.playing
@@ -1758,7 +1757,7 @@ async def on_message( message ):
 	if message.type != discord.MessageType.default: return
 
 	# Try to get the member from the guild members directly
-	guildMember = discord.utils.get( client.get_guild( settings[ "guild" ] ).members, id = message.author.id )
+	guildMember = discord.utils.get( client.get_guild( settings.guild ).members, id = message.author.id )
 
 	# Ignore direct messages if the author isn't in the discord server
 	if message.guild == None and guildMember == None:
@@ -1773,7 +1772,7 @@ async def on_message( message ):
 	if message.content == client.user.mention:
 
 		# Friendly message
-		await message.channel.send( ":information_source: Type `" + settings[ "prefix" ] + "commands` to view a list of commands." )
+		await message.channel.send( ":information_source: Type `" + settings.prefix + "commands` to view a list of commands." )
 
 		# Prevent further execution
 		return
@@ -1791,7 +1790,7 @@ async def on_message( message ):
 	unixTimestampNow = time.time()
 
 	# Is this message a chat command?
-	if message.content.startswith( settings[ "prefix" ] ):
+	if message.content.startswith( settings.prefix ):
 	
 		# Get both the command and the arguments
 		command = ( message.content.lower()[ 1: ].split( " " )[ 0 ] if message.content.lower()[ 1: ] != "" else None )
@@ -1847,7 +1846,7 @@ async def on_message( message ):
 		else:
 
 			# Friendly message
-			await message.channel.send( ":grey_question: I didn't recognise that command, type `" + settings[ "prefix" ] + "commands` to see a list of available chat commands." )
+			await message.channel.send( ":grey_question: I didn't recognise that command, type `" + settings.prefix + "commands` to see a list of available chat commands." )
 
 	# This message is not a chat command
 	else:
@@ -1862,7 +1861,7 @@ async def on_message( message ):
 			mysqlQuery( "INSERT INTO MemberStatistics ( Member ) VALUES ( '" + str( message.author.id ) + "' ) ON DUPLICATE KEY UPDATE Messages = Messages + 1;" )
 
 			# Are we not in a repost excluded channel?
-			if message.channel.id not in settings[ "reposts" ][ "exclude" ]:
+			if message.channel.id not in settings.reposts.exclude:
 
 				# Loop through all of those inline links and attachment links
 				for url in itertools.chain( attachmentURLs, inlineURLs ):
@@ -1877,7 +1876,7 @@ async def on_message( message ):
 					if repostInformation[ 0 ] == False:
 
 						# Get the location
-						location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings[ "guild" ] ) + "/", "" )
+						location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings.guild ) + "/", "" )
 						
 						# Add repost information to the database
 						mysqlQuery( "INSERT INTO RepostHistory ( Checksum, Location ) VALUES ( '" + repostInformation[ 1 ] + "', '" + location + "' );" )
@@ -1904,7 +1903,7 @@ async def on_message( message ):
 						except discord.NotFound:
 
 							# Get the location
-							location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings[ "guild" ] ) + "/", "" )
+							location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings.guild ) + "/", "" )
 
 							# Update the record in the database to have this message as the first one
 							mysqlQuery( "UPDATE RepostHistory SET Location = '" + location + "', Count = 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
@@ -1916,7 +1915,7 @@ async def on_message( message ):
 							mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
 
 							# Friendly message
-							await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings[ "guild" ] ) + "/" + repostInformation[ 0 ] + ">." )
+							await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + repostInformation[ 0 ] + ">." )
 
 			# Does the message start with "Im " and has it been 15 seconds since the last one?
 			if message.content.startswith( "Im " ) and ( lastDadJoke + 15 ) < unixTimestampNow:
@@ -1928,7 +1927,7 @@ async def on_message( message ):
 				lastDadJoke = unixTimestampNow
 
 			# Are we sending a message in a relay channel?
-			if str( message.channel.id ) in settings[ "channels" ][ "relays" ].keys():
+			if str( message.channel.id ) in settings.channels.relays.keys():
 
 				# The message to send
 				relayContent = re.sub( r"<a?:([A-Za-z0-9_-]+):\d{18}\\?>", r":\1:", safeContent )
@@ -1964,9 +1963,9 @@ async def on_message( message ):
 						bitlyRequest = requests.post( "https://api-ssl.bitly.com/v4/shorten", headers = {
 							"Accept": "application/json",
 							"Content-Type": "application/json",
-							"Authorization": "Bearer " + secrets[ "bitly" ][ "key" ],
+							"Authorization": "Bearer " + secrets.bitly.key,
 							"User-Agent": USER_AGENT_HEADER,
-							"From": settings[ "email" ]
+							"From": settings.email
 						}, json = {
 							"long_url": attachment.url,
 							"tags": [ "Discord Relay" ]
@@ -1994,7 +1993,7 @@ async def on_message( message ):
 					return
 
 				# Get the config for this server
-				server = settings[ "garrysmod" ][ settings[ "channels" ][ "relays" ][ str( message.channel.id ) ] ]
+				server = settings.garrysmod[ settings.channels.relays[ str( message.channel.id ) ] ]
 
 				# Construct the API's URL
 				apiURL = "http://" + server[ "address" ] + ":" + str( server[ "port" ] ) + "/discord"
@@ -2018,8 +2017,8 @@ async def on_message( message ):
 					# Send the message to the API
 					requests.post( apiURL, json = payload, timeout = 2, headers = {
 						"Accept": "application/json",
-						"Authorization": secrets[ "sandbox" ][ "key" ],
-						"From": settings[ "email" ],
+						"Authorization": secrets.sandbox.key,
+						"From": settings.email,
 						"User-Agent": USER_AGENT_HEADER
 					} )
 
@@ -2042,11 +2041,13 @@ async def on_message( message ):
 ######################### ALL CODE BELOW THIS LINE NEEDS REFORMATTING & CLEANING UP ######################### 
 #############################################################################################################
 
-			_webhooks=await client.guilds[0].webhooks()
+			guild = client.get_guild( settings.guild )
+
+			_webhooks=await guild.webhooks()
 			anonymousWebhook=discord.utils.get(_webhooks,name="Anonymous")
 
-			memberRole=discord.utils.get(client.guilds[0].roles,name="Members")
-			timeoutRole=discord.utils.get(client.guilds[0].roles,name="Timeout")
+			memberRole=discord.utils.get(guild.roles,name="Members")
+			timeoutRole=discord.utils.get(guild.roles,name="Timeout")
 
 			# Disallow unverified members
 			if(memberRole not in guildMember.roles):
@@ -2076,7 +2077,7 @@ async def on_message( message ):
 
 			# Pick random username and avatar
 			username = random.choice( pseudonames )
-			randomAvatarHash = random.choice( settings[ "anonymous" ][ "avatars" ] )
+			randomAvatarHash = random.choice( settings.anonymous.avatars )
 			avatar = f"https://discordapp.com/assets/{ randomAvatarHash }.png"
 
 			# A placeholder list for all the discord file objects
@@ -2129,7 +2130,7 @@ async def on_member_join(member):
 
 	welcomeMessage=f":wave::skin-tone-1: Welcome {member.mention} to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#410507397166006274>."
 
-	newChannel=discord.utils.get(client.guilds[0].text_channels,name="greetings")
+	newChannel=discord.utils.get(member.guild.text_channels,name="greetings")
 	await newChannel.send(welcomeMessage)
 
 	await log("Member joined",f"{member.mention} joined the server.",thumbnail=member.avatar_url)
@@ -2138,7 +2139,7 @@ async def on_member_join(member):
 async def on_member_remove(member):
 	await client.wait_until_ready()
 
-	newChannel=discord.utils.get(client.guilds[0].text_channels,name="greetings")
+	newChannel=discord.utils.get(member.guild.text_channels,name="greetings")
 
 	moderator, reason, event = None, None, 0
 	after = datetime.datetime.now()-datetime.timedelta(seconds=5)
@@ -2269,7 +2270,7 @@ try:
 	client.event( on_ready )
 
 	# Start the client
-	client.loop.run_until_complete( client.start( secrets[ "token" ] ) )
+	client.loop.run_until_complete( client.start( secrets.token ) )
 
 # Catch keyboard interrupts
 except KeyboardInterrupt:
