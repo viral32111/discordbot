@@ -160,6 +160,20 @@ updateCategoryTask = None
 # Holds the latest status of each server - by default all are nothing
 latestServerStatus = { server: None for server in settings.garrysmod.keys() }
 
+# Template to allow for user pings only
+allowUserMentions = discord.AllowedMentions(
+	
+	# Disable @everyone & @here pings
+	everyone = False,
+
+	# Allow user pings
+	users = True,
+
+	# Disable role pings
+	roles = False
+
+)
+
 ##############################################
 # Initalise global constants
 ##############################################
@@ -1631,7 +1645,21 @@ client = discord.Client(
 	max_messages = 10000,
 	
 	# Cache members that are offline
-	fetch_offline_members = True
+	fetch_offline_members = True,
+
+	# Set the default allowed mentions for each message sent by the bot
+	allowed_mentions = discord.AllowedMentions(
+
+		# Disable @everyone & @here pings
+		everyone = False,
+
+		# Disable user pings
+		users = False,
+
+		# Disable role pings
+		roles = False
+
+	)
 
 )
 
@@ -1922,7 +1950,7 @@ async def on_message( message ):
 							mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
 
 							# Friendly message
-							await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + repostInformation[ 0 ] + ">." )
+							await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + repostInformation[ 0 ] + ">.", allowed_mentions = allowUserMentions )
 
 			# Does the message start with "Im " and has it been 15 seconds since the last one?
 			if message.content.startswith( "Im " ) and ( lastDadJoke + 15 ) < unixTimestampNow:
@@ -2141,10 +2169,10 @@ async def on_message( message ):
 async def on_member_join(member):
 	await client.wait_until_ready()
 
-	welcomeMessage=f":wave::skin-tone-1: Welcome {member.mention} to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#410507397166006274>."
+	welcomeMessage=f":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#410507397166006274>."
 
 	newChannel=discord.utils.get(member.guild.text_channels,name="greetings")
-	await newChannel.send(welcomeMessage)
+	await newChannel.send(welcomeMessage, allowed_mentions = allowUserMentions )
 
 	await log("Member joined",f"{member.mention} joined the server.",thumbnail=member.avatar_url)
 
