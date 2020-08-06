@@ -1559,8 +1559,8 @@ class ChatCommands:
 	async def statistics( self, message, arguments, permissions ):
 
 		# Fetch this member's statistics
-		statistics = mysqlQuery( "SELECT Messages, Edits FROM MemberStatistics WHERE Member = '" + str( message.author.id ) + "';" )[ 0 ]
-		
+		statistics = mysqlQuery( "SELECT Messages, Edits FROM MemberStatistics WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.memberStatistics.passphrase + "', 512 ) ) ) ) );" )[ 0 ]
+
 		# Format each statistic
 		messages = "{:,}".format( statistics[ 0 ] )
 		edits = "{:,}".format( statistics[ 1 ] )
@@ -1577,7 +1577,7 @@ class ChatCommands:
 	async def topstatistics( self, message, arguments, permissions ):
 
 		# Fetch the top 20 member statistics
-		topStatistics = mysqlQuery( "SELECT Member, Messages, Edits FROM MemberStatistics ORDER BY Messages DESC LIMIT 20;" )
+		topStatistics = mysqlQuery( "SELECT AES_DECRYPT( UNHEX( Member ), UNHEX( SHA2( '" + secrets.memberStatistics.passphrase + "', 512 ) ) ) AS Member, Messages, Edits FROM MemberStatistics ORDER BY Messages DESC LIMIT 20;" )
 
 		# Create a blank embed
 		embed = discord.Embed( title = "Top 20", description = "", color = settings.color )
@@ -1865,7 +1865,7 @@ async def on_message( message ):
 			print( "(" + ascii( message.channel.category.name ) + " -> #" + message.channel.name + ") " + str( message.author ) + " (" + message.author.display_name + "): " + message.content + ( "\n\t".join( attachmentURLs ) if len( attachmentURLs ) > 0 else "" ) )
 
 			# Create or increment the message sent statistic for this member
-			mysqlQuery( "INSERT INTO MemberStatistics ( Member ) VALUES ( '" + str( message.author.id ) + "' ) ON DUPLICATE KEY UPDATE Messages = Messages + 1;" )
+			mysqlQuery( "INSERT INTO MemberStatistics ( Member ) VALUES ( LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.memberStatistics.passphrase + "', 512 ) ) ) ) ) ) ON DUPLICATE KEY UPDATE Messages = Messages + 1;" )
 
 			# Are we not in a repost excluded channel?
 			if message.channel.id not in settings.reposts.exclude:
@@ -2212,7 +2212,7 @@ async def on_message_edit(originalMessage, editedMessage):
 	if (not isValid(originalMessage)) or (originalMessage.clean_content == editedMessage.clean_content): return
 
 	# Increment the message edit statistic for this member
-	mysqlQuery( "UPDATE MemberStatistics SET Edits = Edits + 1 WHERE Member = '" + str( originalMessage.author.id ) + "';" )
+	mysqlQuery( "UPDATE MemberStatistics SET Edits = Edits + 1 WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( originalMessage.author.id ) + "', UNHEX( SHA2( '" + secrets.memberStatistics.passphrase + "', 512 ) ) ) ) );" )
 
 	# Prevent further execution if this event shouldn't be logged
 	if not shouldLog( originalMessage ): return

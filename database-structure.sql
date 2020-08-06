@@ -7,8 +7,6 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
-CREATE DATABASE IF NOT EXISTS `ConspiracyAI` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `ConspiracyAI`;
 
 CREATE TABLE `AnonMessages` (
   `Message` varchar(24) CHARACTER SET ascii NOT NULL,
@@ -16,7 +14,7 @@ CREATE TABLE `AnonMessages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `MemberStatistics` (
-  `Member` varchar(18) CHARACTER SET ascii NOT NULL,
+  `Member` varchar(64) CHARACTER SET ascii NOT NULL,
   `Messages` int(11) NOT NULL DEFAULT '1',
   `Edits` int(11) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
