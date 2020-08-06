@@ -1477,7 +1477,7 @@ class ChatCommands:
 		if len( arguments ) < 1:
 
 			# Friendly message
-			await message.channel.send( ":grey_exclamation: You must specify the ID of the <#" + str( settings.channels.anonymous ) + "> message to delete.", delete_after = 30 )
+			await message.channel.send( ":grey_exclamation: You must specify the ID of the <#" + str( settings.channels.anonymous ) + "> message to delete.", delete_after = 10 )
 
 			# Prevent further execution
 			return
@@ -1516,13 +1516,13 @@ class ChatCommands:
 		except discord.NotFound:
 
 			# Friendly message
-			await message.channel.send( ":mag_right: I wasn't able to find a <#" + str( settings.channels.anonymous ) + "> message with that ID.", delete_after = 30 )
+			await message.channel.send( ":mag_right: I wasn't able to find a <#" + str( settings.channels.anonymous ) + "> message with that ID.", delete_after = 10 )
 
 		# The specified ID wasn't really an ID
 		except ValueError:
 
 			# Friendly message
-			await message.channel.send( ":grey_question: That doesn't appear to be a valid message ID.", delete_after = 30 )
+			await message.channel.send( ":grey_question: That doesn't appear to be a valid message ID.", delete_after = 10 )
 
 		# The message has been found
 		else:
@@ -1540,7 +1540,7 @@ class ChatCommands:
 			if not hasOwnership:
 
 				# Friendly message
-				await message.channel.send( ":no_entry_sign: The message has not been deleted because your ownership of it could not be verified.\n(Please note, <#" + str( settings.channels.anonymous ) + "> messages sent before the 22nd July 2020 cannot be deleted as no ownership information exists for them.)", delete_after = 30 )
+				await message.channel.send( ":no_entry_sign: The message has not been deleted because your ownership of it could not be verified.\n(Please note, <#" + str( settings.channels.anonymous ) + "> messages sent before the 22nd July 2020 cannot be deleted as no ownership information exists for them.)", delete_after = 10 )
 
 				# Prevent further execution
 				return
@@ -1552,7 +1552,7 @@ class ChatCommands:
 			mysqlQuery( "DELETE FROM AnonMessages WHERE Message = '" + messageIdentifier + "' AND Token = '" + deletionTokenAttempt + "';" )
 
 			# Friendly message
-			await message.channel.send( ":white_check_mark: The message has been successfully deleted.", delete_after = 30 )
+			await message.channel.send( ":white_check_mark: The message has been successfully deleted.", delete_after = 10 )
 
 	# View personal member statistics
 	metadata[ "statistics" ] = [ "General" ]
@@ -1853,7 +1853,7 @@ async def on_message( message ):
 		else:
 
 			# Friendly message
-			await message.channel.send( ":grey_question: I didn't recognise that command, type `" + settings.prefix + "commands` to see a list of available chat commands." )
+			await message.channel.send( ":grey_question: I didn't recognise that command, type `" + settings.prefix + "commands` to see a list of available chat commands.", delete_after = 10 )
 
 	# This message is not a chat command
 	else:
@@ -2000,7 +2000,7 @@ async def on_message( message ):
 				if len( relayContent ) >= 127:
 
 					# Friendly message
-					await message.channel.send( ":grey_exclamation: Your message is too long to be relayed, please shorten it to below 127 characters\n*(Attachments count towards this limit.)*", delete_after = 10 )
+					await message.channel.send( ":grey_exclamation: Your message is too long to be relayed, please shorten it to below 127 characters (attachments count towards this limit.)", delete_after = 10 )
 
 					# Prevent further execution
 					return
@@ -2064,24 +2064,24 @@ async def on_message( message ):
 
 			# Disallow unverified members
 			if(memberRole not in guildMember.roles):
-				await message.author.dm_channel.send( f"Sorry, to use the anonymous chat system, you need to at least have the role \"Members\" in the community's Discord server. You currently have the role \"{guildMember.top_role.name}\".", delete_after=30 )
+				await message.author.dm_channel.send( f"Sorry, to use the anonymous chat system, you need to at least have the role \"Members\" in the community's Discord server. You currently have the role \"{guildMember.top_role.name}\".", delete_after = 10 )
 				return
 
 			# Disallow members in timeout
 			if (timeoutRole in guildMember.roles):
-				await message.author.dm_channel.send( "Sorry, you've been temporarily restricted from using the anonymous chat, because you're in timeout.", delete_after=30 )
+				await message.author.dm_channel.send( "Sorry, you've been temporarily restricted from using the anonymous chat, because you're in timeout.", delete_after = 10 )
 				return
 
 			# Don't allow them to send the same message twice
 			if(message.clean_content!="" and str(message.author.id)in lastSentMessage):
 				if(lastSentMessage[str(message.author.id)]==message.clean_content):
-					await message.author.dm_channel.send( "Please do not send the same message twice.", delete_after=5 )
+					await message.author.dm_channel.send( "Please do not send the same message twice.", delete_after = 10 )
 					return
 
 			# Wait 5 seconds before sending another message
 			if(str(message.author.id)in userCooldowns):
 				if(time.time()-userCooldowns[str(message.author.id)]<=5):
-					await message.author.dm_channel.send( "Please wait at least 5 seconds before sending another message.", delete_after=5 )
+					await message.author.dm_channel.send( "Please wait at least 5 seconds before sending another message.", delete_after = 10 )
 					return
 
 			# Update cooldown and last message sent
@@ -2127,14 +2127,14 @@ async def on_message( message ):
 					await afterSentAnonMessage( anonMessage, message )
 				elif(len(files)>1):
 					anonMessage = await anonymousWebhook.send(message.clean_content,files=files,username=username,avatar_url=avatar, wait = True )
-					await message.author.dm_channel.send("You seem to have uploaded multiple files in a single message, while this can be relayed it is prone to issues by sometimes not relaying all of the uploaded files at once and instead only relaying the last uploaded file. To avoid this, upload all your files in seperate messages.",delete_after=10)
+					await message.author.dm_channel.send("You seem to have uploaded multiple files in a single message, while this can be relayed it is prone to issues by sometimes not relaying all of the uploaded files at once and instead only relaying the last uploaded file. To avoid this, upload all your files in seperate messages.", delete_after = 10 )
 					await afterSentAnonMessage( anonMessage, message )
 				elif(message.clean_content!=""):
 					anonMessage = await anonymousWebhook.send(message.clean_content,username=username,avatar_url=avatar, wait = True )
 					await afterSentAnonMessage( anonMessage, message )
 			except discord.errors.HTTPException as errorMessage:
 				if(errorMessage.code==40005):
-					await message.author.dm_channel.send("Sorry, I wasn't able to relay that message because it was too large. If you uploaded multiple files in a single message, try uploading them in seperate messages.",delete_after=10)
+					await message.author.dm_channel.send("Sorry, I wasn't able to relay that message because it was too large. If you uploaded multiple files in a single message, try uploading them in seperate messages.", delete_after = 10 )
 					pass
 
 # Runs when a member joins
