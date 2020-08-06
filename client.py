@@ -1936,8 +1936,14 @@ async def on_message( message ):
 			# Are we sending a message in a relay channel?
 			if str( message.channel.id ) in settings.channels.relays.keys():
 
-				# The message to send
-				relayContent = re.sub( r"<a?:([A-Za-z0-9_-]+):\d{18}\\?>", r":\1:", safeContent )
+				# Placeholder for the message that will be sent
+				relayContent = message.clean_content
+
+				# Remove emojis from the message
+				relayContent = re.sub( r"<a?:([A-Za-z0-9_-]+):\d{18}\\?>", r":\1:", relayContent )
+
+				# Remove newlines from the message
+				relayContent = re.sub( r"\n", " ", relayContent )
 
 				# Loop through all attachments
 				for attachment in message.attachments:
