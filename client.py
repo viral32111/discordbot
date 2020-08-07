@@ -134,17 +134,6 @@ userCooldowns = {}
 # The last sent messages for the anonymous relay
 lastSentMessage = {}
 
-# Day suffixes for formatting timestamps
-daySuffixes = {
-	1: "st",
-	2: "nd",
-	3: "rd",
-	21: "st",
-	22: "nd",
-	23: "rd",
-	31: "st"
-}
-
 # When the last dad joke was (default is 60 seconds in the past from now)
 lastDadJoke = time.time() - 60
 
@@ -156,20 +145,6 @@ updateCategoryTask = None
 
 # Holds the latest status of each server - by default all are nothing
 latestServerStatus = { server: None for server in settings.garrysmod.keys() }
-
-# Template to allow for user pings only
-allowUserMentions = discord.AllowedMentions(
-	
-	# Disable @everyone & @here pings
-	everyone = False,
-
-	# Allow user pings
-	users = True,
-
-	# Disable role pings
-	roles = False
-
-)
 
 # Console message
 print( "Initalised global variables." )
@@ -183,6 +158,31 @@ COMMIT = os.popen( "cd " + sys.path[ 0 ] + " && git log --max-count=1 --pretty=f
 
 # User agent header for HTTP requests
 USER_AGENT_HEADER = "Conspiracy AI/" + COMMIT + " (Linux) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (Discord Bot; +https://github.com/conspiracy-servers/conspiracy-ai; " + settings.email + ")"
+
+# Day suffixes for formatting timestamps
+DAY_SUFFIXES = {
+	1: "st",
+	2: "nd",
+	3: "rd",
+	21: "st",
+	22: "nd",
+	23: "rd",
+	31: "st"
+}
+
+# Template to allow for user pings only
+ALLOW_USER_MENTIONS = discord.AllowedMentions(
+
+	# Disable @everyone & @here pings
+	everyone = False,
+
+	# Allow user pings
+	users = True,
+
+	# Disable role pings
+	roles = False
+
+)
 
 # Console message
 print( "Initalised global constants." )
@@ -222,7 +222,7 @@ def formatTimestamp( timestamp = datetime.datetime.utcnow() ):
 		timestamp = datetime.datetime.fromtimestamp( timestamp )
 
 	# Fetch the appropriate day suffix
-	daySuffix = daySuffixes.get( timestamp.day, "th" )
+	daySuffix = DAY_SUFFIXES.get( timestamp.day, "th" )
 
 	# Construct a formatting template using the day suffix
 	template = "%A %-d" + daySuffix + " of %B %Y at %-H:%M:%S UTC"
@@ -1227,7 +1227,7 @@ class ChatCommands:
 			timezoneTime = datetime.datetime.now( timezone )
 
 			# Fetch the appropriate day suffix
-			daySuffix = daySuffixes.get( timezoneTime.day, "th" )
+			daySuffix = DAY_SUFFIXES.get( timezoneTime.day, "th" )
 
 			# Construct a formatting template using the day suffix
 			template = "%A %-d" + daySuffix + " of %B %Y at %-H:%M:%S %Z (%z)"
@@ -1954,7 +1954,7 @@ async def on_message( message ):
 							mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
 
 							# Friendly message
-							await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + repostInformation[ 0 ] + ">.", allowed_mentions = allowUserMentions )
+							await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + repostInformation[ 0 ] + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
 
 			# Does the message start with "Im " and has it been 15 seconds since the last one?
 			if message.content.startswith( "Im " ) and ( lastDadJoke + 15 ) < unixTimestampNow:
@@ -2176,7 +2176,7 @@ async def on_member_join(member):
 	welcomeMessage=f":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#410507397166006274>."
 
 	newChannel=discord.utils.get(member.guild.text_channels,name="greetings")
-	await newChannel.send(welcomeMessage, allowed_mentions = allowUserMentions )
+	await newChannel.send(welcomeMessage, allowed_mentions = ALLOW_USER_MENTIONS )
 
 	await log("Member joined",f"{member.mention} joined the server.",thumbnail=member.avatar_url)
 
