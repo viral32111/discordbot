@@ -145,9 +145,6 @@ daySuffixes = {
 	31: "st"
 }
 
-# Console message
-print( "Initalised global variables." )
-
 # When the last dad joke was (default is 60 seconds in the past from now)
 lastDadJoke = time.time() - 60
 
@@ -174,15 +171,22 @@ allowUserMentions = discord.AllowedMentions(
 
 )
 
+# Console message
+print( "Initalised global variables." )
+
 ##############################################
 # Initalise global constants
 ##############################################
 
+# The current shorthand commit SHA of the local repository
+COMMIT = os.popen( "cd " + sys.path[ 0 ] + " && git log --max-count=1 --pretty=format:\"%h\"" ).read()
+
 # User agent header for HTTP requests
-USER_AGENT_HEADER = "Conspiracy AI/1.0.0 (Linux) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (Discord Bot; +https://github.com/conspiracy-servers/conspiracy-ai; " + settings.email + ")"
+USER_AGENT_HEADER = "Conspiracy AI/" + COMMIT + " (Linux) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (Discord Bot; +https://github.com/conspiracy-servers/conspiracy-ai; " + settings.email + ")"
 
 # Console message
 print( "Initalised global constants." )
+print( "Running from commit " + COMMIT + "." )
 
 ##############################################
 # Define helper functions
