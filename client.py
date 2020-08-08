@@ -1104,7 +1104,7 @@ class ChatCommands:
 			embed.color = 0xFF0000
 
 			# Set the embed footer
-			embed.set_footer( text = "Connection timed out (the server is likely frozen or deadlocked in a non-recoverable state)." )
+			embed.set_footer( text = "Connection timed out (the server is likely frozen in a non-recoverable state)." )
 
 		# Who knows??
 		else:
@@ -2169,16 +2169,29 @@ async def on_message( message ):
 					await message.author.dm_channel.send("Sorry, I wasn't able to relay that message because it was too large. If you uploaded multiple files in a single message, try uploading them in seperate messages.", delete_after = 10 )
 					pass
 
-# Runs when a member joins
-async def on_member_join(member):
-	await client.wait_until_ready()
+# Runs when a member joins the server
+async def on_member_join( member ):
 
-	welcomeMessage=f":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#410507397166006274>."
+	# Is this member a bot?
+	if member.bot:
 
-	newChannel=discord.utils.get(member.guild.text_channels,name="greetings")
-	await newChannel.send(welcomeMessage, allowed_mentions = ALLOW_USER_MENTIONS )
+		# Log this bot add event
+		await log( "Bot added", member.mention + " has been added to the server.", thumbnail = member.avatar_url )
 
-	await log("Member joined",f"{member.mention} joined the server.",thumbnail=member.avatar_url)
+	# They are a normal user
+	else:
+
+		# Fetch the #greetings channel
+		greetingsChannel = client.get_channel( settings.channels.greetings )
+
+		# Send a welcome message to the #greetings channel
+		await greetingsChannel.send( ":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#" + str( settings.channels.welcome ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
+
+		# Log this member join event
+		await log( "Member joined", member.mention + " joined the server.", thumbnail = member.avatar_url )
+
+		# Add the user to the database if they're not already in it
+		mysqlQuery( "INSERT IGNORE INTO Members ( Member, Joined ) VALUES ( '" + str( member.id ) + "', '" + member.joined_at.strftime( "%Y-%m-%d %H:%M:%S" ) + "' );" )
 
 # Runs when a member leaves
 async def on_member_remove(member):
