@@ -2,6 +2,8 @@
 
 This is the official Discord bot for the Conspiracy Servers community.
 
+The structure of the MySQL database is within the [https://github.com/conspiracy-servers/conspiracy-ai/blob/master/database.sql] file.
+
 ### Dependencies:
 
 * [discord.py](https://github.com/Rapptz/discord.py)
