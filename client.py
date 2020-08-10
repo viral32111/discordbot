@@ -1952,7 +1952,7 @@ async def on_message( message ):
 							# Get the channel it was sent in
 							channel = client.get_channel( int( location[ 0 ] ) )
 
-							# Raise not found if channel is nothinbg
+							# Raise not found if channel is nothing
 							if channel == None: raise discord.NotFound()
 
 							# Fetch the message from that channel
