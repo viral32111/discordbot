@@ -1632,6 +1632,25 @@ class ChatCommands:
 	async def leaderboard( self, *arguments, **kwarguments ):
 		return await self.topstatistics( *arguments, **kwarguments )
 
+	# View the date & time you joined
+	metadata[ "joined" ] = [ "General" ]
+	async def joined( self, message, arguments, permissions ):
+
+		# Fetch this date & time the member joined
+		joinedAt = mysqlQuery( "SELECT Joined FROM Members WHERE Member = '" + str( message.author.id ) + "';" )[ 0 ][ 0 ]
+
+		# Fetch the appropriate day suffix
+		daySuffix = DAY_SUFFIXES.get( joinedAt.day, "th" )
+
+		# Construct a formatting template using the day suffix
+		template = "%A %-d" + daySuffix + " of %B %Y at %-H:%M:%S"
+
+		# Get the pretty date & time
+		joinedAtPretty = joinedAt.strftime( template )
+
+		# Send a message back
+		await message.channel.send( ":date: You joined this Discord server on **" + joinedAtPretty + "**.\n*(Information from before 08/08/2020 UTC may not be 100% accurate.)*" )
+
 # Console message
 print( "Defined chat commands." )
 
@@ -2184,14 +2203,38 @@ async def on_member_join( member ):
 		# Fetch the #greetings channel
 		greetingsChannel = client.get_channel( settings.channels.greetings )
 
-		# Send a welcome message to the #greetings channel
-		await greetingsChannel.send( ":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#" + str( settings.channels.welcome ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
-
 		# Log this member join event
 		await log( "Member joined", member.mention + " joined the server.", thumbnail = member.avatar_url )
 
-		# Add the user to the database if they're not already in it
-		mysqlQuery( "INSERT IGNORE INTO Members ( Member, Joined ) VALUES ( '" + str( member.id ) + "', '" + member.joined_at.strftime( "%Y-%m-%d %H:%M:%S" ) + "' );" )
+		# Query the date & time that the user joined from the database
+		results = mysqlQuery( "SELECT Joined FROM Members WHERE Member = '" + str( member.id ) + "';" )
+
+		# Have they been in the server before? (we got results from the database)
+		if len( results ) > 0:
+
+			# Set their year role to whatever joined at date & time was in the database
+			year = results[ 0 ][ 0 ].year
+
+			# Send a welcome back message to the #greetings channel
+			await greetingsChannel.send( ":wave::skin-tone-1: Welcome back " + member.mention + ", it's great to see you here again!", allowed_mentions = ALLOW_USER_MENTIONS )
+
+		# This is their first time joining (we didn't get any results from the database)
+		else:
+
+			# Add the user to the database
+			mysqlQuery( "INSERT INTO Members ( Member, Joined ) VALUES ( '" + str( member.id ) + "', '" + member.joined_at.strftime( "%Y-%m-%d %H:%M:%S" ) + "' );" )
+
+			# Set their year role to when they joined (which should always be right now, unless Discord is taking a shit)
+			year = member.joined_at.year
+
+			# Send a first welcome message to the #greetings channel
+			await greetingsChannel.send( ":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#" + str( settings.channels.welcome ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
+
+		# Fetch the role for the year we just set above
+		yearRole = member.guild.get_role( settings.roles.years[ str( year ) ] )
+
+		# Give the user that year role
+		await member.add_roles( yearRole, reason = "Member joined the server." )
 
 # Runs when a member leaves
 async def on_member_remove(member):
@@ -2336,12 +2379,12 @@ except KeyboardInterrupt:
 	# Console message
 	print( "Shutting down..." )
 
+	# Close the client
+	client.loop.run_until_complete( client.close() )
+
 	# Cancel tasks
 	randomActivityTask.cancel()
 	updateCategoryTask.cancel()
-
-	# Close the client
-	client.loop.run_until_complete( client.close() )
 
 	# Close the event loop
 	client.loop.close()
