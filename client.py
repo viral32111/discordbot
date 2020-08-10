@@ -1934,8 +1934,9 @@ async def on_message( message ):
 					if repostInformation[ 0 ] == False:
 
 						# Get the location
-						location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings.guild ) + "/", "" )
-						
+						location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings.guild ) + "/", "" ) # This will be deprecated in the future
+						location = location.replace( "https://discord.com/channels/" + str( settings.guild ) + "/", "" )
+
 						# Add repost information to the database
 						mysqlQuery( "INSERT INTO RepostHistory ( Checksum, Location ) VALUES ( '" + repostInformation[ 1 ] + "', '" + location + "' );" )
 
