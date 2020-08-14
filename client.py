@@ -1936,6 +1936,9 @@ async def on_message( message ):
 					# Skip if the information is nothing - this means the link is not an image/video/audio file, or is over 100 MiB
 					if repostInformation == None: continue
 
+					# Skip if this checksum is in the repost exclude list
+					if repostInformation[ 1 ] in settings.reposts.excludeChecksums: continue
+
 					# Is this not a repost?
 					if repostInformation[ 0 ] == False:
 
@@ -1945,6 +1948,9 @@ async def on_message( message ):
 
 						# Add repost information to the database
 						mysqlQuery( "INSERT INTO RepostHistory ( Checksum, Location ) VALUES ( '" + repostInformation[ 1 ] + "', '" + location + "' );" )
+
+						# Console message
+						print( "Adding original message attachment with checksum '" + repostInformation[ 1 ] + "' to the repost history database for the first time." )
 
 					# It is a repost
 					else:
@@ -1982,6 +1988,9 @@ async def on_message( message ):
 
 								# Update the count in the database
 								mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
+
+								# Console message
+								print( "Incrementing repost count for message attachment with checksum '" + repostInformation[ 2 ] + "' in the repost history database." )
 
 								# Friendly message
 								await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + repostInformation[ 0 ] + ">.", allowed_mentions = ALLOW_USER_MENTIONS )

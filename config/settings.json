@@ -29,6 +29,9 @@
 		"exclude": [
 			241602380569772044, // Casual -> #commands
 			670361447728939008 // Staff -> #commands
+		],
+		"excludeChecksums": [
+			"d556a1122196aff29f037986e570fb6d42eac96dcd9dcb9168066de98c31ccc7" // that rainbow dancing anime girl gif
 		]
 	},
 	"garrysmod": {
