@@ -13,6 +13,11 @@ CREATE TABLE `AnonMessages` (
   `Token` varchar(64) CHARACTER SET ascii NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `Members` (
+  `Member` varchar(64) CHARACTER SET ascii NOT NULL,
+  `Joined` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE `MemberStatistics` (
   `Member` varchar(64) CHARACTER SET ascii NOT NULL,
   `Messages` int(11) NOT NULL DEFAULT '1',
@@ -34,6 +39,9 @@ CREATE TABLE `RepostHistory` (
 ALTER TABLE `AnonMessages`
   ADD PRIMARY KEY (`Message`),
   ADD UNIQUE KEY `Token` (`Token`);
+
+ALTER TABLE `Members`
+  ADD PRIMARY KEY (`Member`);
 
 ALTER TABLE `MemberStatistics`
   ADD PRIMARY KEY (`Member`);
