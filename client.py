@@ -1961,26 +1961,30 @@ async def on_message( message ):
 							# Raise not found if channel is nothing
 							if channel == None: raise discord.NotFound()
 
-							# Fetch the message from that channel
-							await channel.fetch_message( int( location[ 1 ] ) )
+							# Fetch the original message from that channel
+							originalMessage = await channel.fetch_message( int( location[ 1 ] ) )
 
-						# The message does not exist
+						# The original message does not exist
 						except discord.NotFound:
 
 							# Get the location
-							location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings.guild ) + "/", "" )
+							location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings.guild ) + "/", "" ) # This will be deprecated in the future
+							location = location.replace( "https://discord.com/channels/" + str( settings.guild ) + "/", "" )
 
 							# Update the record in the database to have this message as the first one
 							mysqlQuery( "UPDATE RepostHistory SET Location = '" + location + "', Count = 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
 
-						# The message exists
+						# The original message exists
 						else:
 
-							# Update the count in the database
-							mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
+							# Is this not the original author reposting their own content?
+							if originalMessage.author.id != message.author.id:
 
-							# Friendly message
-							await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + repostInformation[ 0 ] + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
+								# Update the count in the database
+								mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
+
+								# Friendly message
+								await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + repostInformation[ 0 ] + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
 
 			# Does the message start with "Im " and has it been 15 seconds since the last one?
 			if message.content.startswith( "Im " ) and ( lastDadJoke + 15 ) < unixTimestampNow:
