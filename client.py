@@ -918,31 +918,37 @@ class ChatCommands:
 			inspection = re.search( r"return await self\.(\w+)\( \*\w+, \*\*\w+ \)", inspect.getsource( method ) )
 
 			# Is it an alias?
-			if inspection:
+			if inspection != None:
 
-				# Get this command's metadata
-				metadata = self.metadata[ inspection.group( 1 ) ]
+				# Get the real command this alias is for
+				realCommand = inspection.group( 1 )
 
-				# Has this method already been added?
-				if inspection.group( 1 ) in availableChatCommands[ metadata[ 0 ] ]:
+				# Get the real command's category
+				category = self.metadata[ realCommand ][ 0 ]
 
-					# Append the alias
-					availableChatCommands[ metadata[ 0 ] ][ inspection.group( 1 ) ].append( definition )
+				# Has the real command already been added to this category?
+				if realCommand in availableChatCommands[ category ]:
 
-				# The method has not been added yet
+					# Append the alias to the real command
+					availableChatCommands[ category ][ realCommand ].append( definition )
+
+				# The real command has not been added to it's category yet
 				else:
 
-					# Add the method with this alias
-					availableChatCommands[ metadata[ 0 ] ][ inspection.group( 1 ) ] = [ definition ]
-			
-			# It's a normal chat command, but is it not already in the list?
+					# Add the real command with this alias as a list
+					availableChatCommands[ category ][ realCommand ] = [ definition ]
+
+			# It's a real command and it isn't already in the list
 			elif inspection == None and definition not in availableChatCommands:
 
-				# Get this command's metadata
-				metadata = self.metadata[ definition ]
+				# Get the real command's category
+				category = self.metadata[ definition ][ 0 ]
 
-				# Add it to the command dictionary
-				availableChatCommands[ metadata[ 0 ] ][ definition ] = []
+				# Has the real command not already been added to this category?
+				if definition not in availableChatCommands[ category ]:
+	
+					# Add the real command with an empty list for future aliases
+					availableChatCommands[ category ][ definition ] = []
 
 		# Create a blank embed to be updated soon
 		embed = discord.Embed( title = "Chat Commands", description = "", color = settings.color )
@@ -1363,9 +1369,9 @@ class ChatCommands:
 			# Send message feedback
 			await message.channel.send( "Removed " + member.mention + " from timeout." )
 
-	# Lookup information about an anime
-	metadata[ "anime" ] = [ "General" ]
-	async def anime( self, message, arguments, permissions ):
+	# Lookup information about an anime on My Anime List
+	metadata[ "myanimelist" ] = [ "General" ]
+	async def myanimelist( self, message, arguments, permissions ):
 
 		# Was there no anime name provided?
 		if len( arguments ) < 1:
@@ -1470,13 +1476,13 @@ class ChatCommands:
 
 	# Aliases for the anime command
 	async def mal( self, *arguments, **kwarguments ):
-		return await self.anime( *arguments, **kwarguments )
+		return await self.myanimelist( *arguments, **kwarguments )
 
-	async def myanimelist( self, *arguments, **kwarguments ):
-		return await self.anime( *arguments, **kwarguments )
+	async def anime( self, *arguments, **kwarguments ):
+		return await self.myanimelist( *arguments, **kwarguments )
 
 	async def manga( self, *arguments, **kwarguments ):
-		return await self.anime( *arguments, **kwarguments )
+		return await self.myanimelist( *arguments, **kwarguments )
 
 	# Delete message sent in anonymous
 	metadata[ "delete" ] = [ "General" ]
