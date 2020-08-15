@@ -52,6 +52,7 @@ import inspect # View the code of a function
 import itertools # Chained iteration
 import urllib.parse # Parsing URLs
 import dotmap # Attribute style access to dictionary keys
+import bs4 # Parsing & web scraping HTML
 
 # Console message
 print( "Imported modules." )
@@ -398,21 +399,40 @@ def mysqlQuery( sql ):
 	# Return the results
 	return results
 
+# Get the direct URL from a Tenor vanity URL
+def extractDirectTenorURL( vanityURL ):
+
+	# Request the vanity URL page
+	vanity = requests.get( vanityURL, headers = {
+		"Accept": "text/html, */*",
+		"User-Agent": USER_AGENT_HEADER,
+		"From": settings.email
+	} )
+
+	# Create parsing soup from the received HTML
+	soup = bs4.BeautifulSoup( vanity.text, features = "html.parser" )
+
+	# Return the found image source URL in html > head > link > image_src
+	return soup.find( "link", { "class": "dynamic", "rel": "image_src" } )[ "href" ]
+
 # Download media over HTTP and save it to disk
 def downloadWebMedia( originalURL ):
 
-	# Does the downloads directory exist?
-	if not os.path.isdir( settings.downloads ):
-
-		# Create the downloads directory
-		os.mkdir( settings.downloads, 0o700 )
+	# Create the downloads directory if it doesn't exist
+	if not os.path.isdir( settings.downloads ): os.mkdir( settings.downloads, 0o700 )
 
 	# Get the current date & time in UTC
 	rightNow = datetime.datetime.utcnow()
 
+	# Is this a vanity Tenor URL?
+	if re.match( r"^https?:\/\/(www\.)?tenor\.com\/view\/.+", originalURL ):
+
+		# Set the original URL to the extracted direct URL
+		originalURL = extractDirectTenorURL( originalURL )
+
 	# Request just the headers of the remote web file
 	head = requests.head( originalURL, headers = {
-		"Accept": "*/*",
+		"Accept": "image/*, video/*, audio/*, */*",
 		"User-Agent": USER_AGENT_HEADER,
 		"From": settings.email
 	} )
@@ -458,7 +478,7 @@ def downloadWebMedia( originalURL ):
 
 	# Request the full content to stream-download it
 	get = requests.get( originalURL, stream = True, headers = {
-		"Accept": "*/*",
+		"Accept": "image/*, video/*, audio/*, */*",
 		"User-Agent": USER_AGENT_HEADER,
 		"From": settings.email
 	} )
