@@ -193,7 +193,6 @@ print( "Running from commit " + COMMIT + "." )
 ##############################################
 
 # Check if a Discord object is valid
-# TO-DO: Destroy this shit, I hate it
 def isValid( obj ):
 
 	# Messages
@@ -661,8 +660,6 @@ print( "Defined helper functions." )
 ##############################################
 # Define GMod Relay Classes
 ##############################################
-
-# TO-DO: Rewrite these classes
 
 # Player class
 class Player:
@@ -1145,7 +1142,6 @@ class ChatCommands:
 			return
 
 		# Construct request URL
-		# TO-DO: Use my own API/AppID key here
 		locationQuery = "%20".join( arguments )
 		apiURL = "https://api.openweathermap.org/data/2.5/weather?units=metric&appid=e5b292ae2f9dae5f29e11499c2d82ece&q=" + locationQuery
 
