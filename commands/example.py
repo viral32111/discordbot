@@ -5,24 +5,11 @@
 # Import the chat command object from the main script
 from __main__ import chatCommand
 
-# Import any required modules
-import discord
-
 ##############################################
 # Define chat commands
 ##############################################
 
 # Example
-@chatCommand()
-async def example( message, arguments ):
-	return "example"
-
-# ABC
-@chatCommand()
-async def abc( message, arguments ):
-	return "abc"
-
-# Foo
-@chatCommand( bar = 123 )
-async def foo( message, arguments ):
-	return "foo"
+@chatCommand( aliases = [ "hello", "hw" ], wip = True )
+async def helloworld( message, arguments ):
+	return { "content": "hello discord!\n" + ", ".join( arguments ) }

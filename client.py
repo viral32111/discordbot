@@ -53,6 +53,8 @@ import itertools # Chained iteration
 import urllib.parse # Parsing URLs
 import dotmap # Attribute style access to dictionary keys
 import bs4 # Parsing & web scraping HTML
+import difflib # For computing deltas
+import operator # Extra sorting methods
 
 # Console message
 print( "Imported modules." )
@@ -204,7 +206,13 @@ DEFAULT_COMMAND_METADATA = {
 	"roles": None,
 
 	# True if the command can only be used in direct messages, false otherwise
-	"dm": False
+	"dm": False,
+
+	# True if the input command/calling action should be deleted after this command is used
+	"delete": False,
+
+	# True if the command is work-in-progress, this means it cannot be used by anyone else other than me :)
+	"wip": False
 
 }
 
@@ -835,6 +843,9 @@ class ChatCommands:
 		# Add the command to the registered commands dictionary by using the function's name as a key
 		self.commands[ function.__name__ ] = self.command
 
+		# Register all aliases for this command with their values as a reference to the existing main command above
+		for name in self.command.aliases: self.commands[ name ] = self.commands[ function.__name__ ]
+
 		# Delete the temporarily stored chat command object
 		del self.command
 
@@ -900,7 +911,7 @@ class ChatCommandsDeprecated:
 		# Chat commands field
 		helpEmbed.add_field(
 			name = "Chat Commands",
-			value = "Type `" + settings.prefix + "commands` for a list of usable chat commands. Try to keep command usage in <#241602380569772044> to avoid cluttering the discussion channels.",
+			value = "Type `" + settings.prefixDeprecated + "commands` for a list of usable chat commands. Try to keep command usage in <#241602380569772044> to avoid cluttering the discussion channels.",
 			inline = False
 		)
 
@@ -1100,10 +1111,10 @@ class ChatCommandsDeprecated:
 			for command, aliases in commands.items():
 
 				# Construct a string out of the list of command aliases
-				aliasesString = " *(" + ", ".join( [ "`" + settings.prefix + alias + "`" for alias in aliases ] ) + ")*"
+				aliasesString = " *(" + ", ".join( [ "`" + settings.prefixDeprecated + alias + "`" for alias in aliases ] ) + ")*"
 
 				# Append the command name and it's aliases (if any are available) to the final embed description
-				value += "• `" + settings.prefix + command + "`" + ( aliasesString if len( aliases ) > 0 else "" ) + "\n"
+				value += "• `" + settings.prefixDeprecated + command + "`" + ( aliasesString if len( aliases ) > 0 else "" ) + "\n"
 
 			# Add the field to the embed for this category
 			embed.add_field( name = "__" + category + "__", value = value, inline = False )
@@ -1972,7 +1983,7 @@ async def on_message( message ):
 	if message.content == client.user.mention:
 
 		# Friendly message
-		await message.channel.send( ":information_source: Type `" + settings.prefix + "commands` to view a list of commands." )
+		await message.channel.send( ":information_source: Type `" + settings.prefixDeprecated + "commands` to view a list of commands." )
 
 		# Prevent further execution
 		return
@@ -1989,8 +2000,8 @@ async def on_message( message ):
 	# Store the current unix timestamp for later use
 	unixTimestampNow = time.time()
 
-	# Is this message a chat command?
-	if message.content.startswith( settings.prefix ):
+	# Is this message an old chat command?
+	if message.content.startswith( settings.prefixDeprecated ):
 	
 		# Get both the command and the arguments
 		command = ( message.content.lower()[ 1: ].split( " " )[ 0 ] if message.content.lower()[ 1: ] != "" else None )
@@ -2046,7 +2057,106 @@ async def on_message( message ):
 		else:
 
 			# Friendly message
-			await message.channel.send( ":grey_question: I didn't recognise that command, type `" + settings.prefix + "commands` to see a list of available chat commands.", delete_after = 10 )
+			await message.channel.send( ":grey_question: I didn't recognise that command, type `" + settings.prefixDeprecated + "commands` to see a list of available chat commands.", delete_after = 10 )
+
+	# Is this message a new chat command?
+	elif message.content.startswith( settings.prefix ):
+	
+		# Get both the command and the arguments
+		command = ( message.content.lower()[ 1: ].split( " " )[ 0 ] if message.content.lower()[ 1: ] != "" else None )
+
+		# Prevent further execution if there's no command
+		if command == None: return
+
+		# Start typing in the channel
+		await message.channel.trigger_typing()
+
+		# Is the chat command valid?
+		if command in chatCommands:
+
+			# Create the list of arguments
+			arguments = message.content[ len( command ) + 2 : ].split()
+
+			# Default to guild permissions
+			permissions = guildMember.guild_permissions
+
+			# Is this a message from a guild?
+			if message.guild != None:
+
+				# Use channel permissions instead
+				permissions = message.author.permissions_in( message.channel )
+
+			# Be safe!
+			try:
+
+				# Fetch the command metadata
+				metadata = chatCommands[ command ]
+
+				# Is this command work-in-progress & is the author not me?
+				if metadata.wip and message.author.id != 480764191465144331:
+
+					# Give a response
+					await message.channel.send( ":wrench: This command is work-in-progress, please refrain from using it until it's released." )
+
+					# Prevent further execution
+					return
+
+				# Is this command NSFW & is this not an NSFW channel?
+				if metadata.nsfw and not message.channel.is_nsfw():
+
+					# Give a response
+					await message.channel.send( ":exclamation: This command can only be used in channels marked as NSFW." )
+
+					# Prevent further execution
+					return
+
+				# TO-DO: metadata.channels
+				# TO-DO: metadata.categories
+				# TO-DO: metadata.roles
+				# TO-DO: metadata.permissions
+				# TO-DO: metadata.dm
+
+				# Delete the command caller/input if it's set to do so
+				if metadata.delete: await message.delete()
+
+				# Execute the command and store it's response
+				response = await metadata.execute( message, arguments )
+
+				# Send a response with user mention capability if it was provided
+				if response != None: await message.channel.send( **response, allowed_mentions = ALLOW_USER_MENTIONS )
+
+			# Catch all errors that occur
+			except Exception:
+
+				# Print a stacktrace
+				print( traceback.format_exc() )
+
+				# Friendly message
+				await message.channel.send( ":interrobang: I encountered an error while attempting to execute that command, <@480764191465144331> needs to fix this.", allowed_mentions = ALLOW_USER_MENTIONS )
+
+			# After all that...
+			finally:
+
+				# Should we log this command usage?
+				if shouldLog( message ):
+
+					# Console message
+					print( "(" + ascii( message.channel.category.name ) + " -> #" + message.channel.name + ") " + str( message.author ) + " (" + message.author.display_name + "): " + message.content )
+
+					# Log the usage of the command
+					await log( "Command executed", message.author.mention + " executed the `" + command + "` command" + ( " with arguments `" + " ".join( arguments ) + "`" if len( arguments ) > 0 else "" ) + " in " + message.channel.mention, jump = message.jump_url )
+
+		# Unknown chat command
+		else:
+
+			# Calculate the ratio of how similar the attempted command is to all other commands
+			similarMatches = { name : difflib.SequenceMatcher( None, command, name ).ratio() for name, metadata in chatCommands if not metadata.wip }
+
+			# Sort by the highest ratio (the most accurate/similar match)
+			sortedSimilarMatches = sorted( similarMatches, key = similarMatches.get, reverse = True )
+
+			# Send back a message
+			await message.channel.send( ":grey_question: I didn't recognise that command, " + ( "did you mean `" + settings.prefix + sortedSimilarMatches[ 0 ] + "`? If not, " if len( sortedSimilarMatches ) > 0 else "" ) + "type `" + settings.prefix + "commands` to see a list of commands.", delete_after = 30 )
 
 	# This message is not a chat command
 	else:
