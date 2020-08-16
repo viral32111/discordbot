@@ -62,7 +62,7 @@ print( "Imported modules." )
 ##############################################
 
 # Open the settings file
-with open( sys.path[ 0 ] + "/config/settings.json", "r" ) as handle:
+with open( sys.path[ 0 ] + "/config/settings.jsonc", "r" ) as handle:
 
 	# Read all the file contents
 	contents = handle.read()
@@ -74,7 +74,7 @@ with open( sys.path[ 0 ] + "/config/settings.json", "r" ) as handle:
 	settings = dotmap.DotMap( json.loads( stripped ) )
 
 # Open the secrets file
-with open( sys.path[ 0 ] + "/config/secrets.json", "r" ) as handle:
+with open( sys.path[ 0 ] + "/config/secrets.jsonc", "r" ) as handle:
 
 	# Read all the file contents
 	contents = handle.read()
