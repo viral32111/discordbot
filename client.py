@@ -185,6 +185,35 @@ ALLOW_USER_MENTIONS = discord.AllowedMentions(
 
 )
 
+# This is the default metadata for chat commands
+DEFAULT_COMMAND_METADATA = {
+
+	# The category displayed in the !commands response
+	"category": "Other",
+
+	# Additional ways to call/execute the same command
+	"aliases": [],
+
+	# True if the command gives NSFW responses, false otherwise (auto-restricts it to only NSFW channels)
+	"nsfw": False,
+
+	# Permissions a member requires to use the command (none = everyone can use)
+	"permissions": None,
+
+	# Channels the command can only be used in (none = can be used in all channels)
+	"channels": None,
+
+	# Channel categories the command can only be used in (none = can be used in any channel category)
+	"categories": None,
+
+	# Roles a member requires to use the command (None = any role can use)
+	"roles": None,
+
+	# True if the command can only be used in direct messages, false otherwise
+	"dm": False
+
+}
+
 # Console message
 print( "Initalised global constants." )
 print( "Running from commit " + COMMIT + "." )
@@ -728,11 +757,108 @@ class Server:
 print( "Defined relay classes." )
 
 ##############################################
-# Define the chat commands
+# Setup the chat commands
 ##############################################
 
-# A class to hold all the chat commands
+# A chat command class that inherits from a dictionary
+class ChatCommand( dict ):
+
+	# Called when the class is initalised
+	def __init__( self, metadata ):
+
+		# Call the dictionary class' init method
+		super( ChatCommand, self).__init__( metadata )
+
+		# Copy all default command metadata to a local dictionary
+		data = DEFAULT_COMMAND_METADATA.copy()
+
+		# Update the local dictionary with any metadata passed to this method
+		data.update( metadata )
+
+		# Add each key & value pair in the local dictionary to this object
+		for key, value in data.items(): self[ key ] = value
+
+	# Called when there is an attempt to get an attribute
+	def __getattr__( self, name ):
+
+		# Attempt to fetch the attribute by its name, return none if not found
+		return self.get( name, None )
+
+	# Called when there is an attempt to set an attribute
+	def __setattr__( self, key, value):
+
+		# Call the dictionary class' set item method with the same arguments
+		self.__setitem__( key, value )
+
+	# Called when there is an attempt to delete an attribute
+	def __delattr__( self, item ):
+
+		# Call the dictionary class' delete item method with the same arguments
+		self.__delitem__( item )
+
+# A class that holds all easily registered chat commands
 class ChatCommands:
+
+	# Called when the class is initalised
+	def __init__( self ):
+
+		# Set the registered commands dictionary to an empty dictionary
+		self.commands = {}
+
+	# Called when this object is called like a function
+	def __call__( self, **metadata ):
+
+		# Create a chat command object from the passed metadata as keyword arguments and temporarily store it
+		self.command = ChatCommand( metadata )
+
+		# Return the command register function so the decorator can continue
+		return self.register
+
+	# Called to check if an object contains an item (the 'in' statement)
+	def __contains__( self, item ):
+
+		# Return a boolean if the queried item is in the registered commands dictionary
+		return item in self.commands
+
+	# Called to get an item from this object
+	def __getitem__( self, name ):
+
+		# Return the item with the same name in the registered commands dictionary
+		return self.commands[ name ]
+
+	# Called when iterating over this obhect
+	def __iter__( self ):
+
+		# Return an iterator for the items in the registered commands dictionary
+		return iter( self.commands.items() )
+
+	# A function to register new chat commands
+	def register( self, function ):
+
+		# Set the chat command object's execute property to the passed function reference
+		self.command.execute = function
+
+		# Add the command to the registered commands dictionary by using the function's name as a key
+		self.commands[ function.__name__ ] = self.command
+
+		# Delete the temporarily stored chat command object
+		del self.command
+
+# Inistansiate an object from the chat commands holder class
+chatCommands = ChatCommands()
+
+# Create a duplicate reference to the chat commands object for syntatic sugar in the command definition files
+chatCommand = chatCommands
+
+# Import each chat command file
+from commands import example
+
+#############################################################################################################
+######################### ALL THE CHAT COMMANDS BELOW THIS POINT USE THE OLD SYSTEM ######################### 
+#############################################################################################################
+
+# A class to hold all the chat commands
+class ChatCommandsDeprecated:
 
 	#### Class methods
 
@@ -1709,7 +1835,7 @@ client = discord.Client(
 )
 
 # Instansiate the chat commands class
-chatCommands = ChatCommands( client )
+chatCommandsDeprecated = ChatCommandsDeprecated( client )
 
 # Console message
 print( "Connecting to Discord..." )
@@ -1882,7 +2008,7 @@ async def on_message( message ):
 		await message.channel.trigger_typing()
 
 		# Is the chat command valid?
-		if command in chatCommands:
+		if command in chatCommandsDeprecated:
 
 			# Create the list of arguments
 			arguments = message.clean_content[ len( command ) + 2 : ].split()
@@ -1900,7 +2026,7 @@ async def on_message( message ):
 			try:
 
 				# Execute the command
-				await chatCommands[ command ]( message, arguments, permissions )
+				await chatCommandsDeprecated[ command ]( message, arguments, permissions )
 
 			# Catch all errors that occur
 			except Exception:
