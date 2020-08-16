@@ -14,4 +14,4 @@ The structure of the MySQL database is within the [database.sql](https://github.
 * [pytz](https://pypi.org/project/pytz/)
 * [beautifulsoup4](https://pypi.org/project/beautifulsoup4/)
 
-Copyright (C) 2016-2020 viral32111 under GNU AGPLv3.
+Copyright (C) 2016 - 2020 viral32111 under GNU AGPLv3.

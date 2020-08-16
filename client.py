@@ -1,5 +1,6 @@
-# Conspiracy AI - The Discord bot for Conspiracy Servers
-# Copyright (C) 2016-2020 viral32111 (https://viral32111.com)
+###################################################################################
+# Conspiracy AI - The official Discord bot for the Conspiracy Servers community.
+# Copyright (C) 2016 - 2020 viral32111 (https://viral32111.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -13,8 +14,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see http://www.gnu.org/licenses/.
-
-################################################################################
+###################################################################################
 
 # Emojis for chat command feedback:
 # :exclamation:			Incorrect channel for command (NSFW cmd not being used in channel marked as NSFW, etc)

@@ -17,28 +17,5 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 */
 
 {
-	"token": "",
-	"sandbox": {
-		"key": "",
-		"krypton_key": ""
-	},
-	"database": {
-		"user": "",
-		"passwd": ""
-	},
-	"webhooks": {
-		"anonymous": {
-			"token": ""
-		}
-	},
-	"anonymous": {
-		"sauce": "" // Don't change this once it's set!
-	},
-	"bitly": {
-		"key": ""
-	},
-	"encryptionKeys": {
-		"members": "", // Don't change this once it's set!
-		"memberStatistics": "" // Don't change this once it's set!
-	}
+	"this-file-is-not": "currently-in-use!"
 }
