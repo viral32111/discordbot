@@ -85,12 +85,6 @@ with open( sys.path[ 0 ] + "/config/secrets.jsonc", "r" ) as handle:
 	# Parse JSON into a map
 	secrets = dotmap.DotMap( json.loads( stripped ) )
 
-# Open the pseudonames file
-with open( sys.path[ 0 ] + "/config/pseudonames.txt", "r" ) as handle:
-
-	# Read each line into a list
-	pseudonames = handle.readlines()
-
 # Console message
 print( "Loaded configuration files." )
 
@@ -2302,7 +2296,7 @@ async def on_message( message ):
 			if(message.clean_content!=""):lastSentMessage[str(message.author.id)]=message.clean_content
 
 			# Pick random username and avatar
-			username = random.choice( pseudonames )
+			username = random.choice( settings.anonymousNames )
 			randomAvatarHash = random.choice( settings.anonymous.avatars )
 			avatar = f"https://discordapp.com/assets/{ randomAvatarHash }.png"
 

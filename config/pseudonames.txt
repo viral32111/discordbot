@@ -1,4 +1,0 @@
-This file contains the random names to use as the anonymous relay webhook usernames.
-Each random name should be on a new line, I recommend around 2000-5000 names.
-There are websites which can mass generate random first & last names for you.
-Remove these information/help lines when populating this file.
