@@ -187,23 +187,20 @@ DEFAULT_COMMAND_METADATA = {
 	# The category displayed in the !commands response
 	"category": "Other",
 
-	# Additional ways to call/execute the same command
+	# Additional ways to call/execute the same command (empty list = no aliases)
 	"aliases": [],
 
 	# True if the command gives NSFW responses, false otherwise (auto-restricts it to only NSFW channels)
 	"nsfw": False,
 
-	# Permissions a member requires to use the command (none = everyone can use)
+	# Permissions a member requires to use the command (none = everyone can use/no specific permissions needed)
 	"permissions": None,
 
-	# Channels the command can only be used in (none = can be used in all channels)
-	"channels": None,
+	# Channels the command can only be used in (empty list = can be used in all channels)
+	"channels": [],
 
-	# Channel categories the command can only be used in (none = can be used in any channel category)
-	"categories": None,
-
-	# Roles a member requires to use the command (None = any role can use)
-	"roles": None,
+	# Roles a member requires to use the command (empty list = any role can use)
+	"roles": [],
 
 	# True if the command can only be used in direct messages, false otherwise
 	"dm": False,
@@ -212,7 +209,10 @@ DEFAULT_COMMAND_METADATA = {
 	"delete": False,
 
 	# True if the command is work-in-progress, this means it cannot be used by anyone else other than me :)
-	"wip": False
+	"wip": False,
+
+	# The only users who can use this command (empty list = any user can use)
+	"users": []
 
 }
 
@@ -898,7 +898,7 @@ class ChatCommandsDeprecated:
 		# About field
 		helpEmbed.add_field(
 			name = "About the Community",
-			value = "Conspiracy Servers is a Garry's Mod community founded by <@480764191465144331> and <@213413722943651841> in early 2016, we've been going for nearly 5 years now and have always kept our non-serious, relaxed and casual approach towards our community and its servers.",
+			value = "Conspiracy Servers is a Garry's Mod community founded by <@" + str( settings.owner ) + "> and <@213413722943651841> in early 2016, we've been going for nearly 5 years now and have always kept our non-serious, relaxed and casual approach towards our community and its servers.",
 		)
 
 		# Guidelines & rules field
@@ -1267,7 +1267,7 @@ class ChatCommandsDeprecated:
 			embed.title = "Sandbox"
 
 			# Set the embed description
-			embed.description = "Tell <@480764191465144331> that he's forgotten to add a case in the sandbox status command for a new invalid exception he added at some point.\n\nI've been given data that I have no clue what to do with, send help."
+			embed.description = "Tell <@" + str( settings.owner ) + "> that he's forgotten to add a case in the sandbox status command for a new invalid exception he added at some point.\n\nI've been given data that I have no clue what to do with, send help."
 
 		# Send the embed
 		await message.channel.send( embed = embed )
@@ -2077,15 +2077,6 @@ async def on_message( message ):
 			# Create the list of arguments
 			arguments = message.content[ len( command ) + 2 : ].split()
 
-			# Default to guild permissions
-			permissions = guildMember.guild_permissions
-
-			# Is this a message from a guild?
-			if message.guild != None:
-
-				# Use channel permissions instead
-				permissions = message.author.permissions_in( message.channel )
-
 			# Be safe!
 			try:
 
@@ -2093,7 +2084,7 @@ async def on_message( message ):
 				metadata = chatCommands[ command ]
 
 				# Is this command work-in-progress & is the author not me?
-				if metadata.wip and message.author.id != 480764191465144331:
+				if metadata.wip and message.author.id != settings.owner:
 
 					# Give a response
 					await message.channel.send( ":wrench: This command is work-in-progress, please refrain from using it until it's released." )
@@ -2101,20 +2092,80 @@ async def on_message( message ):
 					# Prevent further execution
 					return
 
-				# Is this command NSFW & is this not an NSFW channel?
-				if metadata.nsfw and not message.channel.is_nsfw():
+				# Is this command restricted to certain users & is this user not one of them?
+				if len( metadata.users ) > 0 and message.author.id not in metadata.users:
+
+					# Convert the list of users to a clean string
+					users = ", ".join( [ client.get_user( userID ).mention for userID in metadata.users ] )
 
 					# Give a response
-					await message.channel.send( ":exclamation: This command can only be used in channels marked as NSFW." )
+					await message.channel.send( ":no_entry_sign: This command can only be used by " + users + "." )
 
 					# Prevent further execution
 					return
 
-				# TO-DO: metadata.channels
-				# TO-DO: metadata.categories
-				# TO-DO: metadata.roles
-				# TO-DO: metadata.permissions
-				# TO-DO: metadata.dm
+				# Is this command DM only & is this not a direct message?
+				if metadata.dm and message.guild:
+
+					# Give a response
+					await message.channel.send( ":exclamation: This command can only be used over Direct Messages." )
+
+					# Prevent further execution
+					return
+
+				# Is this not a direct message?
+				if message.guild:
+
+					# Is this command NSFW & is this not an NSFW channel?
+					if metadata.nsfw and not message.channel.is_nsfw():
+
+						# Give a response
+						await message.channel.send( ":exclamation: This command can only be used in NSFW channels." )
+
+						# Prevent further execution
+						return
+
+					# Is this command only available in certain channels and is this not one of those channels?
+					if len( metadata.channels ) > 0 and message.channel.id not in metadata.channels:
+
+						# Convert the list of channels to a clean string
+						channels = ", ".join( [ client.get_channel( channelID ).mention for channelID in metadata.channels ] )
+
+						# Give a response
+						await message.channel.send( ":exclamation: This command can only be used in " + channels + "." )
+
+						# Prevent further execution
+						return
+
+				# Create a list of the role IDs this member has
+				roleIDs = [ role.id for role in guildMember.roles ]
+
+				# Create a list of the roles this member requires to execute this command (if there are any)
+				requiredRoles = [ message.guild.get_role( roleID ) for roleID in metadata.roles if roleID not in roleIDs ]
+
+				# Is there at least one additional role that this member requires?
+				if len( requiredRoles ) > 0:
+
+					# Convert the list of roles to a clean string
+					roles = ", ".join( [ role.mention for role in requiredRoles ] )
+
+					# Give a response
+					await message.channel.send( ":no_entry_sign: This command can only be used by members with the role " + roles + "." )
+
+					# Prevent further execution
+					return
+
+				# Use channel permissions if this message is not from direct messages, otherwise use overall guild permissions
+				#permissions = ( message.author.permissions_in( message.channel ) if message.guild else guildMember.guild_permissions )
+
+				# Does this command require certain permissions and does this member not have those permissions?
+				#if metadata.permissions and permissions < metadata.permissions:
+
+					# Give a response
+					#await message.channel.send( ":no_entry_sign: You don't have the necessary permissions to use this command." )
+
+					# Prevent further execution
+					#return
 
 				# Delete the command caller/input if it's set to do so
 				if metadata.delete: await message.delete()
@@ -2132,7 +2183,7 @@ async def on_message( message ):
 				print( traceback.format_exc() )
 
 				# Friendly message
-				await message.channel.send( ":interrobang: I encountered an error while attempting to execute that command, <@480764191465144331> needs to fix this.", allowed_mentions = ALLOW_USER_MENTIONS )
+				await message.channel.send( ":interrobang: I encountered an error while attempting to execute that command, <@" + str( settings.owner ) + "> needs to fix this.", allowed_mentions = ALLOW_USER_MENTIONS )
 
 			# After all that...
 			finally:
@@ -2156,7 +2207,7 @@ async def on_message( message ):
 			sortedSimilarMatches = sorted( similarMatches, key = similarMatches.get, reverse = True )
 
 			# Send back a message
-			await message.channel.send( ":grey_question: I didn't recognise that command, " + ( "did you mean `" + settings.prefix + sortedSimilarMatches[ 0 ] + "`? If not, " if len( sortedSimilarMatches ) > 0 else "" ) + "type `" + settings.prefix + "commands` to see a list of commands.", delete_after = 30 )
+			await message.channel.send( ":grey_question: I didn't recognise that command, " + ( "did you mean `" + settings.prefix + sortedSimilarMatches[ 0 ] + "`? If not, " if len( sortedSimilarMatches ) > 0 else "" ) + "type `" + settings.prefix + "commands` to see a list of commands." )
 
 	# This message is not a chat command
 	else:

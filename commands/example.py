@@ -5,6 +5,9 @@
 # Import the chat command object from the main script
 from __main__ import chatCommand
 
+# Import required modules
+import discord
+
 ##############################################
 # Define chat commands
 ##############################################
