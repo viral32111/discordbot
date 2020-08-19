@@ -215,7 +215,13 @@ DEFAULT_COMMAND_METADATA = {
 	"users": [],
 
 	# The command's parent command (none = no parent command)
-	"parent": None
+	"parent": None,
+
+	# Additional ways to call/execute the same subcommand (empty list = no aliases, only works if parent is set)
+	"subaliases": [],
+
+	# A message explaining the command, showing usage examples, etc. (none = no help available)
+	"help": None
 
 }
 
@@ -769,13 +775,29 @@ print( "Defined relay classes." )
 class ChatCommand( dict ):
 
 	# Called when the class is initalised
-	def __init__( self, metadata ):
+	def __init__( self, metadata, parentMetadata ):
 
 		# Call the dictionary class' init method
-		super( ChatCommand, self).__init__( metadata )
+		super( ChatCommand, self ).__init__( metadata )
 
 		# Copy all default command metadata to a local dictionary
 		data = DEFAULT_COMMAND_METADATA.copy()
+
+		# Has the parent metadata been provided?
+		if parentMetadata:
+
+			# Update the local dictionary with certain metadata properties from the parent command
+			data.update( {
+				"category": parentMetadata.category,
+				"nsfw": parentMetadata.nsfw,
+				"permissions": parentMetadata.permissions,
+				"channels": parentMetadata.channels,
+				"roles": parentMetadata.roles,
+				"dm": parentMetadata.dm,
+				"delete": parentMetadata.delete,
+				"wip": parentMetadata.wip,
+				"users": parentMetadata.users,
+			} )
 
 		# Update the local dictionary with any metadata passed to this method
 		data.update( metadata )
@@ -813,8 +835,22 @@ class ChatCommands:
 	# Called when this object is called like a function
 	def __call__( self, **metadata ):
 
-		# Create a chat command object from the passed metadata as keyword arguments and temporarily store it
-		self.command = ChatCommand( metadata )
+		# Placeholder for the parent metadata
+		parentMetadata = None
+
+		# Is this a subcommand and is inheriting from parent enabled?
+		if ( "parent" in metadata and metadata[ "parent" ] ):
+
+			print( "using parent metadata from " + metadata[ "parent" ] )
+
+			# Set the parent metadata to the parent command's metadata
+			parentMetadata = self.commands[ metadata[ "parent" ] ]
+
+		# Store the metadata of the parent command if this is a subcommand and inherting is enabled
+		#parentMetadata = self.commands[ metadata[ "parent" ] ] if metadata[ "parent" ] and metadata[ "inherit" ] else None
+
+		# Create a chat command object from the passed metadata and parent metadata (if applicable) as keyword arguments and temporarily store it
+		self.command = ChatCommand( metadata, parentMetadata )
 
 		# Return the command register function so the decorator can continue
 		return self.register
@@ -848,9 +884,15 @@ class ChatCommands:
 
 		# Is this a sub-command?
 		if self.command.parent:
-		
+
 			# Add the sub-command to the subcmds dictionary of the main command
-			self.commands[ self.command.parent.__name__ ].subcmds[ function.__name__ ] = self.command
+			self.commands[ self.command.parent ].subcmds[ function.__name__ ] = self.command
+
+			# Register all subaliases for this subcommand with their values as a reference to the existing subcommand above
+			for name in self.command.subaliases: self.commands[ self.command.parent ].subcmds[ name ] = self.commands[ self.command.parent ].subcmds[ function.__name__ ]
+
+			# Register all aliases for this subcommand with their values as a reference to the existing subcommand above
+			for name in self.command.aliases: self.commands[ name ] = self.commands[ self.command.parent ].subcmds[ function.__name__ ]
 
 		# This is not a sub-command
 		else:
@@ -2089,14 +2131,29 @@ async def on_message( message ):
 		# Is the chat command valid?
 		if command in chatCommands:
 
+			# Fetch the command metadata
+			metadata = chatCommands[ command ]
+
 			# Create the list of arguments
 			arguments = message.content[ len( command ) + 2 : ].split()
 
+			# Was there at least one argument?
+			if len( arguments ) > 0:
+
+				# Is the first argument a subcommand?
+				if arguments[ 0 ] in metadata.subcmds:
+
+					# Update the command variable to the first argument
+					command = arguments[ 0 ]
+
+					# Remove the command from the arguments
+					del arguments[ 0 ]
+
+					# Fetch the subcommand metadata
+					metadata = metadata.subcmds[ command ]
+
 			# Be safe!
 			try:
-
-				# Fetch the command metadata
-				metadata = chatCommands[ command ]
 
 				# Is this command work-in-progress & is the author not me?
 				if metadata.wip and message.author.id != settings.owner:
@@ -2216,7 +2273,7 @@ async def on_message( message ):
 		else:
 
 			# Calculate the ratio of how similar the attempted command is to all other commands
-			similarMatches = { name : difflib.SequenceMatcher( None, command, name ).ratio() for name, metadata in chatCommands if not metadata.wip }
+			similarMatches = { name : difflib.SequenceMatcher( None, command, name ).ratio() for name, metadata in chatCommands } # WHEN RELEASING ADD: 'if not metadata.wip'
 
 			# Sort by the highest ratio (the most accurate/similar match)
 			sortedSimilarMatches = sorted( similarMatches, key = similarMatches.get, reverse = True )
