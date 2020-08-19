@@ -212,7 +212,10 @@ DEFAULT_COMMAND_METADATA = {
 	"wip": False,
 
 	# The only users who can use this command (empty list = any user can use)
-	"users": []
+	"users": [],
+
+	# The command's parent command (none = no parent command)
+	"parent": None
 
 }
 
@@ -840,11 +843,23 @@ class ChatCommands:
 		# Set the chat command object's execute property to the passed function reference
 		self.command.execute = function
 
-		# Add the command to the registered commands dictionary by using the function's name as a key
-		self.commands[ function.__name__ ] = self.command
+		# Add an empty dictionary for sub-commands to be added to later
+		self.command.subcmds = {}
 
-		# Register all aliases for this command with their values as a reference to the existing main command above
-		for name in self.command.aliases: self.commands[ name ] = self.commands[ function.__name__ ]
+		# Is this a sub-command?
+		if self.command.parent:
+		
+			# Add the sub-command to the subcmds dictionary of the main command
+			self.commands[ self.command.parent.__name__ ].subcmds[ function.__name__ ] = self.command
+
+		# This is not a sub-command
+		else:
+
+			# Add the command to the registered commands dictionary by using the function's name as a key
+			self.commands[ function.__name__ ] = self.command
+
+			# Register all aliases for this command with their values as a reference to the existing main command above
+			for name in self.command.aliases: self.commands[ name ] = self.commands[ function.__name__ ]
 
 		# Delete the temporarily stored chat command object
 		del self.command
