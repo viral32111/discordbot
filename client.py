@@ -829,8 +829,11 @@ class ChatCommands:
 	# Called when the class is initalised
 	def __init__( self ):
 
-		# Set the registered commands dictionary to an empty dictionary
+		# Create a dictionary to hold the registered/usable chat commands
 		self.commands = {}
+
+		# Create a dictionary to hold lookup references for every registered chat command
+		self.lookup = {}
 
 	# Called when this object is called like a function
 	def __call__( self, **metadata ):
@@ -838,16 +841,8 @@ class ChatCommands:
 		# Placeholder for the parent metadata
 		parentMetadata = None
 
-		# Is this a subcommand and is inheriting from parent enabled?
-		if ( "parent" in metadata and metadata[ "parent" ] ):
-
-			print( "using parent metadata from " + metadata[ "parent" ] )
-
-			# Set the parent metadata to the parent command's metadata
-			parentMetadata = self.commands[ metadata[ "parent" ] ]
-
-		# Store the metadata of the parent command if this is a subcommand and inherting is enabled
-		#parentMetadata = self.commands[ metadata[ "parent" ] ] if metadata[ "parent" ] and metadata[ "inherit" ] else None
+		# Set the parent metadata to the parent command's metadata if this a subcommand and inheriting from parent is enabled
+		if "parent" in metadata and metadata[ "parent" ]: parentMetadata = self.lookup[ metadata[ "parent" ] ]
 
 		# Create a chat command object from the passed metadata and parent metadata (if applicable) as keyword arguments and temporarily store it
 		self.command = ChatCommand( metadata, parentMetadata )
@@ -879,22 +874,22 @@ class ChatCommands:
 		# Set the chat command object's execute property to the passed function reference
 		self.command.execute = function
 
-		# Add an empty dictionary for sub-commands to be added to later
+		# Add an empty dictionary for subcommands to be added to later
 		self.command.subcmds = {}
 
-		# Is this a sub-command?
+		# Is this a subcommand?
 		if self.command.parent:
 
-			# Add the sub-command to the subcmds dictionary of the main command
-			self.commands[ self.command.parent ].subcmds[ function.__name__ ] = self.command
+			# Add the subcommand to the subcmds dictionary of the parent command
+			self.lookup[ self.command.parent ].subcmds[ function.__name__ ] = self.command
 
 			# Register all subaliases for this subcommand with their values as a reference to the existing subcommand above
-			for name in self.command.subaliases: self.commands[ self.command.parent ].subcmds[ name ] = self.commands[ self.command.parent ].subcmds[ function.__name__ ]
+			for name in self.command.subaliases: self.lookup[ self.command.parent ].subcmds[ name ] = self.lookup[ self.command.parent ].subcmds[ function.__name__ ]
 
 			# Register all aliases for this subcommand with their values as a reference to the existing subcommand above
-			for name in self.command.aliases: self.commands[ name ] = self.commands[ self.command.parent ].subcmds[ function.__name__ ]
+			for name in self.command.aliases: self.commands[ name ] = self.lookup[ self.command.parent ].subcmds[ function.__name__ ]
 
-		# This is not a sub-command
+		# This is not a subcommand
 		else:
 
 			# Add the command to the registered commands dictionary by using the function's name as a key
@@ -902,6 +897,9 @@ class ChatCommands:
 
 			# Register all aliases for this command with their values as a reference to the existing main command above
 			for name in self.command.aliases: self.commands[ name ] = self.commands[ function.__name__ ]
+
+		# Register the command/subcommand in the lookup reference dictionary
+		self.lookup[ function.__name__ ] = self.command
 
 		# Delete the temporarily stored chat command object
 		del self.command
@@ -2137,8 +2135,8 @@ async def on_message( message ):
 			# Create the list of arguments
 			arguments = message.content[ len( command ) + 2 : ].split()
 
-			# Was there at least one argument?
-			if len( arguments ) > 0:
+			# Loop so long as there is at least one argument
+			while len( arguments ) > 0:
 
 				# Is the first argument a subcommand?
 				if arguments[ 0 ] in metadata.subcmds:
@@ -2152,101 +2150,104 @@ async def on_message( message ):
 					# Fetch the subcommand metadata
 					metadata = metadata.subcmds[ command ]
 
+				# It's not a subcommand
+				else:
+
+					# Break out of the loop
+					break
+
+			# Is this command work-in-progress & is the author not me?
+			if metadata.wip and message.author.id != settings.owner:
+
+				# Give a response
+				await message.channel.send( ":wrench: This command is work-in-progress, please refrain from using it until it's released." )
+
+				# Prevent further execution
+				return
+
+			# Is this command restricted to certain users & is this user not one of them?
+			if len( metadata.users ) > 0 and message.author.id not in metadata.users:
+
+				# Convert the list of users to a clean string
+				users = ", ".join( [ client.get_user( userID ).mention for userID in metadata.users ] )
+
+				# Give a response
+				await message.channel.send( ":no_entry_sign: This command can only be used by " + users + "." )
+
+				# Prevent further execution
+				return
+
+			# Is this command DM only & is this not a direct message?
+			if metadata.dm and message.guild:
+
+				# Give a response
+				await message.channel.send( ":exclamation: This command can only be used over Direct Messages." )
+
+				# Prevent further execution
+				return
+
+			# Is this not a direct message?
+			if message.guild:
+
+				# Is this command NSFW & is this not an NSFW channel?
+				if metadata.nsfw and not message.channel.is_nsfw():
+
+					# Give a response
+					await message.channel.send( ":exclamation: This command can only be used in NSFW channels." )
+
+					# Prevent further execution
+					return
+
+				# Is this command only available in certain channels and is this not one of those channels?
+				if len( metadata.channels ) > 0 and message.channel.id not in metadata.channels:
+
+					# Convert the list of channels to a clean string
+					channels = ", ".join( [ client.get_channel( channelID ).mention for channelID in metadata.channels ] )
+
+					# Give a response
+					await message.channel.send( ":exclamation: This command can only be used in " + channels + "." )
+
+					# Prevent further execution
+					return
+
+			# Create a list of the role IDs this member has
+			roleIDs = [ role.id for role in guildMember.roles ]
+
+			# Create a list of the roles this member requires to execute this command (if there are any)
+			requiredRoles = [ message.guild.get_role( roleID ) for roleID in metadata.roles if roleID not in roleIDs ]
+
+			# Is there at least one additional role that this member requires?
+			if len( requiredRoles ) > 0:
+
+				# Convert the list of roles to a clean string
+				roles = ", ".join( [ role.mention for role in requiredRoles ] )
+
+				# Give a response
+				await message.channel.send( ":no_entry_sign: This command can only be used by members with the role " + roles + "." )
+
+				# Prevent further execution
+				return
+
+			# Use channel permissions if this message is not from direct messages, otherwise use overall guild permissions
+			#permissions = ( message.author.permissions_in( message.channel ) if message.guild else guildMember.guild_permissions )
+
+			# Does this command require certain permissions and does this member not have those permissions?
+			#if metadata.permissions and permissions < metadata.permissions:
+
+				# Give a response
+				#await message.channel.send( ":no_entry_sign: You don't have the necessary permissions to use this command." )
+
+				# Prevent further execution
+				#return
+
+			# Delete the command caller/input if it's set to do so
+			if metadata.delete: await message.delete()
+
 			# Be safe!
 			try:
 
-				# Is this command work-in-progress & is the author not me?
-				if metadata.wip and message.author.id != settings.owner:
-
-					# Give a response
-					await message.channel.send( ":wrench: This command is work-in-progress, please refrain from using it until it's released." )
-
-					# Prevent further execution
-					return
-
-				# Is this command restricted to certain users & is this user not one of them?
-				if len( metadata.users ) > 0 and message.author.id not in metadata.users:
-
-					# Convert the list of users to a clean string
-					users = ", ".join( [ client.get_user( userID ).mention for userID in metadata.users ] )
-
-					# Give a response
-					await message.channel.send( ":no_entry_sign: This command can only be used by " + users + "." )
-
-					# Prevent further execution
-					return
-
-				# Is this command DM only & is this not a direct message?
-				if metadata.dm and message.guild:
-
-					# Give a response
-					await message.channel.send( ":exclamation: This command can only be used over Direct Messages." )
-
-					# Prevent further execution
-					return
-
-				# Is this not a direct message?
-				if message.guild:
-
-					# Is this command NSFW & is this not an NSFW channel?
-					if metadata.nsfw and not message.channel.is_nsfw():
-
-						# Give a response
-						await message.channel.send( ":exclamation: This command can only be used in NSFW channels." )
-
-						# Prevent further execution
-						return
-
-					# Is this command only available in certain channels and is this not one of those channels?
-					if len( metadata.channels ) > 0 and message.channel.id not in metadata.channels:
-
-						# Convert the list of channels to a clean string
-						channels = ", ".join( [ client.get_channel( channelID ).mention for channelID in metadata.channels ] )
-
-						# Give a response
-						await message.channel.send( ":exclamation: This command can only be used in " + channels + "." )
-
-						# Prevent further execution
-						return
-
-				# Create a list of the role IDs this member has
-				roleIDs = [ role.id for role in guildMember.roles ]
-
-				# Create a list of the roles this member requires to execute this command (if there are any)
-				requiredRoles = [ message.guild.get_role( roleID ) for roleID in metadata.roles if roleID not in roleIDs ]
-
-				# Is there at least one additional role that this member requires?
-				if len( requiredRoles ) > 0:
-
-					# Convert the list of roles to a clean string
-					roles = ", ".join( [ role.mention for role in requiredRoles ] )
-
-					# Give a response
-					await message.channel.send( ":no_entry_sign: This command can only be used by members with the role " + roles + "." )
-
-					# Prevent further execution
-					return
-
-				# Use channel permissions if this message is not from direct messages, otherwise use overall guild permissions
-				#permissions = ( message.author.permissions_in( message.channel ) if message.guild else guildMember.guild_permissions )
-
-				# Does this command require certain permissions and does this member not have those permissions?
-				#if metadata.permissions and permissions < metadata.permissions:
-
-					# Give a response
-					#await message.channel.send( ":no_entry_sign: You don't have the necessary permissions to use this command." )
-
-					# Prevent further execution
-					#return
-
-				# Delete the command caller/input if it's set to do so
-				if metadata.delete: await message.delete()
-
 				# Execute the command and store it's response
 				response = await metadata.execute( message, arguments )
-
-				# Send a response with user mention capability if it was provided
-				if response != None: await message.channel.send( **response, allowed_mentions = ALLOW_USER_MENTIONS )
 
 			# Catch all errors that occur
 			except Exception:
@@ -2257,7 +2258,13 @@ async def on_message( message ):
 				# Friendly message
 				await message.channel.send( ":interrobang: I encountered an error while attempting to execute that command, <@" + str( settings.owner ) + "> needs to fix this.", allowed_mentions = ALLOW_USER_MENTIONS )
 
-			# After all that...
+			# No errors occured
+			else:
+
+				# Send a response with user mention capability if it was provided
+				if response != None: await message.channel.send( **response, allowed_mentions = ALLOW_USER_MENTIONS )
+
+			# We're done here
 			finally:
 
 				# Should we log this command usage?

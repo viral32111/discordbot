@@ -20,3 +20,7 @@ async def helloworld( message, arguments ):
 @chatCommand( subaliases = [ "foo", "bar" ], aliases = [ "hwfoo" ], parent = "helloworld" )
 async def foobar( message, arguments ):
 	return { "content": "fooooooooooo\n" + ", ".join( arguments ) }
+
+@chatCommand( subaliases = [ "fun", "funny" ], parent = "foobar" )
+async def funni( message, arguments ):
+	return { "content": "funni word\n" + ", ".join( arguments ) }
