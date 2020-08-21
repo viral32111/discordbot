@@ -49,7 +49,8 @@ CREATE TABLE `RelayShortlinks` (
 
 CREATE TABLE `RepostHistory` (
   `Checksum` varchar(64) CHARACTER SET ascii NOT NULL,
-  `Location` varchar(37) CHARACTER SET ascii NOT NULL,
+  `Channel` bigint(18) NOT NULL,
+  `Message` bigint(18) NOT NULL,
   `Count` int(11) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

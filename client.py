@@ -571,8 +571,8 @@ def isRepost( url ):
 	# Get the checksum of the file contents
 	checksum = fileChecksum( path )
 
-	# Get the message link & repost count for this content from the database
-	results = mysqlQuery( "SELECT Location, Count FROM RepostHistory WHERE Checksum = '" + checksum + "';" )
+	# Get the location & repost count for this content from the database
+	results = mysqlQuery( "SELECT Channel, Message, Count FROM RepostHistory WHERE Checksum = '" + checksum + "';" )
 
 	# Return false & the checksum if no data was returned
 	if len( results ) < 1: return [ False, checksum ]
@@ -2324,12 +2324,11 @@ async def on_message( message ):
 					# Is this not a repost?
 					if repostInformation[ 0 ] == False:
 
-						# Get the location
-						location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings.guild ) + "/", "" ) # This will be deprecated in the future
-						location = location.replace( "https://discord.com/channels/" + str( settings.guild ) + "/", "" )
+						# Get the location information using a regular expression
+						location = re.search( r"(\d+)/(\d+)$", message.jump_url )
 
 						# Add repost information to the database
-						mysqlQuery( "INSERT INTO RepostHistory ( Checksum, Location ) VALUES ( '" + repostInformation[ 1 ] + "', '" + location + "' );" )
+						mysqlQuery( "INSERT INTO RepostHistory ( Checksum, Channel, Message ) VALUES ( '" + repostInformation[ 1 ] + "', " + location.group( 1 ) + ", " + location.group( 2 ) + " );" )
 
 						# Console message
 						print( "Adding original message attachment with checksum '" + repostInformation[ 1 ] + "' to the repost history database for the first time." )
@@ -2337,30 +2336,26 @@ async def on_message( message ):
 					# It is a repost
 					else:
 
-						# Split the location
-						location = repostInformation[ 0 ].split( "/" )
-
 						# Be safe!
 						try:
 
 							# Get the channel it was sent in
-							channel = client.get_channel( int( location[ 0 ] ) )
+							channel = client.get_channel( repostInformation[ 0 ] )
 
 							# Raise not found if channel is nothing
 							if channel == None: raise discord.NotFound()
 
 							# Fetch the original message from that channel
-							originalMessage = await channel.fetch_message( int( location[ 1 ] ) )
+							originalMessage = await channel.fetch_message( repostInformation[ 1 ] )
 
 						# The original message does not exist
 						except discord.NotFound:
 
-							# Get the location
-							location = message.jump_url.replace( "https://discordapp.com/channels/" + str( settings.guild ) + "/", "" ) # This will be deprecated in the future
-							location = location.replace( "https://discord.com/channels/" + str( settings.guild ) + "/", "" )
+							# Get the location information using a regular expression
+							location = re.search( r"(\d+)/(\d+)$", message.jump_url )
 
 							# Update the record in the database to have this message as the first one
-							mysqlQuery( "UPDATE RepostHistory SET Location = '" + location + "', Count = 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
+							mysqlQuery( "UPDATE RepostHistory SET Channel = " + location.group( 1 ) + ", Message = " + location.group( 2 ) + ", Count = 1 WHERE Checksum = '" + repostInformation[ 3 ] + "';" )
 
 						# The original message exists
 						else:
@@ -2369,13 +2364,13 @@ async def on_message( message ):
 							if originalMessage.author.id != message.author.id:
 
 								# Update the count in the database
-								mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 2 ] + "';" )
+								mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 3 ] + "';" )
 
 								# Console message
-								print( "Incrementing repost count for message attachment with checksum '" + repostInformation[ 2 ] + "' in the repost history database." )
+								print( "Incrementing repost count for message attachment with checksum '" + repostInformation[ 3 ] + "' in the repost history database." )
 
 								# Friendly message
-								await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 1 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + repostInformation[ 0 ] + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
+								await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 2 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + str( repostInformation[ 0 ] ) + "/" + str( repostInformation[ 1 ] ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
 
 			# Does the message start with "Im " and has it been 15 seconds since the last one?
 			if message.content.startswith( "Im " ) and ( lastDadJoke + 15 ) < unixTimestampNow:
