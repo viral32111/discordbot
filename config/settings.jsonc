@@ -181,7 +181,18 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 		"Listening to in-game voice chat.",
 		"Listening to dubstep DarkRP loading screens.",
 		"Listening to \"RDM!, RDM! @ADMIN TP\"",
-		"Watching you wait for this message to change."
+		"Watching you wait for this message to change.",
+		"Playing sandbox.conspiracyservers.com:27045",
+		"Playing 6AF9 F7D7 89D7 BFE5 46CD 8318 770F 46AB EA99 D12F",
+		"Playing 185.134.22.10:27045",
+		"Playing 1477327222",
+		"Playing I'm open-source!",
+		"Playing conspiracyservers.com",
+		"Playing conspiracyservers.com/discord",
+		"Playing conspiracyservers.com/steam",
+		"Playing conspiracyservers.com/sandbox",
+		"Playing github.com/conspiracy-servers",
+		"Playing contact@conspiracyservers.com"
 	],
 	"maps": {
 		"gm_construct": "store.steampowered.com/app/4000",
