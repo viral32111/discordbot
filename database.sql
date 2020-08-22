@@ -33,6 +33,7 @@ CREATE TABLE `AnonMessages` (
 
 CREATE TABLE `Members` (
   `Member` varchar(64) CHARACTER SET ascii NOT NULL,
+  `Steam` bigint(17) DEFAULT NULL,
   `Joined` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

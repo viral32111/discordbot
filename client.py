@@ -2604,13 +2604,22 @@ async def on_member_join( member ):
 		await log( "Member joined", member.mention + " joined the server.", thumbnail = member.avatar_url )
 
 		# Query the date & time that the member joined from the database
-		results = mysqlQuery( "SELECT Joined FROM Members WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) );" )
+		results = mysqlQuery( "SELECT Joined, Steam FROM Members WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) );" )
 
 		# Have they been in the server before? (we got results from the database)
 		if len( results ) > 0:
 
 			# Set their year role to whatever joined at date & time was in the database
-			year = results[ 0 ][ 0 ].year
+			yearJoined = results[ 0 ][ 0 ].year
+
+			# Is the steam community ID column not null (i.e. are they verified)?
+			if results[ 0 ][ 1 ]:
+
+				# Fetch the members role
+				membersRole = member.guild.get_role( settings.roles.members )
+
+				# Give the member that year role and the members role
+				await member.add_roles( membersRole, reason = "Member is already verified." )
 
 			# Send a welcome back message to the #greetings channel
 			await greetingsChannel.send( ":wave::skin-tone-1: Welcome back " + member.mention + ", it's great to see you here again!", allowed_mentions = ALLOW_USER_MENTIONS )
@@ -2622,13 +2631,13 @@ async def on_member_join( member ):
 			mysqlQuery( "INSERT INTO Members ( Member, Joined ) VALUES ( LOWER( HEX( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) ), '" + member.joined_at.strftime( "%Y-%m-%d %H:%M:%S" ) + "' );" )
 
 			# Set their year role to when they joined (which should always be right now, unless Discord is taking a shit)
-			year = member.joined_at.year
+			yearJoined = member.joined_at.year
 
 			# Send a first welcome message to the #greetings channel
 			await greetingsChannel.send( ":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#" + str( settings.channels.welcome ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
 
 		# Fetch the role for the year we just set above
-		yearRole = member.guild.get_role( settings.roles.years[ str( year ) ] )
+		yearRole = member.guild.get_role( settings.roles.years[ str( yearJoined ) ] )
 
 		# Give the member that year role
 		await member.add_roles( yearRole, reason = "Member joined the server." )
