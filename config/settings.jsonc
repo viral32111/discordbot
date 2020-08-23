@@ -51,7 +51,8 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 			670361447728939008 // Staff -> #commands
 		],
 		"excludeChecksums": [
-			"d556a1122196aff29f037986e570fb6d42eac96dcd9dcb9168066de98c31ccc7" // that rainbow dancing anime girl gif
+			"d556a1122196aff29f037986e570fb6d42eac96dcd9dcb9168066de98c31ccc7", // that rainbow dancing anime girl gif
+			"0ca9a98fe347bc7947a2828d7b2084e007702f531bc86102637be58ca9613f66" // "what the fuck?" deepfake yanderedev video
 		]
 	},
 	"garrysmod": {
