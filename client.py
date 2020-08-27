@@ -154,7 +154,7 @@ print( "Initalised global variables." )
 COMMIT = os.popen( "cd /srv/conspiracy-ai && git log --max-count=1 --pretty=format:\"%h\"" ).read()
 
 # User agent header for HTTP requests
-USER_AGENT_HEADER = "Conspiracy AI/" + COMMIT + " (Linux) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (Discord Bot; +https://github.com/conspiracy-servers/conspiracy-ai; " + settings.email + ")"
+USER_AGENT_HEADER = "Conspiracy AI/" + COMMIT + " (GNU/Linux; Discord Bot) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (github.com/conspiracy-servers/conspiracy-ai; " + settings.email + ")"
 
 # Day suffixes for formatting timestamps
 DAY_SUFFIXES = {
@@ -227,7 +227,7 @@ DEFAULT_COMMAND_METADATA = {
 
 # Console message
 print( "Initalised global constants." )
-print( "Running from commit " + COMMIT + "." )
+print( "User-Agent set to '" + USER_AGENT_HEADER + "'." )
 
 ##############################################
 # Define helper functions
