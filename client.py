@@ -1376,28 +1376,39 @@ class ChatCommandsDeprecated:
 		# Parse response
 		data = weatherRequest.json()
 
-		# Create an embed
+		# Create an basic embed
 		embed = discord.Embed(
 
-			# Place & country name
+			# The name of the city and the country code as the title
 			title = data[ "name" ] + ", " + data[ "sys" ][ "country" ],
 
-			# Weather information
-			description = "Weather: " + data[ "weather" ][ 0 ][ "main" ] +" (" + data[ "weather" ][ 0 ][ "description" ] + ")\n" +
-			"Temperature: " + str( data[ "main" ][ "temp" ] ) + " °C (feels like " + str( data[ "main" ][ "feels_like" ] ) + " °C)\n" +
-			"Pressure: " + str( data[ "main" ][ "pressure" ] ) + " hPa\n" +
-			"Humidity: " + str( data[ "main" ][ "humidity" ] ) + "%\n" +
-			"Wind Speed: " + str( data[ "wind" ][ "speed" ] ) + " m/s\n" +
-			"Longitude: " + str( data[ "coord" ][ "lon" ] ) + "\n" +
-			"Latitude: " + str( data[ "coord" ][ "lat" ] ) + "\n" +
-			"Sunrise: " + formatTimestamp( data[ "sys" ][ "sunrise" ] ) + "\n" +
-			"Sunset: " + formatTimestamp( data[ "sys" ][ "sunset" ] ),
-
-			# White (more or less)
+			# Set the color to white (more or less)
 			color = 0xF4F7F7,
+
 		)
 
-		# Weather icon as the thumbnail
+		# Add a field to the embed for the weather
+		embed.add_field( name = "Weather", value = data[ "weather" ][ 0 ][ "description" ].title(), inline = True )
+
+		# Add a field to the embed for the temperature
+		embed.add_field( name = "Temperature", value = str( data[ "main" ][ "temp" ] ) + " °C (" + str( data[ "main" ][ "feels_like" ] ) + " °C)", inline = True )
+
+		# Add a field to the embed for the pressure
+		embed.add_field( name = "Pressure", value = str( data[ "main" ][ "pressure" ] ) + " hPa", inline = True )
+
+		# Add a field to the embed for the humidity
+		embed.add_field( name = "Humidity", value = str( data[ "main" ][ "humidity" ] ) + "%", inline = True )
+
+		# Add a field to the embed for the wind speed
+		embed.add_field( name = "Wind Speed", value = str( data[ "wind" ][ "speed" ] ) + " m/s", inline = True )
+
+		# Add a field to the embed for the sunrise
+		embed.add_field( name = "Sunrise", value = formatTimestamp( data[ "sys" ][ "sunrise" ] ), inline = False )
+
+		# Add a field to the embed for the sunset
+		embed.add_field( name = "Sunset", value = formatTimestamp( data[ "sys" ][ "sunset" ] ), inline = False )
+
+		# Set the weather icon as the thumbnail
 		embed.set_thumbnail( url = "https://openweathermap.org/img/wn/" + data[ "weather" ][ 0 ][ "icon" ] + "@2x.png" )
 
 		# Send the embed back
