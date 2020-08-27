@@ -1349,7 +1349,7 @@ class ChatCommandsDeprecated:
 
 		# Construct request URL
 		locationQuery = "%20".join( arguments )
-		apiURL = "https://api.openweathermap.org/data/2.5/weather?units=metric&appid=e5b292ae2f9dae5f29e11499c2d82ece&q=" + locationQuery
+		apiURL = "https://api.openweathermap.org/data/2.5/weather?appid=" + secrets.apiKeys.openWeatherMap + "&units=metric&lang=en&q=" + locationQuery
 
 		# Make the API request
 		weatherRequest = requests.get( apiURL, headers = {
