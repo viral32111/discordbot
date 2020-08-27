@@ -64,7 +64,7 @@ print( "Imported modules." )
 ##############################################
 
 # Open the settings file
-with open( sys.path[ 0 ] + "/config/settings.jsonc", "r" ) as handle:
+with open( "/srv/conspiracy-ai/config/settings.jsonc", "r" ) as handle:
 
 	# Read all the file contents
 	contents = handle.read()
@@ -76,7 +76,7 @@ with open( sys.path[ 0 ] + "/config/settings.jsonc", "r" ) as handle:
 	settings = dotmap.DotMap( json.loads( stripped ) )
 
 # Open the secrets file
-with open( sys.path[ 0 ] + "/config/secrets.jsonc", "r" ) as handle:
+with open( "/srv/conspiracy-ai/config/secrets.jsonc", "r" ) as handle:
 
 	# Read all the file contents
 	contents = handle.read()
@@ -98,16 +98,16 @@ print( "Loaded configuration files." )
 strings = {}
 
 # Loop through all files & directories in the strings directory
-for name in os.listdir( sys.path[ 0 ] + "/strings" ):
+for name in os.listdir( "/srv/conspiracy-ai/strings" ):
 
 	# Skip if it isn't a regular file
-	if not os.path.isfile( sys.path[ 0 ] + "/strings/" + name ): continue
+	if not os.path.isfile( "/srv/conspiracy-ai/strings/" + name ): continue
 
 	# Get the name of the locale
 	locale = os.path.splitext( name )[ 0 ]
 
 	# Open the file for reading
-	with open( sys.path[ 0 ] + "/strings/" + name, "r" ) as handle:
+	with open( "/srv/conspiracy-ai/strings/" + name, "r" ) as handle:
 
 		# Read all the contents of the file
 		contents = handle.read()
@@ -151,7 +151,7 @@ print( "Initalised global variables." )
 ##############################################
 
 # The current shorthand commit SHA of the local repository
-COMMIT = os.popen( "cd " + sys.path[ 0 ] + " && git log --max-count=1 --pretty=format:\"%h\"" ).read()
+COMMIT = os.popen( "cd /srv/conspiracy-ai && git log --max-count=1 --pretty=format:\"%h\"" ).read()
 
 # User agent header for HTTP requests
 USER_AGENT_HEADER = "Conspiracy AI/" + COMMIT + " (Linux) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (Discord Bot; +https://github.com/conspiracy-servers/conspiracy-ai; " + settings.email + ")"
@@ -459,7 +459,7 @@ def extractDirectTenorURL( vanityURL ):
 def downloadWebMedia( originalURL ):
 
 	# Create the downloads directory if it doesn't exist
-	if not os.path.isdir( settings.downloads ): os.mkdir( settings.downloads, 0o700 )
+	if not os.path.isdir( "/srv/conspiracy-ai/downloads" ): os.mkdir( "/srv/conspiracy-ai/downloads", 0o700 )
 
 	# Get the current date & time in UTC
 	rightNow = datetime.datetime.utcnow()
@@ -505,7 +505,7 @@ def downloadWebMedia( originalURL ):
 	hashedURL = hashlib.sha256( originalURL.encode( "utf-8" ) ).hexdigest()
 
 	# This is the local file's full path
-	path = settings.downloads + "/" + hashedURL + extension
+	path = "/srv/conspiracy-ai/downloads/" + hashedURL + extension
 
 	# Does the local file already exist and is the last modified header present?
 	if os.path.isfile( path ) and "last-modified" in headers:
