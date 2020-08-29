@@ -911,7 +911,7 @@ chatCommands = ChatCommands()
 chatCommand = chatCommands
 
 # Import each chat command file
-from commands import example
+from commands import nsfw
 
 #############################################################################################################
 ######################### ALL THE CHAT COMMANDS BELOW THIS POINT USE THE OLD SYSTEM ######################### 
@@ -980,7 +980,7 @@ class ChatCommandsDeprecated:
 		# Send the embed back
 		await message.channel.send( embed = helpEmbed )
 
-	# Search rule 34 for posts
+	# Search rule 34 for posts - MOVED TO NEW SYSTEM!
 	metadata[ "rule34" ] = [ "NSFW" ]
 	async def rule34( self, message, arguments, permissions ):
 
@@ -1091,7 +1091,7 @@ class ChatCommandsDeprecated:
 				# Re-raise the exception for somebody else to deal with
 				raise exception
 
-	# Alias for rule 34 command
+	# Alias for rule 34 command - MOVED TO NEW SYSTEM!
 	async def r34( self, *arguments, **kwarguments ):
 		return await self.rule34( *arguments, **kwarguments )
 
