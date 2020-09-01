@@ -27,51 +27,51 @@ SET time_zone = "+00:00";
 
 
 CREATE TABLE `AnonMessages` (
-  `Message` varchar(24) CHARACTER SET ascii NOT NULL,
-  `Token` varchar(64) CHARACTER SET ascii NOT NULL
+	`Message` varchar(24) CHARACTER SET ascii NOT NULL,
+	`Token` varchar(64) CHARACTER SET ascii NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `Members` (
-  `Member` varchar(64) CHARACTER SET ascii NOT NULL,
-  `Steam` bigint(17) DEFAULT NULL,
-  `Joined` datetime NOT NULL
+	`Member` varchar(64) CHARACTER SET ascii NOT NULL,
+	`Steam` varchar(64) CHARACTER SET ascii DEFAULT NULL,
+	`Joined` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `MemberStatistics` (
-  `Member` varchar(64) CHARACTER SET ascii NOT NULL,
-  `Messages` int(11) NOT NULL DEFAULT '1',
-  `Edits` int(11) NOT NULL DEFAULT '0'
+	`Member` varchar(64) CHARACTER SET ascii NOT NULL,
+	`Messages` int(11) NOT NULL DEFAULT '1',
+	`Edits` int(11) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `RelayShortlinks` (
-  `Checksum` varchar(64) CHARACTER SET ascii NOT NULL,
-  `Link` varchar(8) CHARACTER SET ascii NOT NULL
+	`Checksum` varchar(64) CHARACTER SET ascii NOT NULL,
+	`Link` varchar(8) CHARACTER SET ascii NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `RepostHistory` (
-  `Checksum` varchar(64) CHARACTER SET ascii NOT NULL,
-  `Channel` bigint(18) NOT NULL,
-  `Message` bigint(18) NOT NULL,
-  `Count` int(11) NOT NULL DEFAULT '1'
+	`Checksum` varchar(64) CHARACTER SET ascii NOT NULL,
+	`Channel` bigint(18) NOT NULL,
+	`Message` bigint(18) NOT NULL,
+	`Count` int(11) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 ALTER TABLE `AnonMessages`
-  ADD PRIMARY KEY (`Message`),
-  ADD UNIQUE KEY `Token` (`Token`);
+	ADD PRIMARY KEY (`Message`),
+	ADD UNIQUE KEY `Token` (`Token`);
 
 ALTER TABLE `Members`
-  ADD PRIMARY KEY (`Member`);
+	ADD PRIMARY KEY (`Member`);
 
 ALTER TABLE `MemberStatistics`
-  ADD PRIMARY KEY (`Member`);
+	ADD PRIMARY KEY (`Member`);
 
 ALTER TABLE `RelayShortlinks`
-  ADD PRIMARY KEY (`Checksum`),
-  ADD UNIQUE KEY `LINK` (`Link`) USING BTREE;
+	ADD PRIMARY KEY (`Checksum`),
+	ADD UNIQUE KEY `LINK` (`Link`) USING BTREE;
 
 ALTER TABLE `RepostHistory`
-  ADD PRIMARY KEY (`Checksum`);
+	ADD PRIMARY KEY (`Checksum`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -2615,7 +2615,7 @@ async def on_member_join( member ):
 		await log( "Member joined", member.mention + " joined the server.", thumbnail = member.avatar_url )
 
 		# Query the date & time that the member joined from the database
-		results = mysqlQuery( "SELECT Joined, Steam FROM Members WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) );" )
+		results = mysqlQuery( "SELECT Joined, AES_DECRYPT( UNHEX( Steam ), UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) AS Steam FROM Members WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) );" )
 
 		# Have they been in the server before? (we got results from the database)
 		if len( results ) > 0:
