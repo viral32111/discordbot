@@ -27,7 +27,7 @@
 # :white_check_mark:	Successful action
 # :information_source:	Information / Help / Assistance
 # :recycle: 			Repost detected
-# :link:				External URL/link
+# :link:				External URL/link to a website
 
 ##############################################
 # Import required modules
@@ -912,6 +912,7 @@ chatCommands = ChatCommands()
 chatCommand = chatCommands
 
 # Import each chat command file
+from commands import general
 from commands import nsfw
 
 #############################################################################################################
