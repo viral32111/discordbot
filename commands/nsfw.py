@@ -16,7 +16,7 @@ import os # Host operaring system interaction
 # Define chat commands
 ##############################################
 
-# Example
+# Rule #34
 @chatCommand( category = "NSFW", aliases = [ "r34" ], nsfw = True )
 async def rule34( message, arguments ):
 

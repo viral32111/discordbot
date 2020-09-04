@@ -12,7 +12,7 @@ import discord
 # Define chat commands
 ##############################################
 
-# Example
+# Help
 @chatCommand( category = "General" )
 async def help( message, arguments ):
 
