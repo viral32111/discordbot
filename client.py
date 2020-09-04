@@ -1884,7 +1884,10 @@ client = discord.Client(
 
 	# Set initial status to idle to indicate not ready yet
 	status = discord.Status.dnd if len( sys.argv ) > 1 else discord.Status.idle,
-	
+
+	# Set the initial activity to loading
+	activity = discord.Game( "Loading..." ),
+
 	# Max messages to cache internally
 	max_messages = 10000,
 	
