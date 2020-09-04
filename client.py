@@ -27,6 +27,7 @@
 # :white_check_mark:	Successful action
 # :information_source:	Information / Help / Assistance
 # :recycle: 			Repost detected
+# :link:				External URL/link
 
 ##############################################
 # Import required modules
