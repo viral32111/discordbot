@@ -74,3 +74,10 @@ async def help( message, arguments ):
 
 	# Respond with this embed
 	return { "embed": embed }
+
+# Link Steam account
+@chatCommand( category = "General" )
+async def link( message, arguments ):
+
+	# Respond with a simple message
+	return { "content": ":link: Visit <https://conspiracyservers.com/link> to link your Steam account." }
