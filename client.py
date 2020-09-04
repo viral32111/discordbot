@@ -943,7 +943,7 @@ class ChatCommandsDeprecated:
 
 	#### Command definitions
 
-	# Help command
+	# Help command - MOVED TO NEW SYSTEM!
 	metadata[ "help" ] = [ "General" ]
 	async def help( self, message, arguments, permissions ):
 
