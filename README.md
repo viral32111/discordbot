@@ -4,14 +4,37 @@ This is the official Discord bot for the Conspiracy Servers community.
 
 The structure of the MySQL database is within the [database.sql](https://github.com/conspiracy-servers/conspiracy-ai/blob/master/database.sql) file.
 
-### Dependencies:
+## Dependencies
 
-* [discord.py](https://github.com/Rapptz/discord.py)
-* [requests](https://github.com/psf/requests)
-* [dotmap](https://github.com/drgrib/dotmap)
+### Native
+
+* [json](https://docs.python.org/3/library/json.html)
+* [re](https://docs.python.org/3/library/re.html)
+* [datetime](https://docs.python.org/3/library/datetime.html)
+* [time](https://docs.python.org/3/library/time.html)
+* [random](https://docs.python.org/3/library/random.html)
+* [os](https://docs.python.org/3/library/os.html)
+* [sys](https://docs.python.org/3/library/sys.html)
+* [traceback](https://docs.python.org/3/library/traceback.html)
+* [hashlib](https://docs.python.org/3/library/hashlib.html)
+* [xml.etree.ElementTree](https://docs.python.org/3/library/xml.etree.elementtree.html)
+* [mimetypes](https://docs.python.org/3/library/mimetypes.html)
+* [shutil](https://docs.python.org/3/library/shutil.html)
+* [inspect](https://docs.python.org/3/library/inspect.html)
+* [itertools](https://docs.python.org/3/library/itertools.html)
+* [urllib.parse](https://docs.python.org/3/library/urllib.parse.html)
+* [difflib](https://docs.python.org/3/library/difflib.html)
+* [operator](https://docs.python.org/3/library/operator.html)
+
+### Thirdparty
+
+* [discord.py](https://pypi.org/project/discord.py/)
+* [asyncio](https://pypi.org/project/asyncio/)
+* [requests](https://pypi.org/project/requests/)
 * [hurry.filesize](https://pypi.org/project/hurry.filesize/)
-* [mysql-connector-python](https://dev.mysql.com/doc/connector-python/en/)
+* [mysql-connector-python](https://pypi.org/project/mysql-connector-python/)
 * [pytz](https://pypi.org/project/pytz/)
+* [dotmap](https://pypi.org/project/dotmap/)
 * [beautifulsoup4](https://pypi.org/project/beautifulsoup4/)
 
 ## Legal
