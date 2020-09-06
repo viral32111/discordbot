@@ -2523,12 +2523,12 @@ async def on_message( message ):
 			_webhooks=await guild.webhooks()
 			anonymousWebhook=discord.utils.get(_webhooks,name="Anonymous")
 
-			memberRole=discord.utils.get(guild.roles,name="Members")
+			memberRole=discord.utils.get(guild.roles,name="Steam Linked")
 			timeoutRole=discord.utils.get(guild.roles,name="Timeout")
 
 			# Disallow unverified members
 			if(memberRole not in guildMember.roles):
-				await message.author.dm_channel.send( f"Sorry, to use the anonymous chat system, you need to at least have the role \"Members\" in the community's Discord server. You currently have the role \"{guildMember.top_role.name}\".", delete_after = 10 )
+				await message.author.dm_channel.send( f"Sorry, to use the anonymous chat system, you need to at least have the role \"Steam Linked\" in the community's Discord server. You currently have the role \"{guildMember.top_role.name}\".", delete_after = 10 )
 				return
 
 			# Disallow members in timeout
