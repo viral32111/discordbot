@@ -441,10 +441,13 @@ def extractDirectTenorURL( vanityURL ):
 	return soup.find( "link", { "class": "dynamic", "rel": "image_src" } )[ "href" ]
 
 # Download media over HTTP and save it to disk
-def downloadWebMedia( originalURL ):
+def downloadWebMedia( originalURL, shouldArchive = False ):
 
-	# Create the downloads directory if it doesn't exist
-	if not os.path.isdir( "/srv/conspiracy-ai/downloads" ): os.mkdir( "/srv/conspiracy-ai/downloads", 0o700 )
+	# Set the directory of where to save the file to
+	directory = "/srv/conspiracy-ai/archive" if shouldArchive else "/tmp/conspiracy-ai/downloads"
+
+	# Create the directory if it doesn't exist
+	os.makedirs( directory, 0o700, exist_ok = True )
 
 	# Get the current date & time in UTC
 	rightNow = datetime.datetime.utcnow()
@@ -489,8 +492,8 @@ def downloadWebMedia( originalURL ):
 	# Create a hash of the URL to use as the local file's name
 	hashedURL = hashlib.sha256( originalURL.encode( "utf-8" ) ).hexdigest()
 
-	# This is the local file's full path
-	path = "/srv/conspiracy-ai/downloads/" + hashedURL + extension
+	# The local file's full path
+	path = directory + "/" + hashedURL + extension
 
 	# Does the local file already exist and is the last modified header present?
 	if os.path.isfile( path ) and "last-modified" in headers:
@@ -548,7 +551,7 @@ def fileChecksum( path, algorithm = hashlib.sha256 ):
 def isRepost( url ):
 
 	# Download the media file at the URL
-	path = downloadWebMedia( url )
+	path = downloadWebMedia( url, True )
 
 	# Return nothing if the file wasn't downloaded - this should mean the file wasn't an image/video/audio file, or was over 100 MiB
 	if path == None: return None
@@ -2412,7 +2415,7 @@ async def on_message( message ):
 				for attachment in message.attachments:
 
 					# Download the attachment
-					path = downloadWebMedia( attachment.url )
+					path = downloadWebMedia( attachment.url, True )
 
 					# Skip if the download failed
 					if path == None: continue
@@ -2563,7 +2566,7 @@ async def on_message( message ):
 			for attachment in message.attachments:
 
 				# Download the attachment
-				path = downloadWebMedia( attachment.url )
+				path = downloadWebMedia( attachment.url, True )
 
 				# Skip if the attachment wasn't downloaded
 				if path == None: continue
