@@ -2142,176 +2142,176 @@ async def on_message( message ):
 		# Prevent further execution if there's no command
 		if command == None: return
 
-		# Start typing in the channel
-		await message.channel.trigger_typing()
+		# Type forever until all of the chat command's processing is finished
+		async with message.channel.typing():
 
-		# Is the chat command valid?
-		if command in chatCommands:
+			# Is the chat command valid?
+			if command in chatCommands:
 
-			# Fetch the command metadata
-			metadata = chatCommands[ command ]
+				# Fetch the command metadata
+				metadata = chatCommands[ command ]
 
-			# Create the list of arguments
-			arguments = message.content[ len( command ) + 2 : ].split()
+				# Create the list of arguments
+				arguments = message.content[ len( command ) + 2 : ].split()
 
-			# Loop so long as there is at least one argument
-			while len( arguments ) > 0:
+				# Loop so long as there is at least one argument
+				while len( arguments ) > 0:
 
-				# Is the first argument a subcommand?
-				if arguments[ 0 ] in metadata.subcmds:
+					# Is the first argument a subcommand?
+					if arguments[ 0 ] in metadata.subcmds:
 
-					# Update the command variable to the first argument
-					command = arguments[ 0 ]
+						# Update the command variable to the first argument
+						command = arguments[ 0 ]
 
-					# Remove the command from the arguments
-					del arguments[ 0 ]
+						# Remove the command from the arguments
+						del arguments[ 0 ]
 
-					# Fetch the subcommand metadata
-					metadata = metadata.subcmds[ command ]
+						# Fetch the subcommand metadata
+						metadata = metadata.subcmds[ command ]
 
-				# It's not a subcommand
+					# It's not a subcommand
+					else:
+
+						# Break out of the loop
+						break
+
+				# Is this command work-in-progress & is the author not me?
+				if metadata.wip and message.author.id != settings.owner:
+
+					# Give a response
+					await message.channel.send( ":wrench: This command is work-in-progress, please refrain from using it until it's released." )
+
+					# Prevent further execution
+					return
+
+				# Is this command restricted to certain users & is this user not one of them?
+				if len( metadata.users ) > 0 and message.author.id not in metadata.users:
+
+					# Convert the list of users to a clean string
+					users = ", ".join( [ client.get_user( userID ).mention for userID in metadata.users ] )
+
+					# Give a response
+					await message.channel.send( ":no_entry_sign: This command can only be used by " + users + "." )
+
+					# Prevent further execution
+					return
+
+				# Is this command DM only & is this not a direct message?
+				if metadata.dm and message.guild:
+
+					# Give a response
+					await message.channel.send( ":exclamation: This command can only be used over Direct Messages." )
+
+					# Prevent further execution
+					return
+
+				# Is this not a direct message?
+				if message.guild:
+
+					# Is this command NSFW & is this not an NSFW channel?
+					if metadata.nsfw and not message.channel.is_nsfw():
+
+						# Give a response
+						await message.channel.send( ":exclamation: This command can only be used in NSFW channels." )
+
+						# Prevent further execution
+						return
+
+					# Is this command only available in certain channels and is this not one of those channels?
+					if len( metadata.channels ) > 0 and message.channel.id not in metadata.channels:
+
+						# Convert the list of channels to a clean string
+						channels = ", ".join( [ client.get_channel( channelID ).mention for channelID in metadata.channels ] )
+
+						# Give a response
+						await message.channel.send( ":exclamation: This command can only be used in " + channels + "." )
+
+						# Prevent further execution
+						return
+
+				# Create a list of the role IDs this member has
+				roleIDs = [ role.id for role in guildMember.roles ]
+
+				# Create a list of the roles this member requires to execute this command (if there are any)
+				requiredRoles = [ message.guild.get_role( roleID ) for roleID in metadata.roles if roleID not in roleIDs ]
+
+				# Is there at least one additional role that this member requires?
+				if len( requiredRoles ) > 0:
+
+					# Convert the list of roles to a clean string
+					roles = ", ".join( [ role.mention for role in requiredRoles ] )
+
+					# Give a response
+					await message.channel.send( ":no_entry_sign: This command can only be used by members with the role " + roles + "." )
+
+					# Prevent further execution
+					return
+
+				# Use channel permissions if this message is not from direct messages, otherwise use overall guild permissions
+				#permissions = ( message.author.permissions_in( message.channel ) if message.guild else guildMember.guild_permissions )
+
+				# Does this command require certain permissions and does this member not have those permissions?
+				#if metadata.permissions and permissions < metadata.permissions:
+
+					# Give a response
+					#await message.channel.send( ":no_entry_sign: You don't have the necessary permissions to use this command." )
+
+					# Prevent further execution
+					#return
+
+				# Delete the command caller/input if it's set to do so
+				if metadata.delete: await message.delete()
+
+				# Be safe!
+				try:
+
+					# Execute the command and store it's response
+					response = await metadata.execute( message, arguments )
+
+				# Catch all errors that occur
+				except Exception:
+
+					# Print a stacktrace
+					print( traceback.format_exc() )
+
+					# Friendly message
+					await message.channel.send( ":interrobang: I encountered an error while attempting to execute that command, <@" + str( settings.owner ) + "> needs to fix this.", allowed_mentions = ALLOW_USER_MENTIONS )
+
+				# No errors occured
 				else:
 
-					# Break out of the loop
-					break
+					# Send a response with user mention capability if it was provided
+					if response != None: await message.channel.send( **response, allowed_mentions = ALLOW_USER_MENTIONS )
 
-			# Is this command work-in-progress & is the author not me?
-			if metadata.wip and message.author.id != settings.owner:
+				# We're done here
+				finally:
 
-				# Give a response
-				await message.channel.send( ":wrench: This command is work-in-progress, please refrain from using it until it's released." )
+					# Don't continue if this is a direct message - I respect privacy!
+					if not message.guild: return
 
-				# Prevent further execution
-				return
+					# Display a console message
+					print( "(" + ascii( message.channel.category.name ) + " -> #" + message.channel.name + ") " + str( message.author ) + " (" + message.author.display_name + ") executed command '" + command + "'" + ( " with arguments '" + ", ".join( arguments ) + "'" if len( arguments ) > 0 else "" ) + "." )
 
-			# Is this command restricted to certain users & is this user not one of them?
-			if len( metadata.users ) > 0 and message.author.id not in metadata.users:
+					# Don't continue if the channel is an excluded channel
+					if message.channel.id in settings.channels.logs.exclude: return
 
-				# Convert the list of users to a clean string
-				users = ", ".join( [ client.get_user( userID ).mention for userID in metadata.users ] )
+					# Don't continue if this channel's category is an excluded channel category
+					if message.channel.category_id in settings.channels.logs.exclude: return
 
-				# Give a response
-				await message.channel.send( ":no_entry_sign: This command can only be used by " + users + "." )
+					# Log the usage of the command
+					await log( "Command executed", message.author.mention + " executed command `" + command + "`" + ( " with arguments `" + " ".join( arguments ) + "`" if len( arguments ) > 0 else "" ) + " in " + message.channel.mention, jump = message.jump_url )
 
-				# Prevent further execution
-				return
-
-			# Is this command DM only & is this not a direct message?
-			if metadata.dm and message.guild:
-
-				# Give a response
-				await message.channel.send( ":exclamation: This command can only be used over Direct Messages." )
-
-				# Prevent further execution
-				return
-
-			# Is this not a direct message?
-			if message.guild:
-
-				# Is this command NSFW & is this not an NSFW channel?
-				if metadata.nsfw and not message.channel.is_nsfw():
-
-					# Give a response
-					await message.channel.send( ":exclamation: This command can only be used in NSFW channels." )
-
-					# Prevent further execution
-					return
-
-				# Is this command only available in certain channels and is this not one of those channels?
-				if len( metadata.channels ) > 0 and message.channel.id not in metadata.channels:
-
-					# Convert the list of channels to a clean string
-					channels = ", ".join( [ client.get_channel( channelID ).mention for channelID in metadata.channels ] )
-
-					# Give a response
-					await message.channel.send( ":exclamation: This command can only be used in " + channels + "." )
-
-					# Prevent further execution
-					return
-
-			# Create a list of the role IDs this member has
-			roleIDs = [ role.id for role in guildMember.roles ]
-
-			# Create a list of the roles this member requires to execute this command (if there are any)
-			requiredRoles = [ message.guild.get_role( roleID ) for roleID in metadata.roles if roleID not in roleIDs ]
-
-			# Is there at least one additional role that this member requires?
-			if len( requiredRoles ) > 0:
-
-				# Convert the list of roles to a clean string
-				roles = ", ".join( [ role.mention for role in requiredRoles ] )
-
-				# Give a response
-				await message.channel.send( ":no_entry_sign: This command can only be used by members with the role " + roles + "." )
-
-				# Prevent further execution
-				return
-
-			# Use channel permissions if this message is not from direct messages, otherwise use overall guild permissions
-			#permissions = ( message.author.permissions_in( message.channel ) if message.guild else guildMember.guild_permissions )
-
-			# Does this command require certain permissions and does this member not have those permissions?
-			#if metadata.permissions and permissions < metadata.permissions:
-
-				# Give a response
-				#await message.channel.send( ":no_entry_sign: You don't have the necessary permissions to use this command." )
-
-				# Prevent further execution
-				#return
-
-			# Delete the command caller/input if it's set to do so
-			if metadata.delete: await message.delete()
-
-			# Be safe!
-			try:
-
-				# Execute the command and store it's response
-				response = await metadata.execute( message, arguments )
-
-			# Catch all errors that occur
-			except Exception:
-
-				# Print a stacktrace
-				print( traceback.format_exc() )
-
-				# Friendly message
-				await message.channel.send( ":interrobang: I encountered an error while attempting to execute that command, <@" + str( settings.owner ) + "> needs to fix this.", allowed_mentions = ALLOW_USER_MENTIONS )
-
-			# No errors occured
+			# Unknown chat command
 			else:
 
-				# Send a response with user mention capability if it was provided
-				if response != None: await message.channel.send( **response, allowed_mentions = ALLOW_USER_MENTIONS )
+				# Calculate the ratio of how similar the attempted command is to all other commands
+				similarMatches = { name : difflib.SequenceMatcher( None, command, name ).ratio() for name, metadata in chatCommands } # WHEN RELEASING ADD: 'if not metadata.wip'
 
-			# We're done here
-			finally:
+				# Sort by the highest ratio (the most accurate/similar match)
+				sortedSimilarMatches = sorted( similarMatches, key = similarMatches.get, reverse = True )
 
-				# Don't continue if this is a direct message - I respect privacy!
-				if not message.guild: return
-
-				# Display a console message
-				print( "(" + ascii( message.channel.category.name ) + " -> #" + message.channel.name + ") " + str( message.author ) + " (" + message.author.display_name + ") executed command '" + command + "'" + ( " with arguments '" + ", ".join( arguments ) + "'" if len( arguments ) > 0 else "" ) + "." )
-
-				# Don't continue if the channel is an excluded channel
-				if message.channel.id in settings.channels.logs.exclude: return
-
-				# Don't continue if this channel's category is an excluded channel category
-				if message.channel.category_id in settings.channels.logs.exclude: return
-
-				# Log the usage of the command
-				await log( "Command executed", message.author.mention + " executed command `" + command + "`" + ( " with arguments `" + " ".join( arguments ) + "`" if len( arguments ) > 0 else "" ) + " in " + message.channel.mention, jump = message.jump_url )
-
-		# Unknown chat command
-		else:
-
-			# Calculate the ratio of how similar the attempted command is to all other commands
-			similarMatches = { name : difflib.SequenceMatcher( None, command, name ).ratio() for name, metadata in chatCommands } # WHEN RELEASING ADD: 'if not metadata.wip'
-
-			# Sort by the highest ratio (the most accurate/similar match)
-			sortedSimilarMatches = sorted( similarMatches, key = similarMatches.get, reverse = True )
-
-			# Send back a message
-			await message.channel.send( ":grey_question: I didn't recognise that command, " + ( "did you mean `" + settings.prefix + sortedSimilarMatches[ 0 ] + "`? If not, " if len( sortedSimilarMatches ) > 0 else "" ) + "type `" + settings.prefix + "commands` to see a list of commands." )
+				# Send back a message
+				await message.channel.send( ":grey_question: I didn't recognise that command, " + ( "did you mean `" + settings.prefix + sortedSimilarMatches[ 0 ] + "`? If not, " if len( sortedSimilarMatches ) > 0 else "" ) + "type `" + settings.prefix + "commands` to see a list of commands." )
 
 	# This message is not a chat command
 	else:
