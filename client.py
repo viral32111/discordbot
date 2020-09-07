@@ -1189,12 +1189,11 @@ class ChatCommandsDeprecated:
 		# Delete the shutdown message
 		await message.delete()
 
-		# Sleep for 2 seconds
-		await asyncio.sleep( 2 )
+		# Make the bot look offline while the connection times out
+		await client.change_presence( status = discord.Status.offline )
 
 		# Logout & disconnect
 		await client.logout()
-		await client.close()
 
 	# Sandbox server status
 	metadata[ "sandbox" ] = [ "Garry's Mod" ]
@@ -2788,8 +2787,17 @@ except KeyboardInterrupt:
 	# Console message
 	print( "Shutting down..." )
 
-	# Close the client
-	client.loop.run_until_complete( client.close() )
+	# Make the bot seem offline while the connection times out
+	client.loop.run_until_complete( client.change_presence( status = discord.Status.offline ) )
+
+	# Logout & disconnect
+	client.loop.run_until_complete( client.logout() )
+
+# After above has finished
+finally:
 
 	# Close the event loop
 	client.loop.close()
+
+# Console message
+print( "Shutdown." )
