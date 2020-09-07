@@ -901,6 +901,7 @@ chatCommand = chatCommands
 # Import each chat command file
 from commands import general
 from commands import nsfw
+from commands import dev
 
 #############################################################################################################
 ######################### ALL THE CHAT COMMANDS BELOW THIS POINT USE THE OLD SYSTEM ######################### 
