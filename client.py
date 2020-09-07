@@ -1196,6 +1196,9 @@ class ChatCommandsDeprecated:
 		# Cancel all background tasks
 		for backgroundTask in backgroundTasks: backgroundTask.cancel()
 
+		# Remove all background tasks from the list
+		backgroundTasks.clear()
+
 		# Make the bot look offline while the connection times out
 		await client.change_presence( status = discord.Status.offline )
 
@@ -2026,6 +2029,12 @@ async def on_resumed():
 # Runs when the client disconnects
 async def on_disconnect():
 
+	# Cancel all background tasks
+	for backgroundTask in backgroundTasks: backgroundTask.cancel()
+
+	# Remove all background tasks from the list
+	backgroundTasks.clear()
+
 	# Console message
 	print( "Disconnected from Discord." )
 
@@ -2806,6 +2815,9 @@ except KeyboardInterrupt:
 
 	# Cancel all background tasks
 	for backgroundTask in backgroundTasks: backgroundTask.cancel()
+
+	# Remove all background tasks from the list
+	backgroundTasks.clear()
 
 	# Make the bot seem offline while the connection times out
 	client.loop.run_until_complete( client.change_presence( status = discord.Status.offline ) )
