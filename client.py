@@ -16,19 +16,6 @@
 # along with this program. If not, see http://www.gnu.org/licenses/.
 ###################################################################################
 
-# Emojis for chat command feedback:
-# :exclamation:			Incorrect channel for command (NSFW cmd not being used in channel marked as NSFW, etc)
-# :grey_question:		Unknown / Invalid arguments
-# :grey_exclamation:	Not enough arguments given / Incorrect command usage
-# :interrobang:			Internal error / Invalid API response
-# :no_entry_sign:		Not enough permissions / Cannot be used by you
-# :mag_right:			Search error (mainly for APIs)
-# :wrench:				Command is in development
-# :white_check_mark:	Successful action
-# :information_source:	Information / Help / Assistance
-# :recycle: 			Repost detected
-# :link:				External URL/link to a website
-
 ##############################################
 # Import required modules
 ##############################################

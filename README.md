@@ -37,6 +37,26 @@ The structure of the MySQL database is within the [database.sql](https://github.
 * [dotmap](https://pypi.org/project/dotmap/)
 * [beautifulsoup4](https://pypi.org/project/beautifulsoup4/)
 
+## Notes
+
+### Response Emojis
+
+Non-embedded message responses from this bot are usually prefixed with emojis to better indicate what the message is about. Below is a table that gives a brief description of the ones in use.
+
+| Emoji | Code Representation | Description |
+|:-----:|:-------------------:|:----------- |
+| ❗ | `:exclamation:` | Incorrect channel for command (NSFW cmd not being used in channel marked as NSFW, etc). |
+| ❔ | `:grey_question:` | Unknown / Invalid arguments. |
+| ❕ | `:grey_exclamation:` | Not enough arguments given / Incorrect command usage. |
+| ⁉️ | `:interrobang:` | Internal error / Invalid API response. |
+| 🚫 | `:no_entry_sign:` | Not enough permissions / Cannot be used by you. |
+| 🔎 | `:mag_right:` | Search error (mainly for APIs). |
+| 🔧 | `:wrench:` | Command is in development. |
+| ✅ | `:white_check_mark:` | Successful action. |
+| ℹ️ | `:information_source:` | Information / Help / Assistance. |
+| ♻️ | `:recycle:` | Repost detected. |
+| 🔗 | `:link:` | External URL/link to a website. |
+
 ## Legal
 
 ### License
