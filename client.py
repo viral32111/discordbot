@@ -122,11 +122,8 @@ lastSentMessage = {}
 # When the last dad joke was (default is 60 seconds in the past from now)
 lastDadJoke = time.time() - 60
 
-# The choose random activity background task
-randomActivityTask = None
-
-# The update server category status background task
-updateCategoryTask = None
+# A list to hold all of the created background tasks
+backgroundTasks = []
 
 # Holds the latest status of each server - by default all are nothing
 latestServerStatus = { server: None for server in settings.garrysmod.keys() }
@@ -1189,6 +1186,12 @@ class ChatCommandsDeprecated:
 		# Delete the shutdown message
 		await message.delete()
 
+		# Console message
+		print( "Shutting down..." )
+
+		# Cancel all background tasks
+		for backgroundTask in backgroundTasks: backgroundTask.cancel()
+
 		# Make the bot look offline while the connection times out
 		await client.change_presence( status = discord.Status.offline )
 
@@ -1909,67 +1912,85 @@ print( "Connecting to Discord..." )
 # Automatically randomise the client's activity
 async def chooseRandomActivity():
 
-	# Loop forever
-	while not client.is_closed() and client.is_ready():
+	# Be safe!
+	try:
 
-		# Choose a random activity
-		activity = random.choice( settings.activities )
+		# Loop forever
+		while not client.is_closed():
 
-		# Set the default activity type
-		activityType = discord.ActivityType.playing
+			# Choose a random activity
+			activity = random.choice( settings.activities )
 
-		# Set the default activity text
-		activityText = activity[ 8: ]
+			# Set the default activity type
+			activityType = discord.ActivityType.playing
 
-		# Is it watching?
-		if activity.startswith( "Watching " ):
+			# Set the default activity text
+			activityText = activity[ 8: ]
 
-			# Set the activity type to watching
-			activityType = discord.ActivityType.watching
+			# Is it watching?
+			if activity.startswith( "Watching " ):
 
-			# Set the activity text
-			activityText = activity[ 9: ]
+				# Set the activity type to watching
+				activityType = discord.ActivityType.watching
 
-		# Is it listening to?
-		elif activity.startswith( "Listening to " ):
+				# Set the activity text
+				activityText = activity[ 9: ]
 
-			# Set the activity type to watching
-			activityType = discord.ActivityType.listening
+			# Is it listening to?
+			elif activity.startswith( "Listening to " ):
 
-			# Set the activity text
-			activityText = activity[ 13: ]
+				# Set the activity type to watching
+				activityType = discord.ActivityType.listening
 
-		# Update the client's presence
-		await client.change_presence(
+				# Set the activity text
+				activityText = activity[ 13: ]
 
-			# Use a specific status
-			status = discord.Status.dnd if len( sys.argv ) > 1 else discord.Status.online,
+			# Update the client's presence
+			await client.change_presence(
 
-			# Use the randomly chosen activity
-			activity = discord.Activity(
-				type = activityType,
-				name = activityText,
+				# Use a specific status
+				status = discord.Status.dnd if len( sys.argv ) > 1 else discord.Status.online,
+
+				# Use the randomly chosen activity
+				activity = discord.Activity(
+					type = activityType,
+					name = activityText,
+				)
+
 			)
 
-		)
+			# Run this again in 5 minutes
+			await asyncio.sleep( 300 )
 
-		# Run this again in 5 minutes
-		await asyncio.sleep( 300 )
+	# Catch task cancellation calls
+	except asyncio.CancelledError:
+
+		# Console message
+		print( "Cancelled random activity chooser background task." )
 
 # Automatically update the status of the server categories - this is basically a wrapper function
 async def updateCategoryStatus():
 
-	# Loop forever
-	while not client.is_closed() and client.is_ready():
+	# Be safe!
+	try:
 
-		# Update the local server status cache
-		await updateLocalServerStatus( "sandbox" )
+		# Loop forever
+		while not client.is_closed():
 
-		# Call the helper function
-		await updateServerCategoryStatusWithLocal( "sandbox" )
+			# Update the local server status cache
+			await updateLocalServerStatus( "sandbox" )
 
-		# Run this again in 1 minute
-		await asyncio.sleep( 60 )
+			# Call the helper function
+			await updateServerCategoryStatusWithLocal( "sandbox" )
+
+			# Run this again in 1 minute
+			await asyncio.sleep( 60 )
+
+	# Catch task cancellation calls
+	except asyncio.CancelledError:
+
+		# Console message
+		print( "Cancelled update category status background task." )
 
 # Console message
 print( "Defined background tasks." )
@@ -1988,26 +2009,18 @@ async def on_connect():
 async def on_resumed():
 
 	# Bring some global variables into this scope
-	global randomActivityTask, updateCategoryTask
+	global backgroundTasks
 
 	# Launch background tasks - keep this the same as on_ready()!
-	randomActivityTask = client.loop.create_task( chooseRandomActivity() )
-	updateCategoryTask = client.loop.create_task( updateCategoryStatus() )
-	print( "Launched background tasks." )
+	backgroundTasks.append( client.loop.create_task( chooseRandomActivity() ) )
+	backgroundTasks.append( client.loop.create_task( updateCategoryStatus() ) )
+	print( "Created background tasks." )
 
 	# Console message
 	print( "Resumed connection to Discord." )
 
 # Runs when the client disconnects
 async def on_disconnect():
-
-	# Bring some global variables into this scope
-	global randomActivityTask, updateCategoryTask
-
-	# Cancel tasks
-	randomActivityTask.cancel()
-	updateCategoryTask.cancel()
-	print( "Cancelled background tasks." )
 
 	# Console message
 	print( "Disconnected from Discord." )
@@ -2749,7 +2762,7 @@ async def on_reaction_remove(reaction, user):
 async def on_ready():
 
 	# Bring some global variables into this scope
-	global randomActivityTask, updateCategoryTask
+	global backgroundTasks
 
 	# Register the rest of the callbacks
 	client.event( on_message )
@@ -2761,10 +2774,10 @@ async def on_ready():
 	client.event( on_reaction_remove )
 	print( "Registered callbacks." )
 
-	# Launch background tasks - keep this the same as on_resumed
-	randomActivityTask = client.loop.create_task( chooseRandomActivity() )
-	updateCategoryTask = client.loop.create_task( updateCategoryStatus() )
-	print( "Launched background tasks." )
+	# Launch background tasks - keep this the same as on_ready()!
+	backgroundTasks.append( client.loop.create_task( chooseRandomActivity() ) )
+	backgroundTasks.append( client.loop.create_task( updateCategoryStatus() ) )
+	print( "Created background tasks." )
 
 	# Console message
 	print( "Ready." )
@@ -2786,6 +2799,9 @@ except KeyboardInterrupt:
 
 	# Console message
 	print( "Shutting down..." )
+
+	# Cancel all background tasks
+	for backgroundTask in backgroundTasks: backgroundTask.cancel()
 
 	# Make the bot seem offline while the connection times out
 	client.loop.run_until_complete( client.change_presence( status = discord.Status.offline ) )
