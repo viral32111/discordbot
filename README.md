@@ -65,7 +65,7 @@ This software is licensed and distributed under the [GNU Affero General Public L
 
 ### Distribution
 
-We kindly ask anyone who wishes to redistribute this software to [contact us](mailto:contact@conspiracyservers.com?subject=Conspiracy%20AI%20redistribution) beforehand so that I may review how the software is being used. Of course, I cannot stop you from distributing it, but I would love to see how others have taken our work and adapted it. This is in your best interest, as adaptations and redistributions that I see as interesting or high quality may be listed here and given extra publicity.
+I kindly ask anyone who wishes to redistribute this software to [contact us](mailto:contact@conspiracyservers.com?subject=Conspiracy%20AI%20redistribution) beforehand so that I may review how the software is being used. Of course, I cannot stop you from distributing it, but I would love to see how others have taken our work and adapted it. This is in your best interest, as adaptations and redistributions that I see as interesting or high quality may be listed here and given extra publicity.
 
 Do not redistribute the software with or without changes because this repository seems stale, dead, or otherwise abandoned. You should contribute your changes directly to this repository and keep it active. If you are redistributing this software at a cost, or over a network, ensure you are following the conditions described in the license. Most importantly, the complete public disclosure of the license, changes, and source code of your redistribution.
 
