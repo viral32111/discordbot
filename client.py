@@ -933,9 +933,12 @@ class ChatCommandsDeprecated:
 
 	#### Command definitions
 
-	# Help command - MOVED TO NEW SYSTEM!
+	# Help command
 	metadata[ "help" ] = [ "General" ]
 	async def help( self, message, arguments, permissions ):
+
+		# Send deprecated notice
+		await message.channel.send( "This command starting with `!` is deprecated & will be removed in the future, please use `/help` instead." )
 
 		# Create an embed with help information
 		helpEmbed = discord.Embed( title = "", description = "", color = settings.color )
@@ -970,9 +973,12 @@ class ChatCommandsDeprecated:
 		# Send the embed back
 		await message.channel.send( embed = helpEmbed )
 
-	# Search rule 34 for posts - MOVED TO NEW SYSTEM!
+	# Search rule 34 for posts
 	metadata[ "rule34" ] = [ "NSFW" ]
 	async def rule34( self, message, arguments, permissions ):
+
+		# Send deprecated notice
+		await message.channel.send( "This command starting with `!` is deprecated & will be removed in the future, please use `/rule34` instead." )
 
 		# Is this not being used in an NSFW channel?
 		if message.guild != None and not message.channel.is_nsfw():
@@ -1081,7 +1087,7 @@ class ChatCommandsDeprecated:
 				# Re-raise the exception for somebody else to deal with
 				raise exception
 
-	# Alias for rule 34 command - MOVED TO NEW SYSTEM!
+	# Alias for rule 34 command
 	async def r34( self, *arguments, **kwarguments ):
 		return await self.rule34( *arguments, **kwarguments )
 
