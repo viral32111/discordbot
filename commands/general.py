@@ -83,7 +83,7 @@ async def link( message, arguments ):
 	return { "content": ":link: Visit <https://conspiracyservers.com/link> to link your Steam account." }
 
 # View available commands
-@chatCommands( category = "General", aliases = [ "cmds" ], wip = True )
+@chatCommands( category = "General", aliases = [ "cmds" ] )
 async def commands( message, arguments ):
 
 	# A dictionary to hold all chat commands by their category
