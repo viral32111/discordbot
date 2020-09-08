@@ -41,21 +41,21 @@ The structure of the MySQL database is within the [database.sql](https://github.
 
 ### Response Emojis
 
-Non-embedded message responses from this bot are usually prefixed with emojis to better indicate what the message is about. Below is a table that gives a brief description of the ones in use.
+Non-embedded message responses from this bot are usually prefixed with emojis to better indicate what the message is about. Below is a table that gives a brief description & example of the ones in use.
 
-| Emoji | Code Representation | Description |
-|:-----:|:-------------------:|:----------- |
-| ❗ | `:exclamation:` | Incorrect channel for command (NSFW cmd not being used in channel marked as NSFW, etc). |
-| ❔ | `:grey_question:` | Unknown / Invalid arguments. |
-| ❕ | `:grey_exclamation:` | Not enough arguments given / Incorrect command usage. |
-| ⁉️ | `:interrobang:` | Internal error / Invalid API response. |
-| 🚫 | `:no_entry_sign:` | Not enough permissions / Cannot be used by you. |
-| 🔎 | `:mag_right:` | Search error (mainly for APIs). |
-| 🔧 | `:wrench:` | Command is in development. |
-| ✅ | `:white_check_mark:` | Successful action. |
-| ℹ️ | `:information_source:` | Information / Help / Assistance. |
-| ♻️ | `:recycle:` | Repost detected. |
-| 🔗 | `:link:` | External URL/link to a website. |
+| Emoji | Code Representation | Description | Example |
+|:-----:|:-------------------:|:----------- | :------ |
+| ❗ | `:exclamation:` | Incorrect channel for command. | NSFW command not being used in an NSFW channel. |
+| ❔ | `:grey_question:` | Unknown or invalid arguments provided. | Providing letters instead of a number for an argument. |
+| ❕ | `:grey_exclamation:` | Not enough arguments provided or incorrect command usage. | Not providing any arguments to a command. |
+| ⁉️ | `:interrobang:` | An internal code error occured. | A malformed response from an API. |
+| 🚫 | `:no_entry_sign:` | This command cannot be used by you. | Attempting to run a moderation command as a user. |
+| 🔎 | `:mag_right:` | An issue with searching. | Failed to find specified content from an API. |
+| 🔧 | `:wrench:` | Command is in development. | Attempting to run any work-in-progress commands. |
+| ✅ | `:white_check_mark:` | Action was successful. | A message was successfully deleted. |
+| ℹ️ | `:information_source:` | Information available. | Response contains helpful information. |
+| ♻️ | `:recycle:` | A repost was detected. | The content flagged has been posted by someone else in the past. |
+| 🔗 | `:link:` | Link to an external website. | Response provides a link to the community website. |
 
 ## Legal
 
