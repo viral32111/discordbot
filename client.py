@@ -800,7 +800,7 @@ class ChatCommand( dict ):
 		return self.get( name, None )
 
 	# Called when there is an attempt to set an attribute
-	def __setattr__( self, key, value):
+	def __setattr__( self, key, value ):
 
 		# Call the dictionary class' set item method with the same arguments
 		self.__setitem__( key, value )
@@ -894,9 +894,6 @@ class ChatCommands:
 
 # Inistansiate an object from the chat commands holder class
 chatCommands = ChatCommands()
-
-# Create a duplicate reference to the chat commands object for syntatic sugar in the command definition files
-chatCommand = chatCommands
 
 # Import each chat command file
 from commands import general

@@ -3,7 +3,7 @@
 ##############################################
 
 # Import variables from the main script
-from __main__ import chatCommand
+from __main__ import chatCommands
 
 # Import required modules
 import discord, asyncio, time
@@ -13,7 +13,7 @@ import discord, asyncio, time
 ##############################################
 
 # Sleep
-@chatCommand( category = "Dev", wip = True )
+@chatCommands( category = "Dev", wip = True )
 async def sleep( message, arguments ):
 
 	# Send a message if no arguments were provided

@@ -3,7 +3,7 @@
 ##############################################
 
 # Import variables from the main script
-from __main__ import chatCommand, settings
+from __main__ import chatCommands, settings
 
 # Import required modules
 import discord
@@ -13,7 +13,7 @@ import discord
 ##############################################
 
 # Help
-@chatCommand( category = "General" )
+@chatCommands( category = "General" )
 async def help( message, arguments ):
 
 	# Create a blank embed
@@ -76,8 +76,51 @@ async def help( message, arguments ):
 	return { "embed": embed }
 
 # Link Steam account
-@chatCommand( category = "General" )
+@chatCommands( category = "General" )
 async def link( message, arguments ):
 
 	# Respond with a simple message
 	return { "content": ":link: Visit <https://conspiracyservers.com/link> to link your Steam account." }
+
+# View available commands
+@chatCommands( category = "General", aliases = [ "cmds" ], wip = True )
+async def commands( message, arguments ):
+
+	# A dictionary to hold all chat commands by their category
+	availableChatCommands = {}
+
+	# Loop through all registered chat commands
+	for command, metadata in chatCommands:
+
+		# Skip aliases by checking if the command is in it's own alias dictionary
+		if command in metadata.aliases: continue
+
+		# Add the category to the dictionary if this command's category is not already in it
+		if metadata.category not in availableChatCommands: availableChatCommands[ metadata.category ] = {}
+
+		# Add this command as the key and it's aliases as the value to the dictionary
+		availableChatCommands[ metadata.category ][ command ] = metadata.aliases
+
+	# Create a basic embed
+	embed = discord.Embed( title = "Chat Commands", description = "", color = settings.color )
+
+	# Loop through all categories & their commands
+	for category, commands in availableChatCommands.items():
+
+		# Placeholder for the value of this embed field
+		value = ""
+
+		# Loop through all aliases of this command in this category
+		for command, aliases in commands.items():
+
+			# Construct a string out of the list of command aliases
+			aliasesString = " (" + ", ".join( [ "`" + settings.prefix + alias + "`" for alias in aliases ] ) + ")"
+
+			# Append the command name and it's aliases (if any are available) to the final embed description
+			value += "• `" + settings.prefix + command + "`" + ( aliasesString if len( aliases ) > 0 else "" ) + "\n"
+
+		# Add the field to the embed for this category
+		embed.add_field( name = category, value = value, inline = False )
+
+	# Respond with this embed
+	return { "embed": embed }

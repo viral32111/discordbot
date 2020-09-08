@@ -3,7 +3,7 @@
 ##############################################
 
 # Import variables, globals and functions from the main script
-from __main__ import chatCommand, settings, USER_AGENT_HEADER, downloadWebMedia
+from __main__ import chatCommands, settings, USER_AGENT_HEADER, downloadWebMedia
 
 # Import required modules
 import discord # Discord.py
@@ -17,7 +17,7 @@ import os # Host operaring system interaction
 ##############################################
 
 # Rule #34
-@chatCommand( category = "NSFW", aliases = [ "r34" ], nsfw = True )
+@chatCommands( category = "NSFW", aliases = [ "r34" ], nsfw = True )
 async def rule34( message, arguments ):
 
 	# Send a message if no arguments were provided
