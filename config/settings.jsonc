@@ -195,7 +195,8 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 		"Playing conspiracyservers.com/steam",
 		"Playing conspiracyservers.com/sandbox",
 		"Playing github.com/conspiracy-servers",
-		"Playing contact@conspiracyservers.com"
+		"Playing contact@conspiracyservers.com",
+		"Playing Unix time is over 1600000000!"
 	],
 	"maps": {
 		"gm_construct": "store.steampowered.com/app/4000",
