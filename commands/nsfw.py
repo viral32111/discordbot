@@ -13,10 +13,6 @@ import xml.etree.ElementTree # XML parser for Rule #34 API responses
 import os # Host operaring system interaction
 
 ##############################################
-# Define helper functions
-##############################################
-
-##############################################
 # Define chat commands
 ##############################################
 
@@ -44,7 +40,7 @@ async def rule34( message, arguments ):
 	posts = [ child for child in root ]
 
 	# Send a message if no posts were returned
-	if len( posts ) < 1: return { "content": ":mag_right: I wasn't able to find anything matching the provided tags." }
+	if len( posts ) < 1: return { "content": ":mag_right: I wasn't able to find anything matching the provided tags.\n(Cheatsheet: <https://rule34.xxx/index.php?page=help&topic=cheatsheet>)" }
 
 	# Sort the posts by highest to lowest score
 	posts.sort( key = lambda post: int( post.get( "score" ) ), reverse = True )
@@ -106,7 +102,7 @@ async def xbooru( message, arguments ):
 	posts = [ child for child in root ]
 
 	# Send a message if no posts were returned
-	if len( posts ) < 1: return { "content": ":mag_right: I wasn't able to find anything matching the provided tags." }
+	if len( posts ) < 1: return { "content": ":mag_right: I wasn't able to find anything matching the provided tags.\n(Cheatsheet: <https://xbooru.com/index.php?page=help&topic=cheatsheet>)" }
 
 	# Sort the posts by highest to lowest score
 	posts.sort( key = lambda post: int( post.get( "score" ) ), reverse = True )
@@ -168,7 +164,7 @@ async def furrybooru( message, arguments ):
 	posts = [ child for child in root ]
 
 	# Send a message if no posts were returned
-	if len( posts ) < 1: return { "content": ":mag_right: I wasn't able to find anything matching the provided tags." }
+	if len( posts ) < 1: return { "content": ":mag_right: I wasn't able to find anything matching the provided tags.\n(Cheatsheet: <https://furry.booru.org/index.php?page=help&topic=cheatsheet>)" }
 
 	# Sort the posts by highest to lowest score
 	posts.sort( key = lambda post: int( post.get( "score" ) ), reverse = True )
