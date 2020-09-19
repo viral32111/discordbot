@@ -24,7 +24,7 @@ async def rule34( message, arguments ):
 	# Send a message if no arguments were provided
 	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must provide at least one tag to search for.\n(Cheatsheet: <https://rule34.xxx/index.php?page=help&topic=cheatsheet>)" }
 
-	# Search the Rule #34 API with the tags provided by the user (always excluding loli & shota)
+	# Search with the tags provided by the user (always excluding loli & shota)
 	request = requests.get( "https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=100&tags=" + ( "%20".join( arguments ) ) + "%20-loli%20-shota", headers = {
 		"Accept": "application/xml",
 		"User-Agent": USER_AGENT_HEADER,
@@ -142,7 +142,7 @@ async def xbooru( message, arguments ):
 		else: raise error
 
 # FurryBooru
-@chatCommands( category = "NSFW", aliases = [ "fb", "fbooru", "furry" ], nsfw = True )
+@chatCommands( category = "NSFW", aliases = [ "fur" ], nsfw = True )
 async def furrybooru( message, arguments ):
 
 	# Send a message if no arguments were provided
