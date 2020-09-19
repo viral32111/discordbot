@@ -272,7 +272,7 @@ async def danbooru( message, arguments ):
 	# Send a message if more than two arguments were provided
 	if len( arguments ) > 2: return { "content": ":grey_exclamation: You cannot search for more than 2 tags at a time." }
 
-	# Search with the tags provided by the user (always excluding loli & shota)
+	# Search with the tags provided by the user
 	request = requests.get( "https://danbooru.donmai.us/posts.json?tags=" + ( "%20".join( arguments ) ), headers = {
 		"Accept": "application/json",
 		"User-Agent": USER_AGENT_HEADER,
@@ -287,6 +287,65 @@ async def danbooru( message, arguments ):
 
 	# Send a message if no posts were returned
 	if len( posts ) < 1: return { "content": ":mag_right: I wasn't able to find anything matching the provided tags.\n(Cheatsheet: <https://danbooru.donmai.us/wiki_pages/help:cheatsheet>)" }
+
+	# Sort the posts by highest to lowest score
+	posts.sort( key = lambda post: post[ "score" ], reverse = True )
+
+	# Pick a random post from the top 10 with the highest score
+	post = random.choice( posts[ :10 ] )
+
+	# Download that post
+	path = downloadWebMedia( post[ "file_url" ] )
+
+	# Send a message with the post inline if the post failed to download
+	if path == None: return { "content": "Score: **" + str( post[ "score" ] ) + "**.\n||" + post[ "file_url" ] + "||" }
+
+	# Send a message with the post inline if the file size is greater than 8MB (~8,388,119 bytes)? - See redd.it/aflp3p
+	if os.path.getsize( path ) > 8388119: return { "content": "Score: **" + str( post[ "score" ] ) + "**.\n||" + post[ "file_url" ] + "||" }
+
+	# Create a file attachment marked as spoiler for uploading
+	attachment = discord.File( path, filename = post[ "md5" ] + os.path.splitext( path )[ 1 ], spoiler = True )
+
+	# Be safe!
+	try:
+
+		# Send a message with the file as an attachment
+		return { "content": "Score: **" + str( post[ "score" ] ) + "**.", "file": attachment }
+
+	# Catch discord HTTP errors
+	except discord.HTTPException as error:
+
+		# Is this error caused by the file being too large?
+		if error.code == 40005:
+
+			# Send a message with the post inline
+			return { "content": "Score: " + str( post[ "score" ] ) + ".\n||" + post[ "file_url" ] + "||" }
+
+		# Re-raise the error if it was caused by something else
+		else: raise error
+
+# Hypnohub
+@chatCommands( category = "NSFW", aliases = [ "hypno" ], nsfw = True )
+async def hypnohub( message, arguments ):
+
+	# Send a message if no arguments were provided
+	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must provide at least one tag to search for.\n(Cheatsheet: <https://hypnohub.net/help/cheatsheet>)" }
+
+	# Search with the tags provided by the user
+	request = requests.get( "https://hypnohub.net/post.json?tags=" + ( "%20".join( arguments ) ), headers = {
+		"Accept": "application/json",
+		"User-Agent": USER_AGENT_HEADER,
+		"From": settings.email
+	} )
+
+	# Throw an error if the request wasn't successful
+	if request.status_code != 200: raise Exception( "Received an unsuccessful API response: " + str( request.status_code ) + "\n" + str( request.text ) )
+
+	# Store the returned JSON data
+	posts = request.json()
+
+	# Send a message if no posts were returned
+	if len( posts ) < 1: return { "content": ":mag_right: I wasn't able to find anything matching the provided tags.\n(Cheatsheet: <https://hypnohub.net/help/cheatsheet>)" }
 
 	# Sort the posts by highest to lowest score
 	posts.sort( key = lambda post: post[ "score" ], reverse = True )
