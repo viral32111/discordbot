@@ -2628,8 +2628,8 @@ async def on_member_join( member ):
 	# They are a normal user
 	else:
 
-		# Fetch the #greetings channel
-		greetingsChannel = client.get_channel( settings.channels.greetings )
+		# Fetch the join/leave messages channel
+		joinleaveChannel = client.get_channel( settings.channels.joinleave )
 
 		# Log this member join event
 		await log( "Member joined", member.mention + " joined the server.", thumbnail = member.avatar_url )
@@ -2652,8 +2652,8 @@ async def on_member_join( member ):
 				# Give the member that year role and the members role
 				await member.add_roles( membersRole, reason = "Member is already verified." )
 
-			# Send a welcome back message to the #greetings channel
-			await greetingsChannel.send( ":wave::skin-tone-1: Welcome back " + member.mention + ", it's great to see you here again!", allowed_mentions = ALLOW_USER_MENTIONS )
+			# Send a welcome back message to the join/leave messages channel
+			await joinleaveChannel.send( ":wave::skin-tone-1: Welcome back " + member.mention + ", it's great to see you here again!", allowed_mentions = ALLOW_USER_MENTIONS )
 
 		# This is their first time joining (we didn't get any results from the database)
 		else:
@@ -2664,8 +2664,8 @@ async def on_member_join( member ):
 			# Set their year role to when they joined (which should always be right now, unless Discord is taking a shit)
 			yearJoined = member.joined_at.year
 
-			# Send a first welcome message to the #greetings channel
-			await greetingsChannel.send( ":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#" + str( settings.channels.welcome ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
+			# Send a first welcome message to the join/leave messages channel
+			await joinleaveChannel.send( ":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#" + str( settings.channels.welcome ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
 
 		# Fetch the role for the year we just set above
 		yearRole = member.guild.get_role( settings.roles.years[ str( yearJoined ) ] )
@@ -2677,7 +2677,8 @@ async def on_member_join( member ):
 async def on_member_remove(member):
 	await client.wait_until_ready()
 
-	newChannel=discord.utils.get(member.guild.text_channels,name="greetings")
+	# Fetch the join/leave messages channel
+	joinleaveChannel = client.get_channel( settings.channels.joinleave )
 
 	moderator, reason, event = None, None, 0
 	after = datetime.datetime.now()-datetime.timedelta(seconds=5)
@@ -2696,13 +2697,13 @@ async def on_member_remove(member):
 				break
 
 	if (event == 1):
-		await newChannel.send(f":bangbang: {member} was kicked by {moderator.mention}" + (f" for {reason}" if (reason) else "") + ".")
+		await joinleaveChannel.send(f":bangbang: {member} was kicked by {moderator.mention}" + (f" for {reason}" if (reason) else "") + ".")
 		await log("Member kicked", f"{member} was kicked by {moderator.mention}" + (f" for `{reason}`" if (reason) else "") + ".", thumbnail=member.avatar_url)
 	elif (event == 2):
-		await newChannel.send(f":bangbang: {member} was banned by {moderator.mention}" + (f" for {reason}" if (reason) else "") + ".")
+		await joinleaveChannel.send(f":bangbang: {member} was banned by {moderator.mention}" + (f" for {reason}" if (reason) else "") + ".")
 		await log("Member banned", f"{member} was banned by {moderator.mention}" + (f" for `{reason}`" if (reason) else "") + ".", thumbnail=member.avatar_url)
 	else:
-		await newChannel.send(f":walking::skin-tone-1: {member} left the server.")
+		await joinleaveChannel.send(f":walking::skin-tone-1: {member} left the server.")
 		await log("Member left", f"{member} left the server.", thumbnail=member.avatar_url)
 
 # Runs when a message is deleted
