@@ -1857,7 +1857,7 @@ class ChatCommandsDeprecated:
 	async def joined( self, message, arguments, permissions ):
 
 		# Fetch this date & time the member joined
-		joinedAt = mysqlQuery( "SELECT Joined FROM Members WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) );" )[ 0 ][ 0 ]
+		joinedAt = mysqlQuery( "SELECT FROM_UNIXTIME( AES_DECRYPT( Joined, UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) AS Joined FROM Members WHERE Member = AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) );" )[ 0 ][ 0 ]
 
 		# Fetch the appropriate day suffix
 		daySuffix = DAY_SUFFIXES.get( joinedAt.day, "th" )
@@ -2635,7 +2635,7 @@ async def on_member_join( member ):
 		await log( "Member joined", member.mention + " joined the server.", thumbnail = member.avatar_url )
 
 		# Query the date & time that the member joined from the database
-		results = mysqlQuery( "SELECT Joined, AES_DECRYPT( UNHEX( Steam ), UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) AS Steam FROM Members WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) );" )
+		results = mysqlQuery( "SELECT FROM_UNIXTIME( AES_DECRYPT( Joined, UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) AS Joined, AES_DECRYPT( Steam, UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) AS Steam FROM Members WHERE Member = AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) );" )
 
 		# Have they been in the server before? (we got results from the database)
 		if len( results ) > 0:
@@ -2659,7 +2659,7 @@ async def on_member_join( member ):
 		else:
 
 			# Add the member to the database
-			mysqlQuery( "INSERT INTO Members ( Member, Joined ) VALUES ( LOWER( HEX( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) ), '" + member.joined_at.strftime( "%Y-%m-%d %H:%M:%S" ) + "' );" )
+			mysqlQuery( "INSERT INTO Members ( Member, Joined ) VALUES ( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ), AES_ENCRYPT( UNIX_TIMESTAMP( STR_TO_DATE( '" + member.joined_at.strftime( "%Y-%m-%d %H:%M:%S" ) + "', '%Y-%m-%d %H:%i:%S' ) ), UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) );" )
 
 			# Set their year role to when they joined (which should always be right now, unless Discord is taking a shit)
 			yearJoined = member.joined_at.year
