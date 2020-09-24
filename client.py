@@ -2278,7 +2278,7 @@ async def on_message( message ):
 				try:
 
 					# Execute the command and store it's response
-					response = await metadata.execute( message, arguments )
+					response = await metadata.execute( message, arguments, client )
 
 				# Catch all errors that occur
 				except Exception:

@@ -12,7 +12,7 @@ The structure of the MySQL database is within the [database.sql](https://github.
 
 ### Thirdparty
 
-[discord.py](https://pypi.org/project/discord.py/), [asyncio](https://pypi.org/project/asyncio/), [requests](https://pypi.org/project/requests/), [hurry.filesize](https://pypi.org/project/hurry.filesize/), [mysql-connector-python](https://pypi.org/project/mysql-connector-python/), [pytz](https://pypi.org/project/pytz/), [dotmap](https://pypi.org/project/dotmap/), [beautifulsoup4](https://pypi.org/project/beautifulsoup4/).
+[discord.py](https://pypi.org/project/discord.py/), [asyncio](https://pypi.org/project/asyncio/), [requests](https://pypi.org/project/requests/), [hurry.filesize](https://pypi.org/project/hurry.filesize/), [mysql-connector-python](https://pypi.org/project/mysql-connector-python/), [pytz](https://pypi.org/project/pytz/), [dotmap](https://pypi.org/project/dotmap/), [beautifulsoup4](https://pypi.org/project/beautifulsoup4/), [youtube_dl](https://pypi.org/project/youtube_dl/).
 
 ## Notes
 
