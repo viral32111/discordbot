@@ -17,7 +17,7 @@ from pprint import pprint
 
 # Help
 @chatCommands( category = "General" )
-async def help( message, arguments ):
+async def help( message, arguments, client ):
 
 	# Create a blank embed
 	embed = discord.Embed( title = "", description = "", color = settings.color )
@@ -80,7 +80,7 @@ async def help( message, arguments ):
 
 # Link Steam account
 @chatCommands( category = "General" )
-async def link( message, arguments ):
+async def link( message, arguments, client ):
 
 	# Respond with a simple message
 	return { "content": ":link: Visit <https://conspiracyservers.com/link> to link your Steam account." }

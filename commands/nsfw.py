@@ -19,7 +19,7 @@ import json # JSON parser
 
 # Rule #34
 @chatCommands( category = "NSFW", aliases = [ "r34" ], nsfw = True )
-async def rule34( message, arguments ):
+async def rule34( message, arguments, client ):
 
 	# Send a message if no arguments were provided
 	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must provide at least one tag to search for.\n(Cheatsheet: <https://rule34.xxx/index.php?page=help&topic=cheatsheet>)" }
@@ -81,7 +81,7 @@ async def rule34( message, arguments ):
 
 # Xbooru
 @chatCommands( category = "NSFW", aliases = [ "xb" ], nsfw = True )
-async def xbooru( message, arguments ):
+async def xbooru( message, arguments, client ):
 
 	# Send a message if no arguments were provided
 	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must provide at least one tag to search for.\n(Cheatsheet: <https://xbooru.com/index.php?page=help&topic=cheatsheet>)" }
@@ -143,7 +143,7 @@ async def xbooru( message, arguments ):
 
 # FurryBooru
 @chatCommands( category = "NSFW", aliases = [ "fur" ], nsfw = True )
-async def furrybooru( message, arguments ):
+async def furrybooru( message, arguments, client ):
 
 	# Send a message if no arguments were provided
 	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must provide at least one tag to search for.\n(Cheatsheet: <https://furry.booru.org/index.php?page=help&topic=cheatsheet>)" }
@@ -205,7 +205,7 @@ async def furrybooru( message, arguments ):
 
 # Gelbooru
 @chatCommands( category = "NSFW", aliases = [ "gel" ], nsfw = True )
-async def gelbooru( message, arguments ):
+async def gelbooru( message, arguments, client ):
 
 	# Send a message if no arguments were provided
 	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must provide at least one tag to search for.\n(Cheatsheet: <https://gelbooru.com/index.php?page=help&topic=cheatsheet>)" }
@@ -264,7 +264,7 @@ async def gelbooru( message, arguments ):
 
 # Danbooru
 @chatCommands( category = "NSFW", aliases = [ "dan" ], nsfw = True )
-async def danbooru( message, arguments ):
+async def danbooru( message, arguments, client ):
 
 	# Send a message if no arguments were provided
 	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must provide at least one tag to search for.\n(Cheatsheet: <https://danbooru.donmai.us/wiki_pages/help:cheatsheet>)" }
@@ -326,7 +326,7 @@ async def danbooru( message, arguments ):
 
 # Hypnohub
 @chatCommands( category = "NSFW", aliases = [ "hypno" ], nsfw = True )
-async def hypnohub( message, arguments ):
+async def hypnohub( message, arguments, client ):
 
 	# Send a message if no arguments were provided
 	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must provide at least one tag to search for.\n(Cheatsheet: <https://hypnohub.net/help/cheatsheet>)" }

@@ -14,7 +14,7 @@ import discord, asyncio, time
 
 # Sleep
 @chatCommands( category = "Dev", wip = True )
-async def sleep( message, arguments ):
+async def sleep( message, arguments, client ):
 
 	# Send a message if no arguments were provided
 	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must specify the duration to sleep for in seconds." }
