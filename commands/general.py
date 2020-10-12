@@ -87,7 +87,7 @@ async def link( message, arguments, client ):
 
 # View available commands
 @chatCommands( category = "General", aliases = [ "cmds" ] )
-async def commands( message, arguments ):
+async def commands( message, arguments, client ):
 
 	# A dictionary to hold all chat commands by their category
 	availableChatCommands = {}
