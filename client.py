@@ -52,7 +52,7 @@ print( "Imported modules." )
 ##############################################
 
 # Open the settings file
-with open( "/srv/conspiracy-ai/config/settings.jsonc", "r" ) as handle:
+with open( "/usr/local/src/conspiracyai/config/settings.jsonc", "r" ) as handle:
 
 	# Read all the file contents
 	contents = handle.read()
@@ -64,7 +64,7 @@ with open( "/srv/conspiracy-ai/config/settings.jsonc", "r" ) as handle:
 	settings = dotmap.DotMap( json.loads( stripped ) )
 
 # Open the secrets file
-with open( "/srv/conspiracy-ai/config/secrets.jsonc", "r" ) as handle:
+with open( "/usr/local/src/conspiracyai/config/secrets.jsonc", "r" ) as handle:
 
 	# Read all the file contents
 	contents = handle.read()
@@ -86,16 +86,16 @@ print( "Loaded configuration files." )
 strings = {}
 
 # Loop through all files & directories in the strings directory
-for name in os.listdir( "/srv/conspiracy-ai/strings" ):
+for name in os.listdir( "/usr/local/src/conspiracyai/strings" ):
 
 	# Skip if it isn't a regular file
-	if not os.path.isfile( "/srv/conspiracy-ai/strings/" + name ): continue
+	if not os.path.isfile( "/usr/local/src/conspiracyai/strings/" + name ): continue
 
 	# Get the name of the locale
 	locale = os.path.splitext( name )[ 0 ]
 
 	# Open the file for reading
-	with open( "/srv/conspiracy-ai/strings/" + name, "r" ) as handle:
+	with open( "/usr/local/src/conspiracyai/strings/" + name, "r" ) as handle:
 
 		# Read all the contents of the file
 		contents = handle.read()
@@ -136,7 +136,7 @@ print( "Initalised global variables." )
 ##############################################
 
 # The current shorthand commit SHA of the local repository
-COMMIT = os.popen( "cd /srv/conspiracy-ai && git log --max-count=1 --pretty=format:\"%h\"" ).read()
+COMMIT = os.popen( "cd /usr/local/src/conspiracyai && git log --max-count=1 --pretty=format:\"%h\"" ).read()
 
 # User agent header for HTTP requests
 USER_AGENT_HEADER = "Conspiracy AI/" + COMMIT + " (Linux; Discord Bot) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (github.com/conspiracy-servers/conspiracy-ai; " + settings.email + ")"
@@ -444,7 +444,7 @@ def extractDirectTenorURL( vanityURL ):
 def downloadWebMedia( originalURL, shouldArchive = False ):
 
 	# Set the directory of where to save the file to
-	directory = "/srv/conspiracy-ai/archive" if shouldArchive else "/tmp/conspiracy-ai/downloads"
+	directory = "/usr/local/src/conspiracyai/archive" if shouldArchive else "/tmp/conspiracy-ai/downloads"
 
 	# Create the directory if it doesn't exist
 	os.makedirs( directory, 0o700, exist_ok = True )
@@ -1891,7 +1891,7 @@ client = discord.Client(
 	max_messages = 10000,
 	
 	# Cache members that are offline
-	fetch_offline_members = True,
+	chunk_guilds_at_startup = True,
 
 	# Set the default allowed mentions for each message sent by the bot
 	allowed_mentions = discord.AllowedMentions(
@@ -1905,7 +1905,10 @@ client = discord.Client(
 		# Disable role pings
 		roles = False
 
-	)
+	),
+
+	# Set the session intents to all available intents
+	intents = discord.Intents.all()
 
 )
 
