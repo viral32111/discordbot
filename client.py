@@ -43,6 +43,7 @@ import dotmap # Attribute style access to dictionary keys
 import bs4 # Parsing & web scraping HTML
 import difflib # For computing deltas
 import operator # Extra sorting methods
+import signal # Handling termination signals
 
 # Console message
 print( "Imported modules." )
@@ -1192,6 +1193,8 @@ class ChatCommandsDeprecated:
 
 		# Delete the shutdown message
 		await message.delete()
+
+		###### EVENTUALLY REPLACE CODE BELOW WITH A CALL TO shutdown() AT THE BOTTOM OF THIS FILE
 
 		# Console message
 		print( "Shutting down..." )
@@ -2802,20 +2805,8 @@ async def on_ready():
 	# Console message
 	print( "Ready." )
 
-# Be safe!
-try:
-
-	# Register a few initial callbacks
-	client.event( on_connect )
-	client.event( on_resumed )
-	client.event( on_disconnect )
-	client.event( on_ready )
-
-	# Start the client
-	client.loop.run_until_complete( client.start( secrets.token ) )
-
-# Catch keyboard interrupts
-except KeyboardInterrupt:
+# Coroutine for shutting down the bot
+async def shutdown():
 
 	# Console message
 	print( "Shutting down..." )
@@ -2823,20 +2814,24 @@ except KeyboardInterrupt:
 	# Cancel all background tasks
 	for backgroundTask in backgroundTasks: backgroundTask.cancel()
 
-	# Remove all background tasks from the list
-	backgroundTasks.clear()
-
 	# Make the bot seem offline while the connection times out
-	client.loop.run_until_complete( client.change_presence( status = discord.Status.offline ) )
+	await client.change_presence( status = discord.Status.offline )
 
 	# Logout & disconnect
-	client.loop.run_until_complete( client.logout() )
+	await client.logout()
 
-# After above has finished
-finally:
+# Register a few initial callbacks
+client.event( on_connect )
+client.event( on_resumed )
+client.event( on_disconnect )
+client.event( on_ready )
 
-	# Close the event loop
-	client.loop.close()
+# Register the signal callbacks to shutdown the client on keyboard interrupts and terminations
+client.loop.add_signal_handler( signal.SIGINT, lambda: client.loop.create_task( shutdown() ) )
+client.loop.add_signal_handler( signal.SIGTERM, lambda: client.loop.create_task( shutdown() ) )
+
+# Start the client
+client.loop.run_until_complete( client.start( secrets.token ) )
 
 # Console message
 print( "Shutdown." )
