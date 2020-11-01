@@ -745,7 +745,7 @@ class Server:
 		self.uptime = round( response[ "uptime" ] )
 		self.uptimePretty = formatSeconds( self.uptime )
 		self.maxPlayers = round( response[ "maxplayers" ] )
-		self.mapImage = "https://files.conspiracyservers.com/maps/large/" + response[ "map" ] + ".jpg"
+		self.mapImage = "https://content.conspiracyservers.com/maps/large/" + response[ "map" ] + ".jpg"
 		self.players = [ Player( player, serverConfig ) for player in response[ "players" ] ]
 		self.admins = [ Player( admin, serverConfig ) for admin in response[ "admins" ] ]
 		self.bots = [ Bot( bot ) for bot in response[ "bots" ] ]
@@ -1259,7 +1259,7 @@ class ChatCommandsDeprecated:
 			# Set the author to the server hostname & icon
 			embed.set_author(
 				name = server.hostname[:48] + "...",
-				icon_url = "https://files.conspiracyservers.com/icons/hammer.png"
+				icon_url = "https://content.conspiracyservers.com/icons/hammer.png"
 			)
 
 			# Set the thumbnail to the map preview

@@ -138,10 +138,10 @@ async def downloadCallback( event, message, arguments ):
 		print( "Downloaded: " + event[ "filename" ] + " (" + "{:,}".format( event[ "total_bytes" ] ) + "b) (" + ( str( round( event[ "elapsed" ], 2 ) ) + "s elapsed" if "elapsed" in event else "located" ) + ")" )
 
 		# The path to the file excluding web document root
-		webPath = event[ "filename" ].replace( "/var/www/conspiracyservers.com/files/", "" )
+		webPath = event[ "filename" ].replace( "/srv/www/conspiracyservers.com/files.conspiracyservers.com/downloads/", "" )
 
 		# Friendly message
-		await message.channel.send( "https://files.conspiracyservers.com/" + webPath )
+		await message.channel.send( "https://content.conspiracyservers.com/" + webPath )
 
 	# The download is in progress
 	elif event[ "status" ] == "downloading":
