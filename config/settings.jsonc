@@ -90,8 +90,8 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 		}
 	},
 	"database": {
-		"address": "127.0.0.1",
-		"port": 32400,
+		"address": "localhost",
+		"port": 3306,
 		"name": "ConspiracyAI"
 	},
 	"anonymous": {
