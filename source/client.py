@@ -2781,6 +2781,51 @@ async def on_reaction_remove(reaction, user):
 	# Console message
 	print(f"{user} removed {reaction.emoji} from {reaction.message.content}.")
 
+# Runs when a member's voice state changes
+async def on_voice_state_update( member, before, after ):
+
+	# Has the member joined the Music voice channel?
+	if before.channel == None and after.channel.id == 257480146762596352:
+
+		# Are they the first member to join?
+		if len( after.channel.members ) == 1:
+
+			# Get the DJ role
+			dj_role = member.guild.get_role( 784532835348381776 )
+
+			# Get the #commands channel
+			commands_channel = client.get_channel( 241602380569772044 )
+
+			# Give them the DJ role
+			await member.add_roles( dj_role, reason = "Member is now the DJ." )
+
+			# Send a message
+			await commands_channel.send( member.mention + " is now the " + dj_role.mention + " until they leave." )
+
+	# Has the member left the Music voice channel?
+	elif before.channel.id == 257480146762596352 and after.channel == None:
+
+		# Loop through their roles
+		for role in member.roles:
+
+			# Is this the DJ role?
+			if role.id == 784532835348381776:
+
+				# Get the DJ role
+				dj_role = member.guild.get_role( 784532835348381776 )
+
+				# Get the #commands channel
+				commands_channel = client.get_channel( 241602380569772044 )
+
+				# Remove the role from them
+				await member.remove_roles( dj_role, reason = "Member is no longer the DJ." )
+
+				# Send a message
+				await commands_channel.send( member.mention + " is no longer the " + dj_role.mention + "." )
+
+				# Stop the loop
+				break
+
 # Runs when the client is ready
 async def on_ready():
 
@@ -2795,6 +2840,7 @@ async def on_ready():
 	client.event( on_member_remove )
 	client.event( on_reaction_add )
 	client.event( on_reaction_remove )
+	client.event( on_voice_state_update )
 	print( "Registered callbacks." )
 
 	# Launch background tasks - keep this the same as on_ready()!
