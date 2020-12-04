@@ -2785,7 +2785,7 @@ async def on_reaction_remove(reaction, user):
 async def on_voice_state_update( member, before, after ):
 
 	# Has the member joined the Music voice channel?
-	if before.channel == None and after.channel.id == 257480146762596352:
+	if after.channel != None and after.channel.id == 257480146762596352:
 
 		# Are they the first member to join?
 		if len( after.channel.members ) == 1:
@@ -2803,7 +2803,7 @@ async def on_voice_state_update( member, before, after ):
 			await commands_channel.send( member.mention + " is now the " + dj_role.mention + " until they leave." )
 
 	# Has the member left the Music voice channel?
-	elif before.channel.id == 257480146762596352 and after.channel == None:
+	elif before.channel != None and before.channel.id == 257480146762596352:
 
 		# Loop through their roles
 		for role in member.roles:
