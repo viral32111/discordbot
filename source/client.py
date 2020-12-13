@@ -2071,6 +2071,12 @@ async def on_message( message ):
 		# Prevent further execution
 		return
 
+	# Is the bot pinged at all in this message?
+	if client.user.mentioned_in( message ):
+
+		# Appreciation reaction
+		await message.add_reaction( random.choice( [ "❤️", "💟", "❣️", "😍", "♥️", "🖤", "💙", "🤎", "💚", "💝", "💖", "💕", "🤍", "💛", "🧡", "💜", "💞", "🥰", "💓", "😘", "💗", "🤟", "💘" ] ) )
+
 	# Is the message just a ping to the bot?
 	if message.content == client.user.mention:
 
