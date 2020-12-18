@@ -900,6 +900,7 @@ chatCommands = ChatCommands()
 from commands import general
 from commands import nsfw
 from commands import dev
+from commands import links
 
 #############################################################################################################
 ######################### ALL THE CHAT COMMANDS BELOW THIS POINT USE THE OLD SYSTEM ######################### 
@@ -931,6 +932,7 @@ class ChatCommandsDeprecated:
 
 	#### Command definitions
 
+	"""
 	# Help command
 	metadata[ "help" ] = [ "General" ]
 	async def help( self, message, arguments, permissions ):
@@ -1088,6 +1090,7 @@ class ChatCommandsDeprecated:
 	# Alias for rule 34 command
 	async def r34( self, *arguments, **kwarguments ):
 		return await self.rule34( *arguments, **kwarguments )
+	"""
 
 	# List all the available chat commands
 	metadata[ "commands" ] = [ "General" ]
@@ -1465,6 +1468,7 @@ class ChatCommandsDeprecated:
 	async def date( self, *arguments, **kwarguments ):
 		return await self.time( *arguments, **kwarguments )
 
+	"""
 	# Website link
 	metadata[ "website" ] = [ "Links" ]
 	async def website( self, message, arguments, permissions ):
@@ -1508,6 +1512,7 @@ class ChatCommandsDeprecated:
 	# Alias for staff application command
 	async def apply( self, *arguments, **kwarguments ):
 		return await self.staffapplication( *arguments, **kwarguments )
+	"""
 
 	# Timeout a user
 	metadata[ "timeout" ] = [ "Moderation" ]
