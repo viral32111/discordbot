@@ -901,6 +901,7 @@ from commands import general
 from commands import nsfw
 from commands import dev
 from commands import links
+from commands import garrysmod
 
 #############################################################################################################
 ######################### ALL THE CHAT COMMANDS BELOW THIS POINT USE THE OLD SYSTEM ######################### 
@@ -1214,7 +1215,6 @@ class ChatCommandsDeprecated:
 
 		# Logout & disconnect
 		await client.logout()
-	"""
 
 	# Sandbox server status
 	metadata[ "sandbox" ] = [ "Garry's Mod" ]
@@ -1343,7 +1343,6 @@ class ChatCommandsDeprecated:
 	async def sbox( self, *arguments, **kwarguments ):
 		return await self.sandbox( *arguments, **kwarguments )
 
-	"""
 	# Get weather data for a location
 	metadata[ "weather" ] = [ "General" ]
 	async def weather( self, message, arguments, permissions ):
