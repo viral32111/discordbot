@@ -1178,6 +1178,7 @@ class ChatCommandsDeprecated:
 	async def cmds( self, *arguments, **kwarguments ):
 		return await self.commands( *arguments, **kwarguments )
 
+	"""
 	# Shutdown the bot
 	metadata[ "shutdown" ] = [ "Administration" ]
 	async def shutdown( self, message, arguments, permissions ):
@@ -1213,6 +1214,7 @@ class ChatCommandsDeprecated:
 
 		# Logout & disconnect
 		await client.logout()
+	"""
 
 	# Sandbox server status
 	metadata[ "sandbox" ] = [ "Garry's Mod" ]

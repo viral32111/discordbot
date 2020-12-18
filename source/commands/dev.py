@@ -21,7 +21,7 @@
 ##############################################
 
 # Import variables from the main script
-from __main__ import chatCommands
+from __main__ import chatCommands, log, backgroundTasks
 
 # Import required modules
 import discord, asyncio, time
@@ -104,3 +104,30 @@ async def download( message, arguments, client ):
 
 	# Download it
 	with youtube_dl.YoutubeDL( options ) as ytdl: ytdl.download( arguments )
+
+# Shutdown the bot
+@chatCommands( category = "Dev", aliases = [ "restart" ], wip = True )
+async def shutdown( message, arguments, client ):
+
+	# Log the event
+	await log( "Bot shutdown", "The bot was shutdown by " + message.author.mention )
+
+	# Delete the shutdown message
+	await message.delete()
+
+	###### EVENTUALLY REPLACE CODE BELOW WITH A CALL TO shutdown() AT THE BOTTOM OF THIS FILE
+
+	# Console message
+	print( "Shutting down..." )
+
+	# Cancel all background tasks
+	for backgroundTask in backgroundTasks: backgroundTask.cancel()
+
+	# Remove all background tasks from the list
+	backgroundTasks.clear()
+
+	# Make the bot look offline while the connection times out
+	await client.change_presence( status = discord.Status.offline )
+
+	# Logout & disconnect
+	await client.logout()
