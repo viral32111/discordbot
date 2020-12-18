@@ -1105,7 +1105,7 @@ async def on_message( message ):
 		await message.add_reaction( random.choice( [ "❤️", "💟", "❣️", "😍", "♥️", "🖤", "💙", "🤎", "💚", "💝", "💖", "💕", "🤍", "💛", "🧡", "💜", "💞", "🥰", "💓", "😘", "💗", "🤟", "💘" ] ) )
 
 	# Is the message just a ping to the bot?
-	if message.content == client.user.mention:
+	if message.content == "<@!513872128156893189>":
 
 		# Friendly message
 		await message.channel.send( ":information_source: Type `" + settings.prefix + "commands` to view a list of commands." )
