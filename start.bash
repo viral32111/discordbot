@@ -23,3 +23,5 @@
 	/bin/bash -c 'pip install --upgrade --no-color --no-input pip wheel setuptools && \
 		pip install --upgrade --no-color --no-input discord.py requests hurry.filesize mysql-connector-python pytz dotmap beautifulsoup4 youtube_dl && \
 		python client.py'
+
+/usr/bin/docker attach conspiracyai
