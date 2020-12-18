@@ -25,6 +25,7 @@ from __main__ import chatCommands
 
 # Import required modules
 import discord, asyncio, time
+from pprint import pprint
 
 ##############################################
 # Define chat commands

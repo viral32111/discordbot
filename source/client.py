@@ -1341,6 +1341,7 @@ class ChatCommandsDeprecated:
 	async def sbox( self, *arguments, **kwarguments ):
 		return await self.sandbox( *arguments, **kwarguments )
 
+	"""
 	# Get weather data for a location
 	metadata[ "weather" ] = [ "General" ]
 	async def weather( self, message, arguments, permissions ):
@@ -1468,7 +1469,6 @@ class ChatCommandsDeprecated:
 	async def date( self, *arguments, **kwarguments ):
 		return await self.time( *arguments, **kwarguments )
 
-	"""
 	# Website link
 	metadata[ "website" ] = [ "Links" ]
 	async def website( self, message, arguments, permissions ):
@@ -1591,6 +1591,7 @@ class ChatCommandsDeprecated:
 			# Send message feedback
 			await message.channel.send( "Removed " + member.mention + " from timeout." )
 
+	"""
 	# Lookup information about an anime on My Anime List
 	metadata[ "myanimelist" ] = [ "General" ]
 	async def myanimelist( self, message, arguments, permissions ):
@@ -1878,6 +1879,7 @@ class ChatCommandsDeprecated:
 
 		# Send a message back
 		await message.channel.send( ":date: You joined this Discord server on **" + joinedAtPretty + "**.\n*(Information from before 08/08/2020 UTC may not be 100% accurate.)*" )
+	"""
 
 # Console message
 print( "Defined chat commands." )
