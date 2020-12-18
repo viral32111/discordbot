@@ -54,3 +54,52 @@ async def sleep( message, arguments, client ):
 
 	# Friendly message
 	await message.channel.send( "Finished sleeping, sleep lasted exactly `" + "{0:.16f}".format( finished ) + "` seconds." )
+
+# The function to be called for download progress reporting for the chat command below
+async def downloadCallback( event, message, arguments ):
+
+	# It has finished downloading
+	if event[ "status" ] == "finished":
+		
+		# Console message
+		print( "Downloaded: " + event[ "filename" ] + " (" + "{:,}".format( event[ "total_bytes" ] ) + "b) (" + ( str( round( event[ "elapsed" ], 2 ) ) + "s elapsed" if "elapsed" in event else "located" ) + ")" )
+
+		# The path to the file excluding web document root
+		webPath = event[ "filename" ].replace( "/srv/www/conspiracyservers.com/files.conspiracyservers.com/downloads/", "" )
+
+		# Friendly message
+		await message.channel.send( "https://content.conspiracyservers.com/" + webPath )
+
+	# The download is in progress
+	elif event[ "status" ] == "downloading":
+
+		# Console message
+		print( "Downloading: " + event[ "filename" ] + " (" + "{:,}".format( event[ "downloaded_bytes" ] ) + "/" + "{:,}".format( event[ "total_bytes" ] ) + "b, " + "{:,}".format( round( event[ "speed" ] ) ) + "b/s, " + str( round( ( event[ "downloaded_bytes" ] / event[ "total_bytes" ] ) * 100, 2 ) ) + "%) (" + str( round( event[ "elapsed" ], 2 ) ) + "s elapsed)" )
+
+	# Some other status
+	else:
+		print( "" )
+		pprint( event )
+		print( "" )
+
+# Download an online video
+@chatCommands( category = "Dev", aliases = [ "dl" ], wip = True )
+async def download( message, arguments, client ):
+
+	# Send a message if no arguments were provided
+	if len( arguments ) < 1: return { "content": ":grey_exclamation: You must specify a link to a video, image, or other type of media." }
+
+	# Set the download options
+	options = {
+		"quiet": True,
+		"format": "best",
+		"restrictfilenames": True,
+		"nooverwrites": True,
+		"outtmpl": "/var/www/conspiracyservers.com/files/downloads/%(extractor)s/%(id)s.%(ext)s",
+		"progress_hooks": [
+			lambda event: client.loop.create_task( downloadCallback( event, message, arguments ) )
+		]
+	}
+
+	# Download it
+	with youtube_dl.YoutubeDL( options ) as ytdl: ytdl.download( arguments )
