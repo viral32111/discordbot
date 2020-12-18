@@ -17,7 +17,6 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 */
 
 {
-	"prefixDeprecated": "!",
 	"prefix": "/",
 	"color": 14732677,
 	"guild": 240167618575728644,
