@@ -902,6 +902,7 @@ from commands import nsfw
 from commands import dev
 from commands import links
 from commands import garrysmod
+from commands import moderation
 
 #############################################################################################################
 ######################### ALL THE CHAT COMMANDS BELOW THIS POINT USE THE OLD SYSTEM ######################### 
@@ -1513,7 +1514,6 @@ class ChatCommandsDeprecated:
 	# Alias for staff application command
 	async def apply( self, *arguments, **kwarguments ):
 		return await self.staffapplication( *arguments, **kwarguments )
-	"""
 
 	# Timeout a user
 	metadata[ "timeout" ] = [ "Moderation" ]
@@ -1592,7 +1592,6 @@ class ChatCommandsDeprecated:
 			# Send message feedback
 			await message.channel.send( "Removed " + member.mention + " from timeout." )
 
-	"""
 	# Lookup information about an anime on My Anime List
 	metadata[ "myanimelist" ] = [ "General" ]
 	async def myanimelist( self, message, arguments, permissions ):
