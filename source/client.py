@@ -1380,8 +1380,8 @@ async def on_message( message ):
 								# Console message
 								print( "Incrementing repost count for message attachment with checksum '" + repostInformation[ 3 ] + "' in the repost history database." )
 
-								# Friendly message
-								await message.channel.send( "> <" + url + ">\n:recycle: " + message.author.mention + " this could be a repost, I've seen it " + str( repostInformation[ 2 ] ) + " time(s) before. The original post: <https://discordapp.com/channels/" + str( settings.guild ) + "/" + str( repostInformation[ 0 ] ) + "/" + str( repostInformation[ 1 ] ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
+								# Inform them via reply
+								await message.reply( ":recycle: This is a repost, I've seen it **" + str( repostInformation[ 2 ] ) + "** time" + ( "s" if repostInformation[ 2 ] > 1 else "" ) + " before!\n*(Original: <https://discord.com/channels/" + str( settings.guild ) + "/" + str( repostInformation[ 0 ] ) + "/" + str( repostInformation[ 1 ] ) + ">)*", mention_author = False )
 
 			# Does the message start with "Im " and has it been 15 seconds since the last one?
 			if message.content.startswith( "Im " ) and ( lastDadJoke + 15 ) < unixTimestampNow:
