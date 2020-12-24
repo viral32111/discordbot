@@ -1758,6 +1758,9 @@ async def on_reaction_remove(reaction, user):
 # Runs when a member's voice state changes
 async def on_voice_state_update( member, before, after ):
 
+	# Ignore bots
+	if member.bot: return
+
 	# Has the member joined the Music voice channel?
 	if after.channel != None and after.channel.id == 257480146762596352:
 
