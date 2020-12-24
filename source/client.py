@@ -53,7 +53,7 @@ print( "Imported modules." )
 ##############################################
 
 # Open the settings file
-with open( "/usr/local/etc/conspiracyai/settings.jsonc", "r" ) as handle:
+with open( "config/settings.jsonc", "r" ) as handle:
 
 	# Read all the file contents
 	contents = handle.read()
@@ -65,7 +65,7 @@ with open( "/usr/local/etc/conspiracyai/settings.jsonc", "r" ) as handle:
 	settings = dotmap.DotMap( json.loads( stripped ) )
 
 # Open the secrets file
-with open( "/usr/local/etc/conspiracyai/secrets.jsonc", "r" ) as handle:
+with open( "config/secrets.jsonc", "r" ) as handle:
 
 	# Read all the file contents
 	contents = handle.read()
@@ -87,16 +87,16 @@ print( "Loaded configuration files." )
 strings = {}
 
 # Loop through all files & directories in the strings directory
-for name in os.listdir( "/usr/local/etc/conspiracyai/strings" ):
+for name in os.listdir( "config/strings" ):
 
 	# Skip if it isn't a regular file
-	if not os.path.isfile( "/usr/local/etc/conspiracyai/strings/" + name ): continue
+	if not os.path.isfile( "config/strings/" + name ): continue
 
 	# Get the name of the locale
 	locale = os.path.splitext( name )[ 0 ]
 
 	# Open the file for reading
-	with open( "/usr/local/etc/conspiracyai/strings/" + name, "r" ) as handle:
+	with open( "config/strings/" + name, "r" ) as handle:
 
 		# Read all the contents of the file
 		contents = handle.read()
@@ -137,7 +137,7 @@ print( "Initalised global variables." )
 ##############################################
 
 # Read the current commit ref of the repository
-with open( "/tmp/conspiracyai/ref.txt", "r" ) as handle: COMMIT = handle.read()
+with open( "reference.txt", "r" ) as handle: COMMIT = handle.read()
 
 # User agent header for HTTP requests
 USER_AGENT_HEADER = "Conspiracy AI/" + COMMIT[:7] + " (Linux; Discord Bot) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (github.com/conspiracy-servers/conspiracy-ai; " + settings.email + ")"
@@ -445,7 +445,7 @@ def extractDirectTenorURL( vanityURL ):
 def downloadWebMedia( originalURL, shouldArchive = False ):
 
 	# Set the directory of where to save the file to
-	directory = "/var/lib/conspiracyai/archive" if shouldArchive else "/tmp/conspiracyai/downloads"
+	directory = "archive" if shouldArchive else "/tmp/conspiracyai/downloads"
 
 	# Create the directory if it doesn't exist
 	os.makedirs( directory, 0o700, exist_ok = True )
