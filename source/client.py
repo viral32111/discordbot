@@ -1767,8 +1767,11 @@ async def on_voice_state_update( member, before, after ):
 	# Has the member joined the Music voice channel?
 	if after.channel != None and after.channel.id == 257480146762596352:
 
+		# Get the members in the voice channel, excluding bots
+		membersNoBots = [ member for member in after.channel.members if member.bot == False ]
+
 		# Are they the first member to join?
-		if len( after.channel.members ) == 1:
+		if len( membersNoBots ) == 1:
 
 			# Get the DJ role
 			dj_role = member.guild.get_role( 784532835348381776 )
@@ -1780,7 +1783,7 @@ async def on_voice_state_update( member, before, after ):
 			await member.add_roles( dj_role, reason = "Member is now the DJ." )
 
 			# Send a message
-			await commands_channel.send( member.mention + " is now the " + dj_role.mention + " until they leave." )
+			await commands_channel.send( member.mention + " is now the " + dj_role.mention + "." )
 
 	# Has the member left the Music voice channel?
 	elif before.channel != None and before.channel.id == 257480146762596352:
