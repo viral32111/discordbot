@@ -581,6 +581,9 @@ def shouldLog( message ):
 	# Return false if this a direct message
 	if message.guild == None: return False
 
+	# Return false if this message is from a bot
+	if message.author.bot: return False
+
 	# Return false if this message's channel is an excluded channel
 	if message.channel.id in settings.channels.logs.exclude: return False
 
