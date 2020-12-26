@@ -906,6 +906,7 @@ from commands import dev
 from commands import links
 from commands import garrysmod
 from commands import moderation
+from commands import music
 
 # Console message
 print( "Defined chat commands." )
