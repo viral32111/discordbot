@@ -295,7 +295,7 @@ async def log( title, description, **kwargs ):
 	embed = discord.Embed( title = title, description = description, color = settings.color )
 
 	# Set the footer to the current date & time
-	embed.set_footer( text = formatTimestamp() )
+	embed.set_footer( text = formatTimestamp( datetime.datetime.utcnow() ) )
 
 	# Set the jump link if it was provided
 	jumpLink = kwargs.get( "jump", None )
@@ -1690,33 +1690,64 @@ async def on_member_remove(member):
 		await log("Member left", f"{member} left the server.", thumbnail=member.avatar_url)
 
 # Runs when a message is deleted
-async def on_message_delete(message):
+async def on_message_delete( message ):
 
-	# Don't run if this is a Direct Message
-	if message.guild == None: return
+	# Do not continue if this is a direct message
+	if not message.guild: return
 
-	if (not isValid(message)): return
+	# Do not continue if this was one of our messages
+	if message.author.id == client.user.id: return
 
-	# Prevent further execution if this event shouldn't be logged
+	# Do not continue if this is not a regular message
+	if message.type != discord.MessageType.default: return
+
+	# Set the member that deleted this message to the original message author by default
+	deleter = message.author
+
+	# Wait a few seconds for the audit log to be populated
+	await asyncio.sleep( 2 )
+
+	# Fetch the most recent audit log entry for a message deletion event that happened before 5 seconds in the future and after 5 seconds ago
+	async for entry in message.guild.audit_logs( limit = 1, action = discord.AuditLogAction.message_delete, before = datetime.datetime.utcnow() + datetime.timedelta( seconds = 5 ), after = datetime.datetime.utcnow() - datetime.timedelta( seconds = 5 ) ):
+
+		# Is this entry for this message deletion event? (best guess)
+		if entry.target.id == message.author.id and entry.extra.channel.id == message.channel.id and message.created_at <= entry.created_at:
+
+			# Set the member that deleted this message to the user in the entry
+			deleter = entry.user
+
+	# Was this message deleted by the original message author?
+	if deleter.id == message.author.id:
+
+		# Increment the message deletion statistic for the original author
+		mysqlQuery( "UPDATE MemberStatistics SET Deletions = Deletions + 1 WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) ) );" )
+
+	# Prevent further execution if this event should not be logged
 	if not shouldLog( message ): return
 
-	# This for some reason doesn't work?
-	after = datetime.datetime.now()-datetime.timedelta(seconds=10)
-	moderator = None
-	async for entry in message.guild.audit_logs(limit=1, action=discord.AuditLogAction.message_delete):
-		if (entry.created_at > after) and (entry.target.id == message.author.id):
-			moderator = entry.user
-			break
+	# Does this message include attachments?
+	if len( message.attachments ) > 0:
 
-	if (len(message.attachments) >= 1):
+		# Loop through each attachment in the message
 		for attachment in message.attachments:
-			if (attachment.width) and (attachment.height):
-				await log("Image deleted", f"Image [{attachment.filename} ({attachment.width}x{attachment.height}) ({hurry.filesize.size(attachment.size, system=hurry.filesize.alternative)})]({attachment.proxy_url}) uploaded by {message.author.mention} in {message.channel.mention} was deleted" + (f" by {moderator.mention}" if (moderator) else "") + ".", image=attachment.proxy_url)
-			else:
-				await log("Upload deleted", f"Upload [{attachment.filename} ({hurry.filesize.size(attachment.size, system=hurry.filesize.alternative)})]({attachment.url}) uploaded by {message.author.mention} in {message.channel.mention} was deleted" + (f" by {moderator.mention}" if (moderator) else "") + ".")
+
+			# If the attachment is an image or video
+			if attachment.width and attachment.height:
+
+				# Log this deletion
+				await log( "Image deleted", f"Image [{ attachment.filename } ({ attachment.width }x{ attachment.height }) ({ hurry.filesize.size( attachment.size, system = hurry.filesize.alternative) })]({ attachment.proxy_url }) uploaded by { message.author.mention } in { message.channel.mention } was deleted by { deleter.mention }.", image = attachment.proxy_url )
 			
-	if (message.clean_content != ""):
-		await log("Message deleted", f"`{message.content}` sent by {message.author.mention} in {message.channel.mention} was deleted" + (f" by {moderator.mention}" if (moderator) else "") + ".")
+			# The attachment is not an image or video
+			else:
+
+				# Log this deletion
+				await log( "Upload deleted", f"Upload [{ attachment.filename } ({ hurry.filesize.size( attachment.size, system = hurry.filesize.alternative ) })]({ attachment.url }) uploaded by { message.author.mention } in { message.channel.mention } was deleted by { deleter.mention }." )
+
+	# If the message has content
+	if message.content != "":
+
+		# Log this deletion
+		await log( "Message deleted", f"`{ message.content }` sent by { message.author.mention } in { message.channel.mention } was deleted by { deleter.mention }." )
 
 # Runs when a message is edited
 async def on_message_edit(originalMessage, editedMessage):

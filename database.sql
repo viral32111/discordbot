@@ -27,33 +27,34 @@ SET time_zone = "+00:00";
 
 
 CREATE TABLE `AnonMessages` (
-	`Message` varchar(24) CHARACTER SET ascii NOT NULL,
-	`Token` varchar(64) CHARACTER SET ascii NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+	`Message` varchar(24) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
+	`Token` varchar(64) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Members` (
 	`Member` binary(32) NOT NULL,
 	`Steam` binary(32) DEFAULT NULL,
 	`Joined` binary(16) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `MemberStatistics` (
-	`Member` varchar(64) CHARACTER SET ascii NOT NULL,
-	`Messages` int(11) NOT NULL DEFAULT '1',
-	`Edits` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+	`Member` varchar(64) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
+	`Messages` int NOT NULL DEFAULT '1',
+	`Edits` int NOT NULL DEFAULT '0',
+	`Deletions` int NOT NULL DEFAULT '0',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `RelayShortlinks` (
-	`Checksum` varchar(64) CHARACTER SET ascii NOT NULL,
-	`Link` varchar(8) CHARACTER SET ascii NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+	`Checksum` varchar(64) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
+	`Link` varchar(8) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `RepostHistory` (
-	`Checksum` varchar(64) CHARACTER SET ascii NOT NULL,
-	`Channel` bigint(18) NOT NULL,
-	`Message` bigint(18) NOT NULL,
-	`Count` int(11) NOT NULL DEFAULT '1'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+	`Checksum` varchar(64) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
+	`Channel` bigint NOT NULL,
+	`Message` bigint NOT NULL,
+`Count` int NOT NULL DEFAULT '1',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 ALTER TABLE `AnonMessages`

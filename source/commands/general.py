@@ -244,27 +244,32 @@ async def myanimelist( message, arguments, client ):
 async def statistics( message, arguments, client ):
 
 	# Fetch this member's statistics
-	statistics = mysqlQuery( "SELECT Messages, Edits FROM MemberStatistics WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) ) );" )[ 0 ]
+	statistics = mysqlQuery( "SELECT Messages, Edits, Deletions FROM MemberStatistics WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) ) );" )[ 0 ]
 
 	# Format each statistic
 	messages = "{:,}".format( statistics[ 0 ] )
 	edits = "{:,}".format( statistics[ 1 ] )
+	deletions = "{:,}".format( statistics[ 2 ] )
 
 	# Respond with their statistics
-	return { "content": ":bar_chart: You have sent a total of **" + messages + "** messages in this server & made **" + edits + "** edits to your own messages.\n*(Statistics from before 02/08/2020 07:01:05 UTC may not be 100% accurate)*" }
+	return { "content": ":bar_chart: You have sent a total of **" + messages + "** messages in this server, made **" + edits + "** edits to your own messages & deleted **" + deletions + "** of your own messages.\n*(Statistics from before 02/08/2020 07:01:05 UTC may not be 100% accurate)*" }
 
 # View the top member statistics
 @chatCommands( category = "General", aliases = [ "topstats", "leaderboard" ] )
 async def topstatistics( message, arguments, client ):
 
 	# Fetch the top 20 member statistics
-	topStatistics = mysqlQuery( "SELECT AES_DECRYPT( UNHEX( Member ), UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) AS Member, Messages, Edits FROM MemberStatistics ORDER BY Messages DESC LIMIT 20;" )
+	topStatistics = mysqlQuery( "SELECT AES_DECRYPT( UNHEX( Member ), UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) AS Member, Messages, Edits, Deletions FROM MemberStatistics ORDER BY Messages DESC LIMIT 18;" )
 
 	# Create a blank embed
-	embed = discord.Embed( title = "Top 20", description = "", color = settings.color )
+	#embed = discord.Embed( title = "Top 20", description = "", color = settings.color )
 
 	# Set a notice in the embed footer
-	embed.set_footer( text = "Statistics from before 02/08/2020 07:01:05 UTC may not be 100% accurate." )
+	#embed.set_footer( text = "Statistics from before 02/08/2020 07:01:05 UTC may not be 100% accurate." )
+
+	messageContent = "```\n{:<4} {:<36} {:<14} {:<16} {:<17}\n".format( "No.", "Member Name", "Messages Sent", "Messages Edited", "Messages Deleted" )
+	messageContent += "{:<4} {:<36} {:<14} {:<16} {:<17}\n".format( "-" * 4, "-" * 36, "-" * 14, "-" * 16, "-" * 17 )
+	counter = 1
 
 	# Loop through each top statistic
 	for statistics in topStatistics:
@@ -281,12 +286,19 @@ async def topstatistics( message, arguments, client ):
 		# Format each statistic
 		messages = "{:,}".format( statistics[ 1 ] )
 		edits = "{:,}".format( statistics[ 2 ] )
+		deletions = "{:,}".format( statistics[ 3 ] )
 
 		# Add it to the embed description
-		embed.description += "• " + ( user.mention if user in message.guild.members else str( user ) ) + ": " + messages + " messages, " + edits + " edits.\n"
+		#embed.description += "• " + ( user.mention if user in message.guild.members else str( user ) ) + ": " + messages + " messages, " + edits + " edits, " + deletions + " deletions.\n"
+
+		messageContent += "{:<4} {:<36} {:<14} {:<16} {:<17}\n".format( str( counter ), str( user ), messages, edits, deletions )
+
+		counter += 1
+
+	messageContent += "\n```"
 
 	# Respond with the embed
-	return { "embed": embed }
+	return { "content": messageContent }
 
 # View the date & time you joined
 @chatCommands( category = "General" )
