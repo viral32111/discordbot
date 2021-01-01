@@ -70,4 +70,4 @@ If you discover the software is defective while using it, then you may report it
 
 ### Copyright
 
-Copyright (C) 2016 - 2020 [viral32111](https://github.com/viral32111).
+Copyright (C) 2016 - 2021 [viral32111](https://github.com/viral32111).
