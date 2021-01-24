@@ -28,14 +28,16 @@ $commands = [
 		$memberID = $data[ 'member' ][ 'user' ][ 'id' ];
 		$memberName = $data[ 'member' ][ 'user' ][ 'username' ];
 		$memberTag = $data[ 'member' ][ 'user' ][ 'discriminator' ];
-
+		$memberPermissions = intval( $data[ 'member' ][  'permissions' ] );
 		$commandID = $data[ 'id' ];
 		$guildID = $data[ 'guild_id' ];
 		$channelID = $data[ 'channel_id' ];
 
-		$optionalMessage = ( isset( $data[ 'data' ][ 'options' ][ 0 ] ) : $data[ 'data' ][ 'options' ][ 0 ][ 'value' ] : 'No message provided.' );
+		$hasKickPermission = ( $memberPermissions & 0x2 ) === 0x2;
 
-		return "Pong!\n\nMember: $memberName#$memberTag (ID: `$memberID`).\nInteraction ID: `$commandID`.\nGuild ID: `$guildID`.\nChannel ID: `$channelID`.\nMessage: `$optionalMessage`.";
+		$optionalMessage = ( isset( $data[ 'data' ][ 'options' ][ 0 ] ) ? $data[ 'data' ][ 'options' ][ 0 ][ 'value' ] : 'No message provided.' );
+
+		return "Pong!\n\nMember: $memberName#$memberTag (ID: `$memberID`).\n\nPermissions: `$memberPermissions` (Kick: `$hasKickPermission`).\n\nInteraction ID: `$commandID`.\nGuild ID: `$guildID`.\nChannel ID: `$channelID`.\n\nMessage: `$optionalMessage`.";
 	}
 
 ];
