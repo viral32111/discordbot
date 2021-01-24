@@ -31,7 +31,7 @@ import discord
 ##############################################
 
 # Timeout a user
-@chatCommands( category = "Moderation" )
+@chatCommands( category = "Moderation", wip = True )
 async def timeout( message, arguments, client ):
 
 	# Does the user not have the manage messages permission?
@@ -54,7 +54,7 @@ async def timeout( message, arguments, client ):
 
 		# Give the member the timeout role
 		await member.add_roles( timeoutRole, reason = "Member timed out by " + str( message.author ) )
-	
+
 		# Send message feedback
 		await message.channel.send( "Timed out " + member.mention + " indefinitely." )
 
@@ -82,7 +82,7 @@ async def untimeout( message, arguments, client ):
 
 		# Are they using it on themselves?
 		if member.id == message.author.id:
-			
+
 			# Friendly message
 			await message.channel.send( ":no_entry_sign: You cannot remove yourself from timeout." )
 
@@ -91,6 +91,28 @@ async def untimeout( message, arguments, client ):
 
 		# Remove the timeout role from the member
 		await member.remove_roles( timeoutRole, reason = "Member removed from timeout by " + str( message.author ) )
-	
+
 		# Send message feedback
 		await message.channel.send( "Removed " + member.mention + " from timeout." )
+
+# Restrict member(s) to text channel(s) for a optional amount of time
+@chatCommands( category = "Moderation" )
+async def restrict( message, arguments, client ):
+
+	# Stop with a message if the calling member does not have the Manage Messages permission
+	if not message.channel.permissions_for( message.author ).manage_messages: return { "content": ":no_entry_sign: This command can only be used by Moderators." }
+
+	# Stop with a message if no members were mentioned in the message
+	if len( message.mentions ) < 1: return { "content": ":grey_exclamation: You must mention at least 1 member." }
+
+	# Stop with a message if no text channels were mentioned in the message
+	if len( message.channel_mentions ) < 1: return { "content": ":grey_exclamation: You must mention at least 1 text channel." }
+
+	member_mentions = [ member.mention for member in message.mentions ]
+	channel_mentions = [ channel.mention for channel in message.channel_mentions ]
+	duration_text = " ".join( [ argument for argument in arguments if argument not in member_mentions and argument not in channel_mentions ] )
+
+	fancy_member_mentions = ( ", ".join( member_mentions[ : -1 ] ) + " & " + member_mentions[ -1 ] ) if len( member_mentions ) > 1 else member_mentions[ 0 ]
+	fancy_channel_mentions = ( ", ".join( channel_mentions[ : -1 ] ) + " & " + channel_mentions[ -1 ] ) if len( channel_mentions ) > 1 else channel_mentions[ 0 ]
+
+	return { "content": ":lock: Restricted " + fancy_member_mentions + " to " + fancy_channel_mentions + " for **" + duration_text + "**." }
