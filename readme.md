@@ -16,7 +16,7 @@ Report bugs by creating a [new issue](https://github.com/conspiracy-servers/cons
 
 ### Thirdparty
 
-[discord.py](https://pypi.org/project/discord.py/), [requests](https://pypi.org/project/requests/), [hurry.filesize](https://pypi.org/project/hurry.filesize/), [mysql-connector-python](https://pypi.org/project/mysql-connector-python/), [pytz](https://pypi.org/project/pytz/), [dotmap](https://pypi.org/project/dotmap/), [beautifulsoup4](https://pypi.org/project/beautifulsoup4/), [youtube_dl](https://pypi.org/project/youtube_dl/).
+[discord.py](https://pypi.org/project/discord.py/), [requests](https://pypi.org/project/requests/), [hurry.filesize](https://pypi.org/project/hurry.filesize/), [mysql-connector-python](https://pypi.org/project/mysql-connector-python/), [pytz](https://pypi.org/project/pytz/), [dotmap](https://pypi.org/project/dotmap/), [beautifulsoup4](https://pypi.org/project/beautifulsoup4/), [youtube_dl](https://pypi.org/project/youtube_dl/), [emoji](https://pypi.org/project/emoji/).
 
 ## Notes
 

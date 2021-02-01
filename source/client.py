@@ -44,6 +44,7 @@ import bs4 # Parsing & web scraping HTML
 import difflib # For computing deltas
 import operator # Extra sorting methods
 import signal # Handling termination signals
+import emoji # Resolving unicode emojis to text
 
 # Console message
 print( "Imported modules." )
@@ -1781,6 +1782,46 @@ async def on_reaction_add(reaction, user):
 	# Duplicate the reaction
 	#await reaction.message.add_reaction(reaction)
 
+# Runs when a reaction is added to a message regardless of if the whether the message is cached or not
+async def on_raw_reaction_add( payload ):
+
+	# Fetch objects related to this event
+	guild = client.get_guild( payload.guild_id )
+	channel = guild.get_channel( payload.channel_id )
+	message = await channel.fetch_message( payload.message_id )
+	member = guild.get_member( payload.user_id )
+
+	# Don't continue if it was a bot
+	if member.bot: return
+
+	# The name of the reacting emoji (includes :colons: for unicode emojis)
+	emojiName = emoji.demojize( payload.emoji.name )
+
+	# Is this the subscriptions message?
+	if message.id == settings.subscriptions.message:
+
+		# Is this a valid subscriptions role emoji
+		if payload.emoji.is_unicode_emoji() and emojiName in settings.subscriptions.roles:
+
+			# Fetch the role by ID
+			role = guild.get_role( settings.subscriptions.roles[ emojiName ] )
+
+			# Add role to user
+			await member.add_roles( role, reason = f"Subscribed to { role }." )
+
+			# Direct message the user
+			dmChannel = await member.create_dm()
+			await dmChannel.send( f"You have subscribed to **{ role }**!\n\nMake sure you have the `Suppress All Role @mentions` option disabled in your notification settings for the server so you receive the pings.\n\nIf you subscribed by mistake, remove your reaction from the message in <#410507397166006274> to unsubscribe." )
+
+			# Print in console
+			print( f"{ member } subscribed to { role }." )
+
+		# It is not an emoji we care about
+		else:
+
+			# Remove it from the message to avoid reaction clogging
+			await message.remove_reaction( payload.emoji, member )
+
 # Runs when a reaction is removed from a message
 async def on_reaction_remove(reaction, user):
 
@@ -1789,6 +1830,40 @@ async def on_reaction_remove(reaction, user):
 
 	# Console message
 	print(f"{user} removed {reaction.emoji} from {reaction.message.content}.")
+
+# Runs when a reaction is removed from a message regardless of if the whether the message is cached or not
+async def on_raw_reaction_remove( payload ):
+
+	# Fetch objects related to this event
+	guild = client.get_guild( payload.guild_id )
+	channel = guild.get_channel( payload.channel_id )
+	message = await channel.fetch_message( payload.message_id )
+	member = guild.get_member( payload.user_id )
+
+	# Don't continue if it was a bot
+	if member.bot: return
+
+	# The name of the reacting emoji (includes :colons: for unicode emojis)
+	emojiName = emoji.demojize( payload.emoji.name )
+
+	# Is this the subscriptions message?
+	if message.id == settings.subscriptions.message:
+
+		# Don't continue if we don't care about this reacting emoji
+		if not payload.emoji.is_unicode_emoji() or emojiName not in settings.subscriptions.roles: return
+
+		# Fetch the role by ID
+		role = guild.get_role( settings.subscriptions.roles[ emojiName ] )
+
+		# Remove role from user
+		await member.remove_roles( role, reason = f"Unsubscribed from { role }." )
+
+		# Direct message the user
+		dmChannel = await member.create_dm()
+		await dmChannel.send( f"You have unsubscribed from **{ role }**.\n\nIf you unsubscribed by mistake, add a reaction to the message in <#410507397166006274> to resubscribe." )
+
+		# Print in console
+		print( f"{ member } unsubscribed from { role }." )
 
 # Runs when a member's voice state changes
 async def on_voice_state_update( member, before, after ):
@@ -1854,7 +1929,9 @@ async def on_ready():
 	client.event( on_member_join )
 	client.event( on_member_remove )
 	client.event( on_reaction_add )
+	client.event( on_raw_reaction_add )
 	client.event( on_reaction_remove )
+	client.event( on_raw_reaction_remove )
 	client.event( on_voice_state_update )
 	print( "Registered callbacks." )
 
@@ -1862,6 +1939,14 @@ async def on_ready():
 	backgroundTasks.append( client.loop.create_task( chooseRandomActivity() ) )
 	backgroundTasks.append( client.loop.create_task( updateCategoryStatus() ) )
 	print( "Created background tasks." )
+
+	# Ensure the bot has reacted to the subscriptions message
+	subscriptionsChannel = client.get_channel( settings.subscriptions.channel )
+	subscriptionsMessage = await subscriptionsChannel.fetch_message( settings.subscriptions.message )
+	await subscriptionsMessage.add_reaction( "🍉" )
+	await subscriptionsMessage.add_reaction( "🔨" )
+	await subscriptionsMessage.add_reaction( "🧱" )
+	await subscriptionsMessage.add_reaction( "💾" )
 
 	# Console message
 	print( "Ready." )

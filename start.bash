@@ -28,7 +28,8 @@
 			git+https://github.com/mysql/mysql-connector-python \
 			hurry.filesize \
 			pytz \
-			beautifulsoup4 && \
+			beautifulsoup4 \
+			emoji && \
 		python source/client.py'
 
 /usr/bin/docker attach conspiracyai
