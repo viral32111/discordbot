@@ -31,7 +31,7 @@ import discord
 ##############################################
 
 # Timeout a user
-@chatCommands( category = "Moderation", wip = True )
+@chatCommands( category = "Moderation" )
 async def timeout( message, arguments, client ):
 
 	# Does the user not have the manage messages permission?
