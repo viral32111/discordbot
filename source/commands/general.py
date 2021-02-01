@@ -98,7 +98,7 @@ async def help( message, arguments, client ):
 async def link( message, arguments, client ):
 
 	# Respond with a simple message
-	return { "content": ":link: Visit <https://conspiracyservers.com/link> to link your Steam account." }
+	return { "content": ":link: Visit <https://viral32111.com/link> to link your Steam account." }
 
 # View available commands
 @chatCommands( category = "General", aliases = [ "cmds" ] )

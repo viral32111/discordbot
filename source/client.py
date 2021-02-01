@@ -748,7 +748,7 @@ class Server:
 		self.uptime = round( response[ "uptime" ] )
 		self.uptimePretty = formatSeconds( self.uptime )
 		self.maxPlayers = round( response[ "maxplayers" ] )
-		self.mapImage = "https://content.conspiracyservers.com/maps/large/" + response[ "map" ] + ".jpg"
+		self.mapImage = "https://viral32111.com/content/maps/large/" + response[ "map" ] + ".jpg"
 		self.players = [ Player( player, serverConfig ) for player in response[ "players" ] ]
 		self.admins = [ Player( admin, serverConfig ) for admin in response[ "admins" ] ]
 		self.bots = [ Bot( bot ) for bot in response[ "bots" ] ]
@@ -1097,7 +1097,7 @@ async def on_message( message ):
 	if message.guild == None and guildMember == None:
 
 		# Friendly message
-		await message.author.dm_channel.send( ":exclamation: You must be a member of the Conspiracy Servers Discord to use me.\nJoin here: https://conspiracyservers.com/discord", delete_after = 60 )
+		await message.author.dm_channel.send( ":exclamation: You must be a member of the Conspiracy Servers Discord to use me.\nJoin here: https://viral32111.com/discord", delete_after = 60 )
 
 		# Prevent further execution
 		return

@@ -21,7 +21,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 	"color": 14732677,
 	"guild": 240167618575728644,
 	"owner": 480764191465144331, // me :)
-	"email": "contact@conspiracyservers.com",
+	"email": "contact@viral32111.com",
 	"channels": {
 		"relays": {
 			"257258731287478283": "sandbox",
@@ -57,7 +57,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 	},
 	"garrysmod": {
 		"sandbox": {
-			"address": "sandbox.conspiracyservers.com",
+			"address": "sandbox.viral32111.com",
 			"port": 27190,
 			"groups": {
 				"founders": "Founder",
@@ -70,7 +70,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 			}
 		},
 		"darkrp": {
-			"address": "darkrp.conspiracyservers.com",
+			"address": "darkrp.viral32111.com",
 			"port": 27147,
 			"groups": {
 				"superadmin": "Super Admin",
@@ -185,17 +185,17 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 		"Listening to dubstep DarkRP loading screens.",
 		"Listening to \"RDM!, RDM! @ADMIN TP\"",
 		"Watching you wait for this message to change.",
-		"Playing sandbox.conspiracyservers.com:27045",
+		"Playing sandbox.viral32111.com:27045",
 		"Playing 6AF9 F7D7 89D7 BFE5 46CD 8318 770F 46AB EA99 D12F",
 		"Playing 185.134.22.10:27045",
 		"Playing 1477327222",
 		"Playing I'm open-source!",
-		"Playing conspiracyservers.com",
-		"Playing conspiracyservers.com/discord",
-		"Playing conspiracyservers.com/steam",
-		"Playing conspiracyservers.com/sandbox",
+		"Playing viral32111.com/community",
+		"Playing viral32111.com/discord",
+		"Playing viral32111.com/steam",
+		"Playing viral32111.com/sandbox",
 		"Playing github.com/conspiracy-servers",
-		"Playing contact@conspiracyservers.com",
+		"Playing contact@viral32111.com",
 		"Playing Unix time is over 1600000000!"
 	],
 	"maps": {

@@ -56,12 +56,12 @@ async def sandbox( message, arguments, client ):
 			f"• Latency: { server.latency }ms",
 			f"• Tickrate: { server.tickrate }/s",
 			f"• Uptime: { server.uptimePretty }",
-			f"• IP: [`sandbox.conspiracyservers.com:27045`](https://conspiracyservers.com/join-sandbox)"
+			f"• IP: [`sandbox.viral32111.com:27045`](https://viral32111.com/join-sandbox)"
 		]
 
 		# Useful links
 		links = [
-			"• [Collection](https://conspiracyservers.com/sandbox)",
+			"• [Collection](https://viral32111.com/sandbox)",
 			"• [Rules](https://raw.githubusercontent.com/conspiracy-servers/information/master/Sandbox%20Rules.txt)",
 			"• [Guidelines](https://raw.githubusercontent.com/conspiracy-servers/information/master/Sandbox%20Guidelines.txt)"
 		]
@@ -78,7 +78,7 @@ async def sandbox( message, arguments, client ):
 		# Set the author to the server hostname & icon
 		embed.set_author(
 			name = server.hostname[:48] + "...",
-			icon_url = "https://content.conspiracyservers.com/icons/hammer.png"
+			icon_url = "https://viral32111.com/content/icons/hammer.png"
 		)
 
 		# Set the thumbnail to the map preview

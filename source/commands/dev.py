@@ -66,10 +66,10 @@ async def downloadCallback( event, message, arguments ):
 		print( "Downloaded: " + event[ "filename" ] + " (" + "{:,}".format( event[ "total_bytes" ] ) + "b) (" + ( str( round( event[ "elapsed" ], 2 ) ) + "s elapsed" if "elapsed" in event else "located" ) + ")" )
 
 		# The path to the file excluding web document root
-		webPath = event[ "filename" ].replace( "/srv/www/conspiracyservers.com/files.conspiracyservers.com/downloads/", "" )
+		webPath = event[ "filename" ].replace( "/srv/www/viral32111.com/content/downloads/", "" )
 
 		# Friendly message
-		await message.channel.send( "https://content.conspiracyservers.com/" + webPath )
+		await message.channel.send( "https://viral32111.com/content/downloads/" + webPath )
 
 	# The download is in progress
 	elif event[ "status" ] == "downloading":
@@ -96,7 +96,7 @@ async def download( message, arguments, client ):
 		"format": "best",
 		"restrictfilenames": True,
 		"nooverwrites": True,
-		"outtmpl": "/var/www/conspiracyservers.com/files/downloads/%(extractor)s/%(id)s.%(ext)s",
+		"outtmpl": "/var/www/viral32111.com/content/downloads/%(extractor)s/%(id)s.%(ext)s",
 		"progress_hooks": [
 			lambda event: client.loop.create_task( downloadCallback( event, message, arguments ) )
 		]

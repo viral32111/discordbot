@@ -35,25 +35,25 @@ import discord
 async def website( message, arguments, client ):
 
 	# Respond with a simple message
-	return { "content": ":link: The community website is available at https://conspiracyservers.com" }
+	return { "content": ":link: The community website is available at https://viral32111.com/community" }
 
 # Steam Group
 @chatCommands( category = "Links", aliases = [ "steam" ] )
 async def steamgroup( message, arguments, client ):
 
 	# Respond with a simple message
-	return { "content": ":link: The community Steam Group is available at https://conspiracyservers.com/steam" }
+	return { "content": ":link: The community Steam Group is available at https://viral32111.com/steam" }
 
 # Discord
 @chatCommands( category = "Links", aliases = [ "invite" ] )
 async def discord( message, arguments, client ):
 
 	# Respond with a simple message
-	return { "content": ":link: The community Discord invite link is https://conspiracyservers.com/discord" }
+	return { "content": ":link: The community Discord invite link is https://viral32111.com/discord" }
 
 # Staff Application
 @chatCommands( category = "Links", aliases = [ "apply" ] )
 async def staffapplication( message, arguments, client ):
 
 	# Respond with a simple message
-	return { "content": ":link: You can apply for Staff by filling out the application available at https://conspiracyservers.com/apply" }
+	return { "content": ":link: You can apply for Staff by filling out the application available at https://viral32111.com/apply" }

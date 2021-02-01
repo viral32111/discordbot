@@ -37,8 +37,8 @@ def api( method, endpoint, payload = None ):
 		json = payload,
 		headers = {
 			"Authorization": "Bot {}".format( secrets.token ),
-			"User-Agent": "Conspiracy AI (github.com/conspiracy-servers/conspiracy-ai; contact@conspiracyservers.com)",
-			"From": "contact@conspiracyservers.com"
+			"User-Agent": "Conspiracy AI (github.com/conspiracy-servers/conspiracy-ai; contact@viral32111.com)",
+			"From": "contact@viral32111.com"
 		}
 	)
 
