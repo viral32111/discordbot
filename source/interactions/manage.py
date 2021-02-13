@@ -50,81 +50,20 @@ def api( method, endpoint, payload = None ):
 
 # Main code
 api( "POST", "applications/{}/guilds/{}/commands".format( CLIENT_ID, GUILD_ID ), {
-	"name": "minecraft",
-	"description": "Interact with the Minecraft server.",
+	"name": "warn",
+	"description": "Issue a warning against a member for breaking a rule.",
 	"options": [
 		{
-			"type": 3, # STRING
-			"name": "server",
-			"description": "Execute power actions on the server.",
-			"choices": [
-				{
-					"name": "start",
-					"value": "start"
-				},
-				{
-					"name": "stop",
-					"value": "stop"
-				},
-				{
-					"name": "restart",
-					"value": "restart"
-				}
-			]
+			"type": 6, # USER
+			"name": "member",
+			"description": "The member to warn.",
+			"required": True
 		},
 		{
 			"type": 3, # STRING
-			"name": "world",
-			"description": "Manage the server's world.",
-			"choices": [
-				{
-					"name": "save",
-					"value": "save"
-				}
-			]
-		},
-		{
-			"type": 1, # SUBCOMMAND
-			"name": "kick",
-			"description": "Kick a player.",
-			"options": [
-				{
-					"type": 3, # STRING
-					"name": "name",
-					"description": "The name of the player.",
-					"required": True
-				},
-				{
-					"type": 3, # STRING
-					"name": "reason",
-					"description": "The reason for kicking this player.",
-					"required": True
-				}
-			]
-		},
-		{
-			"type": 1, # SUBCOMMAND
-			"name": "ban",
-			"description": "Ban a player.",
-			"options": [
-				{
-					"type": 3, # STRING
-					"name": "name",
-					"description": "The name of the player.",
-					"required": True
-				},
-				{
-					"type": 3, # STRING
-					"name": "reason",
-					"description": "The reason for banning this player.",
-					"required": True
-				},
-				{
-					"type": 4, # NUMBER
-					"name": "duration",
-					"description": "How long should this player be banned for"
-				}
-			]
+			"name": "reason",
+			"description": "Why are you warning this member?",
+			"required": True
 		}
 	]
 } )

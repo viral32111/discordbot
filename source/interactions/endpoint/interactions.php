@@ -38,6 +38,24 @@ $commands = [
 		$optionalMessage = ( isset( $data[ 'data' ][ 'options' ][ 0 ] ) ? $data[ 'data' ][ 'options' ][ 0 ][ 'value' ] : 'No message provided.' );
 
 		return "Pong!\n\nMember: $memberName#$memberTag (ID: `$memberID`).\n\nPermissions: `$memberPermissions` (Kick: `$hasKickPermission`).\n\nInteraction ID: `$commandID`.\nGuild ID: `$guildID`.\nChannel ID: `$channelID`.\n\nMessage: `$optionalMessage`.";
+	},
+
+	// Warn
+	'warn' => function( $data ) {
+		$memberID = $data[ 'member' ][ 'user' ][ 'id' ];
+		$memberName = $data[ 'member' ][ 'user' ][ 'username' ];
+		$memberTag = $data[ 'member' ][ 'user' ][ 'discriminator' ];
+
+		$memberPermissions = intval( $data[ 'member' ][  'permissions' ] );
+		$hasManageMessagesPermission = ( $memberPermissions & 0x2000 ) === 0x2000;
+
+		$reason = $data[ 'data' ][ 'options' ][ 1 ][ 'value' ];
+
+		if ( $hasManageMessagesPermission ) {
+			return 'ur allowed to use this cmd but it doesnt work yet';
+		} else {
+			return 'NO not for you';
+		}
 	}
 
 ];
@@ -106,7 +124,7 @@ if ( $payload[ 'type' ] == 1 ) {
 		$response[ 'data' ] = [
 			'content' => $result
 		];
-	
+
 	// Result is not valid
 	} else {
 

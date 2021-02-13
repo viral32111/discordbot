@@ -42,7 +42,7 @@ async def website( message, arguments, client ):
 async def steamgroup( message, arguments, client ):
 
 	# Respond with a simple message
-	return { "content": ":link: The community Steam Group is available at https://viral32111.com/steam" }
+	return { "content": ":link: The community Steam Group is available at https://viral32111.com/steamgroup" }
 
 # Discord
 @chatCommands( category = "Links", aliases = [ "invite" ] )
