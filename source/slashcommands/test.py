@@ -21,7 +21,7 @@
 ##############################################
 
 # Import variables from the main script
-from __main__ import slashCommands, ApplicationCommandOption, ApplicationCommandOptionType, ApplicationCommandOptionChoice, InteractionResponse, InteractionResponseType, InteractionApplicationCommandCallbackData
+from __main__ import slashCommands, InteractionResponse, InteractionResponseType, InteractionApplicationCommandCallbackData
 
 # Import required modules
 import discord
@@ -30,76 +30,12 @@ import discord
 # Define slash commands
 ##############################################
 
-# Test
-@slashCommands( description = "A test command to check if the bot can respond to interactions over the gateway." )
-async def test( guild, channel, member, options ):
+# Hello
+@slashCommands( description = "A simple test command to check everything works." )
+async def hello( guild, channel, member, options ):
 	return InteractionResponse(
 		InteractionResponseType.ChannelMessageWithSource,
 		InteractionApplicationCommandCallbackData(
-			"Haha this was a test!"
+			f"Hello { member.mention }!"
 		)
 	)
-
-# Hello World
-@slashCommands( description = "Another testing command, do arguments work?", options = [
-	ApplicationCommandOption(
-		name = "message",
-		description = "This is where the message goes.",
-		type = ApplicationCommandOptionType.String,
-		required = True
-	)
-] )
-async def hello( guild, channel, member, options ):
-	print( "Hello World!" )
-
-# Foo Bar
-@slashCommands( description = "A third testing command, do multiple arguments with choices work?", options = [
-	ApplicationCommandOption(
-		name = "cool",
-		description = "A super cool value.",
-		type = ApplicationCommandOptionType.Integer,
-		choices = [
-			ApplicationCommandOptionChoice( "This is number 1", 1 ),
-			ApplicationCommandOptionChoice( "This is number 2", 2 ),
-			ApplicationCommandOptionChoice( "This is number 3", 3 )
-		]
-	),
-	ApplicationCommandOption(
-		name = "epic",
-		description = "An amazingly epic value.",
-		type = ApplicationCommandOptionType.String,
-		choices = [
-			ApplicationCommandOptionChoice( "This is choice 1", "one" ),
-			ApplicationCommandOptionChoice( "This is choice 2", "two" )
-		]
-	)
-] )
-async def foo( guild, channel, member, options ):
-	print( "Foo Bar!" )
-
-# Example
-@slashCommands( description = "Fourth testing command, we're testing sub-commands here.", options = [
-	ApplicationCommandOption(
-		name = "idk",
-		description = "I don't know tbh.",
-		type = ApplicationCommandOptionType.SubCommand,
-		options = [
-			ApplicationCommandOption(
-				name = "number",
-				description = "It's just a number bro.",
-				type = ApplicationCommandOptionType.Integer,
-			),
-			ApplicationCommandOption(
-				name = "kthxbai",
-				description = "I'm running out of ideas for argument names.",
-				type = ApplicationCommandOptionType.String,
-				choices = [
-					ApplicationCommandOptionChoice( "AAAAAAAAAAAAAAAA", "mood" ),
-					ApplicationCommandOptionChoice( "eternal pain", "life" )
-				]
-			)
-		]
-	)
-] )
-async def example( guild, channel, member, options ):
-	print( "Example!" )
