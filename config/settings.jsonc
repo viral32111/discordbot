@@ -21,6 +21,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 	"color": 14732677,
 	"guild": 240167618575728644,
 	"owner": 480764191465144331, // me :)
+	"appid": 513872128156893189, // bot
 	"email": "contact@viral32111.com",
 	"subscriptions": {
 		"channel": 410507397166006274, // #info
@@ -204,7 +205,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 		"Playing viral32111.com/discord",
 		"Playing viral32111.com/steam",
 		"Playing viral32111.com/sandbox",
-		"Playing github.com/conspiracy-servers",
+		"Playing github.com/viral32111",
 		"Playing contact@viral32111.com",
 		"Playing Unix time is over 1600000000!"
 	],
