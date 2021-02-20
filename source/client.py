@@ -2142,7 +2142,7 @@ async def on_socket_response( payload ):
 
 	guild = client.get_guild( interaction.guild_id )
 	channel = guild.get_channel( interaction.channel_id )
-	member = guild.get_member( interaction.member[ "user" ][ "id" ] )
+	member = guild.get_member( int( interaction.member[ "user" ][ "id" ] ) )
 
 	result = await slashCommands[ interaction.data.name ]( guild, channel, member, interaction.data.options )
 
