@@ -35,18 +35,14 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 	},
 	"channels": {
 		"relays": {
-			"257258731287478283": "sandbox",
-			"332578712585502742": "darkrp",
-			"420369246363844613": "viral32111"
+			"257258731287478283": "sandbox"
 		},
 		"statuses": {
-			"sandbox": 509871312299360276,
-			"darkrp": 643525189585338411
+			"sandbox": 509871312299360276
 		},
 		"logs": {
 			"id": 576904701304635405,
 			"exclude": [
-				643525189585338411, // DarkRP Category
 				728352621420609666 // Development Category
 			]
 		},
@@ -56,8 +52,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 	},
 	"reposts": {
 		"exclude": [
-			241602380569772044, // Casual -> #commands
-			670361447728939008 // Staff -> #commands
+			241602380569772044 // #commands
 		],
 		"excludeChecksums": [
 			"d556a1122196aff29f037986e570fb6d42eac96dcd9dcb9168066de98c31ccc7", // that rainbow dancing anime girl gif
@@ -78,24 +73,6 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 				"donator": "Donator",
 				"trusted": "Trusted",
 				"user": "Member"
-			}
-		},
-		"darkrp": {
-			"address": "darkrp.viral32111.com",
-			"port": 27147,
-			"groups": {
-				"superadmin": "Super Admin",
-				"admin": "Admin",
-				"user": "User"
-			}
-		},
-		"viral32111": {
-			"address": "192.168.0.2",
-			"port": 27050,
-			"groups": {
-				"superadmin": "Super Admin",
-				"admin": "Admin",
-				"user": "User"
 			}
 		}
 	},
