@@ -76,7 +76,7 @@ async def sandbox( message, arguments, client ):
 		# Set the author to the server hostname & icon
 		embed.set_author(
 			name = server.hostname[:48] + "...",
-			icon_url = "https://viral32111.com/images/conspiracyai/icons/hammer.png"
+			icon_url = "https://viral32111.com/images/conspiracyai/icons/sandbox.png"
 		)
 
 		# Set the thumbnail to the map preview
