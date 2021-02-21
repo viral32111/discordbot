@@ -61,9 +61,7 @@ async def sandbox( message, arguments, client ):
 
 		# Useful links
 		links = [
-			"• [Collection](https://viral32111.com/sandbox)",
-			"• [Rules](https://raw.githubusercontent.com/conspiracy-servers/information/master/Sandbox%20Rules.txt)",
-			"• [Guidelines](https://raw.githubusercontent.com/conspiracy-servers/information/master/Sandbox%20Guidelines.txt)"
+			"• [Collection](https://viral32111.com/sandbox)"
 		]
 
 		# Online staff
@@ -78,7 +76,7 @@ async def sandbox( message, arguments, client ):
 		# Set the author to the server hostname & icon
 		embed.set_author(
 			name = server.hostname[:48] + "...",
-			icon_url = "https://viral32111.com/content/icons/hammer.png"
+			icon_url = "https://viral32111.com/images/conspiracyai/icons/hammer.png"
 		)
 
 		# Set the thumbnail to the map preview
