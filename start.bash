@@ -26,6 +26,7 @@
 			git+https://github.com/psf/requests \
 			git+https://github.com/drgrib/dotmap \
 			git+https://github.com/mysql/mysql-connector-python \
+			git+https://github.com/Dinnerbone/mcstatus \
 			hurry.filesize \
 			pytz \
 			beautifulsoup4 \

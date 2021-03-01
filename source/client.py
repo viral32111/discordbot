@@ -46,6 +46,7 @@ import operator # Extra sorting methods
 import signal # Handling termination signals
 import emoji # Resolving unicode emojis to text
 import enum # Enumerations for custom classes
+import mcstatus # Minecraft server status querying
 
 # Console message
 print( "Imported modules." )
@@ -1065,6 +1066,7 @@ class SlashCommands:
 		self.description = arguments[ "description" ]
 		self.options = arguments.get( "options", None )
 		self.dm = arguments.get( "dm", False )
+		self.early = arguments.get( "early", True )
 		return self.register
 
 	def __getitem__( self, name ):
@@ -1072,7 +1074,10 @@ class SlashCommands:
 
 	def register( self, function ):
 		self.name = function.__name__
-		self.commands[ self.name ] = function
+		self.commands[ self.name ] = {
+			"function": function,
+			"early": self.early
+		}
 
 		if self.dm:
 			url = f"https://discord.com/api/v8/applications/{ settings.appid }/commands"
@@ -1125,6 +1130,7 @@ class SlashCommands:
 slashCommands = SlashCommands()
 
 from slashcommands import test
+from slashcommands import minecraft
 
 print( "Defined slash commands." )
 
@@ -1254,7 +1260,25 @@ async def updateCategoryStatus():
 	except asyncio.CancelledError:
 
 		# Console message
-		print( "Cancelled update category status background task." )
+		print( "Cancelled update Sandbox category status background task." )
+
+# Update the Minecraft category name with the server's status
+async def updateMinecraftCategoryStatus():
+	try:
+		category = client.get_channel( 805818251728388156 )
+		server = mcstatus.MinecraftServer( "viral32111.com", 25565 )
+		while not client.is_closed():
+			text = "Unknown"
+			try:
+				status = await server.async_status()
+			except ConnectionRefusedError:
+				text = "Offline"
+			else:
+				text = ( f"{status.players.online} online" if status.players.online > 0 else "Empty" )
+			await category.edit( name = f"🧱 Minecraft ({ text })", reason = "Update Minecraft category server status." )
+			await asyncio.sleep( 120 )
+	except asyncio.CancelledError:
+		print( "Cancelled update Minecraft category status background task." )
 
 # Console message
 print( "Defined background tasks." )
@@ -1278,6 +1302,7 @@ async def on_resumed():
 	# Launch background tasks - keep this the same as on_ready()!
 	backgroundTasks.append( client.loop.create_task( chooseRandomActivity() ) )
 	backgroundTasks.append( client.loop.create_task( updateCategoryStatus() ) )
+	backgroundTasks.append( client.loop.create_task( updateMinecraftCategoryStatus() ) )
 	print( "Created background tasks." )
 
 	# Console message
@@ -2144,37 +2169,79 @@ async def on_socket_response( payload ):
 	channel = guild.get_channel( interaction.channel_id )
 	member = guild.get_member( int( interaction.member[ "user" ][ "id" ] ) )
 
-	result = await slashCommands[ interaction.data.name ]( guild, channel, member, interaction.data.options )
+	command = slashCommands[ interaction.data.name ]
 
-	if result:
-		response = {
-			"type": result.type.value,
-		}
+	async with channel.typing():
+		if command[ "early" ] == True:
 
-		if result.data:
-			data_response = {
-				"tts": result.data.tts,
-				"content": result.data.content
+			# omfg this is shit in the future make this better with an early true/false arg to executing the cmd callback
+			request = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", json = {
+				"type": InteractionResponseType.Acknowledge.value,
+				"data": {
+					"content": "",
+					"embeds": [ {
+						"title": "",
+						"description": "Fetching server information, please wait...",
+						"author": {
+							"name": "viral32111's minecraft server",
+							"icon_url": "https://viral32111.com/images/minecraft/brick.png"
+						},
+						"footer": {
+							"text": f"Requested by { member.name }#{ member.discriminator }."
+						},
+						"color": 0xf7894a
+					} ]
+				}
+			}, headers = {
+				"Authorization": f"Bot { secrets.token }",
+				"User-Agent": USER_AGENT_HEADER,
+				"From": settings.email
+			} )
+
+		result = await command[ "function" ]( client, guild, channel, member, interaction.data.options )
+
+		if result:
+			response = {
+				"type": result.type.value,
 			}
 
-			# result.data.embeds & result.data.allowed_mentions
+			if result.data:
+				data_response = {
+					"tts": result.data.tts,
+					"content": result.data.content
+				}
 
-			response[ "data" ] = data_response
-	else:
-		response = {
-			"type": InteractionResponseType.ChannelMessageWithSource.value,
-			"data": {
-				"content": ":interrobang: Command was executed but it never gave any data back!"
+				if result.data.embeds:
+					data_response[ "embeds" ] = []
+					for embed in result.data.embeds:
+						data_response[ "embeds" ].append( embed.to_dict() )
+
+				# result.data.allowed_mentions
+
+				response[ "data" ] = data_response
+		else:
+			response = {
+				"type": InteractionResponseType.ChannelMessageWithSource.value,
+				"data": {
+					"content": ":interrobang: Command was executed but it never gave any data back!"
+				}
 			}
-		}
 
-	# We need to lookup the SlashCommand here and then execute its function just like how the old command system does it
-	# For now tho we'll just respond with some placeholder
-	request = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", json = response, headers = {
-		"Authorization": f"Bot { secrets.token }",
-		"User-Agent": USER_AGENT_HEADER,
-		"From": settings.email
-	} )
+		if command[ "early" ] == True:
+			request = requests.patch( f"https://discord.com/api/v8/webhooks/{ settings.appid }/{ interaction.token }/messages/@original", json = response[ "data" ], headers = {
+				"Authorization": f"Bot { secrets.token }",
+				"User-Agent": USER_AGENT_HEADER,
+				"From": settings.email
+			} )
+		else:
+			request = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", json = response, headers = {
+				"Authorization": f"Bot { secrets.token }",
+				"User-Agent": USER_AGENT_HEADER,
+				"From": settings.email
+			} )
+
+		if request.status_code != 200:
+			raise Exception( f"Error executing slash command '/{ interaction.data.name }': { request.status_code } { json.dumps( request.json(), indent = 4 ) }" )
 
 # Runs when the client is ready
 async def on_ready():
@@ -2199,6 +2266,7 @@ async def on_ready():
 	# Launch background tasks - keep this the same as on_ready()!
 	backgroundTasks.append( client.loop.create_task( chooseRandomActivity() ) )
 	backgroundTasks.append( client.loop.create_task( updateCategoryStatus() ) )
+	backgroundTasks.append( client.loop.create_task( updateMinecraftCategoryStatus() ) )
 	print( "Created background tasks." )
 
 	# Ensure the bot has reacted to the subscriptions message
