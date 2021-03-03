@@ -1129,7 +1129,6 @@ class SlashCommands:
 
 slashCommands = SlashCommands()
 
-from slashcommands import test
 from slashcommands import minecraft
 
 print( "Defined slash commands." )
