@@ -45,13 +45,12 @@ async def minecraft( client, guild, channel, member, options ):
 	embed.set_footer( text = f"Requested by { member.name }#{ member.discriminator }." )
 
 	try:
-		latency = server.ping()
 		query = server.query()
 	except socket.timeout:
 		embed.description = "Timed out while fetching information! The server is likely offline at the moment."
 	else:
 		embed.description = ""
-		embed.add_field( name = "__Status__", value = f"• Players: { query.players.online } / { query.players.max }\n• Latency: { round( latency ) }ms\n• Version: { query.software.version }\n• Software: { query.software.brand }", inline = False )
+		embed.add_field( name = "__Status__", value = f"• Players: { query.players.online } / { query.players.max }\n• Version: { query.software.version }\n• Software: { query.software.brand }", inline = False )
 
 		if query.players.online > 0:
 			playerText = ""
