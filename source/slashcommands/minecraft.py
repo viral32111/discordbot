@@ -56,10 +56,7 @@ async def minecraft( client, guild, channel, member, options ):
 		if query.players.online > 0:
 			playerText = ""
 			for player in query.players.names:
-				playerText += f"• { player }"
-				#print( player )
-				#match = re.match( r"^(.+) \(([\w\d-]+)\)$", player )
-				#playerText += f"• [{ match.group( 1 ) }](https://namemc.com/profile/{ match.group( 2 ) })"
+				playerText += f"• { discord.utils.escape_markdown( player ) }\n"
 			embed.add_field( name = "__Players__", value = playerText, inline = False )
 
 	return InteractionResponse(
