@@ -47,6 +47,7 @@ import signal # Handling termination signals
 import emoji # Resolving unicode emojis to text
 import enum # Enumerations for custom classes
 import mcstatus # Minecraft server status querying
+import socket # Low level networking interface
 
 # Console message
 print( "Imported modules." )
@@ -1270,7 +1271,7 @@ async def updateMinecraftCategoryStatus():
 			text = "Unknown"
 			try:
 				status = await server.async_status()
-			except ConnectionRefusedError:
+			except socket.timeout:
 				text = "Offline"
 			else:
 				text = ( f"{status.players.online} online" if status.players.online > 0 else "Empty" )
@@ -2167,6 +2168,37 @@ async def on_socket_response( payload ):
 	guild = client.get_guild( interaction.guild_id )
 	channel = guild.get_channel( interaction.channel_id )
 	member = guild.get_member( int( interaction.member[ "user" ][ "id" ] ) )
+
+	if channel.id != 241602380569772044: #commands
+		sendRequest = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", headers = {
+			"Authorization": f"Bot { secrets.token }",
+			"User-Agent": USER_AGENT_HEADER,
+			"From": settings.email
+		}, json = {
+			"type": InteractionResponseType.ChannelMessage.value,
+			"data": {
+				"content": f":exclamation: { member.mention }, commands can only be used in <#241602380569772044>!",
+				"allowed_mentions": {
+					"parse": []
+				}
+			}
+		} )
+
+		if sendRequest.status_code != 204:
+			raise Exception( f"Error responding to slash command '/{ interaction.data.name }': { sendRequest.status_code } { json.dumps( sendRequest.json(), indent = 4 ) }" )
+
+		await asyncio.sleep( 10 )
+
+		deleteRequest = requests.delete( f"https://discord.com/api/v8/webhooks/{ settings.appid }/{ interaction.token }/messages/@original", headers = {
+			"Authorization": f"Bot { secrets.token }",
+			"User-Agent": USER_AGENT_HEADER,
+			"From": settings.email
+		} )
+
+		if deleteRequest.status_code != 204:
+			raise Exception( f"Error deleting slash command response for '/{ interaction.data.name }': { deleteRequest.status_code } { json.dumps( deleteRequest.json(), indent = 4 ) }" )
+
+		return
 
 	command = slashCommands[ interaction.data.name ]
 
