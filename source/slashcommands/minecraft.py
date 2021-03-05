@@ -38,7 +38,19 @@ import discord, mcstatus, socket, re
 		description = "A brief real-time status of the Minecraft server."
 	)
 ] )
-async def minecraft( client, guild, channel, member, options ):
+async def minecraft( client, guild, channel, member, options, early ):
+	if early == True:
+		embed = discord.Embed( title = "", description = "Fetching server information...", color = 0xf7894a )
+		embed.set_footer( text = f"Requested by { member.name }#{ member.discriminator }." )
+		embed.set_author( name = "viral32111's minecraft server", icon_url = "https://viral32111.com/images/minecraft/brick.png" )
+		return InteractionResponse(
+			InteractionResponseType.ChannelMessage,
+			InteractionApplicationCommandCallbackData(
+				"",
+				embeds = [ embed ]
+			)
+		)
+
 	server = mcstatus.MinecraftServer( "viral32111.com", 25565 )
 	embed = discord.Embed( title = "", description = "Nothing is known about the server at this time. Try again later.", color = 0xf7894a )
 	embed.set_author( name = "viral32111's minecraft server", icon_url = "https://viral32111.com/images/minecraft/brick.png" )

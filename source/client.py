@@ -991,6 +991,26 @@ class InteractionResponse:
 		self.type = response_type
 		self.data = data
 
+	def json( self ):
+		response = {
+			"type": self.type.value,
+		}
+
+		if self.data:
+			response[ "data" ] = {
+				"tts": self.data.tts,
+				"content": self.data.content
+			}
+
+			if self.data.embeds:
+				response[ "data" ][ "embeds" ] = []
+				for embed in self.data.embeds:
+					response[ "data" ][ "embeds" ].append( embed.to_dict() )
+
+		# if self.data.allowed_mentions...
+
+		return response
+
 # discord.com/developers/docs/interactions/slash-commands#interaction-response-interactionresponsetype
 class InteractionResponseType( enum.Enum ):
 	Pong = 1
@@ -2204,52 +2224,31 @@ async def on_socket_response( payload ):
 
 	async with channel.typing():
 		if command[ "early" ] == True:
+			result = await command[ "function" ]( client, guild, channel, member, interaction.data.options, True )
 
-			# omfg this is shit in the future make this better with an early true/false arg to executing the cmd callback
-			request = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", json = {
-				"type": InteractionResponseType.Acknowledge.value,
-				"data": {
-					"content": "",
-					"embeds": [ {
-						"title": "",
-						"description": "Fetching server information, please wait...",
-						"author": {
-							"name": "viral32111's minecraft server",
-							"icon_url": "https://viral32111.com/images/minecraft/brick.png"
-						},
-						"footer": {
-							"text": f"Requested by { member.name }#{ member.discriminator }."
-						},
-						"color": 0xf7894a
-					} ]
+			if result:
+				response = result.json()
+			else:
+				response = {
+					"type": InteractionResponseType.ChannelMessageWithSource.value,
+					"data": {
+						"content": ":interrobang: Command was executed but it never gave any data back!"
+					}
 				}
-			}, headers = {
+
+			earlyRequest = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", json = response, headers = {
 				"Authorization": f"Bot { secrets.token }",
 				"User-Agent": USER_AGENT_HEADER,
 				"From": settings.email
 			} )
 
-		result = await command[ "function" ]( client, guild, channel, member, interaction.data.options )
+			if earlyRequest.status_code != 204:
+				raise Exception( f"Error executing early slash command '/{ interaction.data.name }': { earlyRequest.status_code } { json.dumps( earlyRequest.json(), indent = 4 ) }" )
+
+		result = await command[ "function" ]( client, guild, channel, member, interaction.data.options, False )
 
 		if result:
-			response = {
-				"type": result.type.value,
-			}
-
-			if result.data:
-				data_response = {
-					"tts": result.data.tts,
-					"content": result.data.content
-				}
-
-				if result.data.embeds:
-					data_response[ "embeds" ] = []
-					for embed in result.data.embeds:
-						data_response[ "embeds" ].append( embed.to_dict() )
-
-				# result.data.allowed_mentions
-
-				response[ "data" ] = data_response
+			response = result.json()
 		else:
 			response = {
 				"type": InteractionResponseType.ChannelMessageWithSource.value,
@@ -2264,6 +2263,10 @@ async def on_socket_response( payload ):
 				"User-Agent": USER_AGENT_HEADER,
 				"From": settings.email
 			} )
+
+			if request.status_code != 200:
+				raise Exception( f"Error editing slash command response for '/{ interaction.data.name }': { request.status_code } { json.dumps( request.json(), indent = 4 ) }" )
+
 		else:
 			request = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", json = response, headers = {
 				"Authorization": f"Bot { secrets.token }",
@@ -2271,8 +2274,8 @@ async def on_socket_response( payload ):
 				"From": settings.email
 			} )
 
-		if request.status_code != 200:
-			raise Exception( f"Error executing slash command '/{ interaction.data.name }': { request.status_code } { json.dumps( request.json(), indent = 4 ) }" )
+			if request.status_code != 204:
+				raise Exception( f"Error responding to slash command '/{ interaction.data.name }': { request.status_code } { json.dumps( request.json(), indent = 4 ) }" )
 
 # Runs when the client is ready
 async def on_ready():
