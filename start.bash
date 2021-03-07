@@ -1,8 +1,6 @@
 #!/bin/bash
 
-/usr/bin/docker image pull python:latest
-
-/usr/bin/docker run \
+docker run \
 	--name conspiracyai \
 	--hostname conspiracyai \
 	--read-only \
@@ -11,6 +9,9 @@
 	--mount type=bind,source=/srv/conspiracy-ai/source,destination=/data/source,readonly \
 	--mount type=bind,source=/srv/conspiracy-ai/config,destination=/data/config,readonly \
 	--mount type=bind,source=/srv/conspiracy-ai/.git/refs/heads/master,destination=/data/reference.txt,readonly \
+	--mount type=bind,source=/var/run/docker.sock,destination=/var/run/docker.sock \
+	--mount type=bind,source=/srv/minecraft/usercache.json,destination=/srv/minecraft/usercache.json,readonly \
+	--mount type=bind,source=/srv/minecraft/minecraft.cid,destination=/srv/minecraft/minecraft.cid,readonly \
 	--workdir /data \
 	--env XDG_CACHE_HOME=/data/cache \
 	--env PYTHONPATH=/data/packages \
@@ -18,6 +19,7 @@
 	--interactive \
 	--tty \
 	--detach \
+	--pull always \
 	--restart unless-stopped \
 	python:latest \
 	/bin/bash -c 'pip install --no-input --no-color --progress-bar ascii --target packages --cache-dir cache --upgrade \
@@ -27,10 +29,12 @@
 			git+https://github.com/drgrib/dotmap \
 			git+https://github.com/mysql/mysql-connector-python \
 			git+https://github.com/Dinnerbone/mcstatus \
+			git+https://github.com/msabramo/requests-unixsocket \
+			python-dateutil \
 			hurry.filesize \
 			pytz \
 			beautifulsoup4 \
 			emoji && \
 		python source/client.py'
 
-/usr/bin/docker attach conspiracyai
+docker attach conspiracyai

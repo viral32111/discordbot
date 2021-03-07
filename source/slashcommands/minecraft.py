@@ -21,10 +21,10 @@
 ##############################################
 
 # Import variables from the main script
-from __main__ import slashCommands, InteractionResponse, InteractionResponseType, InteractionApplicationCommandCallbackData, ApplicationCommandOption, ApplicationCommandOptionType
+from __main__ import slashCommands, InteractionResponse, InteractionResponseType, InteractionApplicationCommandCallbackData, ApplicationCommandOption, ApplicationCommandOptionType, formatSeconds
 
 # Import required modules
-import discord, mcstatus, socket, re
+import discord, mcstatus, socket, re, json, requests, requests_unixsocket, datetime, dateutil.parser
 
 ##############################################
 # Define slash commands
@@ -58,16 +58,33 @@ async def minecraft( client, guild, channel, member, options, early ):
 
 	try:
 		query = server.query()
+
+		with open( "/srv/minecraft/usercache.json", "r" ) as theFile:
+			playerCache = json.loads( theFile.read() )
+			playerLookup = { player[ "name" ]: player[ "uuid" ] for player in playerCache }
+
+		with open( "/srv/minecraft/minecraft.cid", "r" ) as theFile:
+			containerID = theFile.read()
+		
+			with requests_unixsocket.monkeypatch():
+				inspectRequest = requests.get( f"http+unix://%2Fvar%2Frun%2Fdocker.sock/containers/{ containerID }/json" ).json()
+				statsRequest = requests.get( f"http+unix://%2Fvar%2Frun%2Fdocker.sock/containers/{ containerID }/stats?stream=false" ).json()
+
+				containerUptime = datetime.datetime.now() - dateutil.parser.parse( inspectRequest[ "Created" ] ).replace( tzinfo = None )
+				cpuUsage = round( ( ( statsRequest[ "cpu_stats" ][ "cpu_usage" ][ "total_usage" ] - statsRequest[ "precpu_stats" ][ "cpu_usage" ][ "total_usage" ] ) / ( statsRequest[ "cpu_stats" ][ "system_cpu_usage" ] - statsRequest[ "precpu_stats" ][ "system_cpu_usage" ] ) ) * statsRequest[ "cpu_stats" ][ "online_cpus" ] * 100.0, 2 )
+				memoryUsage = round( ( ( statsRequest[ "memory_stats" ][ "usage" ] - statsRequest[ "memory_stats" ][ "stats" ][ "cache" ] ) / statsRequest[ "memory_stats" ][ "limit" ] ) * 100.0, 2 )
 	except socket.timeout:
 		embed.description = "Timed out while fetching information! The server is likely offline at the moment."
 	else:
 		embed.description = ""
-		embed.add_field( name = "__Status__", value = f"• Players: { query.players.online } / { query.players.max }\n• Version: { query.software.version }\n• Software: { query.software.brand }", inline = False )
+		embed.add_field( name = "__Status__", value = f"• Players: { query.players.online } / { query.players.max }\n• Uptime: { formatSeconds( int( containerUptime.total_seconds() ) ) }\n• Version: { query.software.version }\n• Software: { query.software.brand }", inline = False )
+		embed.add_field( name = "__Resources__", value = f"• Processor: { cpuUsage }%\n• Memory: { memoryUsage }%", inline = False )
 
 		if query.players.online > 0:
 			playerText = ""
 			for player in query.players.names:
-				playerText += f"• { discord.utils.escape_markdown( player ) }\n"
+				uuid = playerLookup[ player ]
+				playerText += f"• [{ discord.utils.escape_markdown( player ) }](https://namemc.com/profile/{ uuid })\n"
 			embed.add_field( name = "__Players__", value = playerText, inline = False )
 
 	return InteractionResponse(
