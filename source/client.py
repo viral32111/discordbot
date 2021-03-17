@@ -140,11 +140,8 @@ print( "Initalised global variables." )
 # Initalise global constants
 ##############################################
 
-# Read the current commit ref of the repository
-with open( "reference.txt", "r" ) as handle: COMMIT = handle.read()
-
 # User agent header for HTTP requests
-USER_AGENT_HEADER = "Conspiracy AI/" + COMMIT[:7] + " (Linux; Discord Bot) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (github.com/viral32111/conspiracy-ai; " + settings.email + ")"
+USER_AGENT_HEADER = "Conspiracy AI/" + os.environ[ 'LOCAL_COMMIT_REFERENCE' ][:7] + " (Linux; Discord Bot) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (github.com/viral32111/conspiracy-ai; " + settings.email + ")"
 
 # Day suffixes for formatting timestamps
 DAY_SUFFIXES = {
@@ -446,10 +443,10 @@ def extractDirectTenorURL( vanityURL ):
 	return soup.find( "link", { "class": "dynamic", "rel": "image_src" } )[ "href" ]
 
 # Download media over HTTP and save it to disk
-def downloadWebMedia( originalURL, shouldArchive = False ):
+def downloadWebMedia( originalURL, subDirectory = "downloads" ):
 
 	# Set the directory of where to save the file to
-	directory = "archive" if shouldArchive else "/tmp/conspiracyai/downloads"
+	directory = "/tmp/" + subDirectory # "/volume/downloads" if keepForever else "/tmp/downloads"
 
 	# Create the directory if it doesn't exist
 	os.makedirs( directory, 0o700, exist_ok = True )
@@ -556,7 +553,7 @@ def fileChecksum( path, algorithm = hashlib.sha256 ):
 def isRepost( url ):
 
 	# Download the media file at the URL
-	path = downloadWebMedia( url, True )
+	path = downloadWebMedia( url, "reposts" )
 
 	# Return nothing if the file wasn't downloaded - this should mean the file wasn't an image/video/audio file, or was over 100 MiB
 	if path == None: return None
@@ -1674,7 +1671,7 @@ async def on_message( message ):
 				for attachment in message.attachments:
 
 					# Download the attachment
-					path = downloadWebMedia( attachment.url, True )
+					path = downloadWebMedia( attachment.url, "relay" )
 
 					# Skip if the download failed
 					if path == None: continue
@@ -1825,7 +1822,7 @@ async def on_message( message ):
 			for attachment in message.attachments:
 
 				# Download the attachment
-				path = downloadWebMedia( attachment.url, True )
+				path = downloadWebMedia( attachment.url, "anonymous" )
 
 				# Skip if the attachment wasn't downloaded
 				if path == None: continue

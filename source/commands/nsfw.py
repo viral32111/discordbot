@@ -68,7 +68,7 @@ async def rule34( message, arguments, client ):
 	post = random.choice( posts[ :10 ] )
 
 	# Download that post
-	path = downloadWebMedia( post.get( "file_url" ) )
+	path = downloadWebMedia( post.get( "file_url" ), "rule34" )
 
 	# Send a message with the post inline if the post failed to download
 	if path == None: return { "content": "Score: **" + post.get( "score" ) + "**.\n||" + post.get( "file_url" ) + "||" }
@@ -130,7 +130,7 @@ async def xbooru( message, arguments, client ):
 	post = random.choice( posts[ :10 ] )
 
 	# Download that post
-	path = downloadWebMedia( post.get( "file_url" ) )
+	path = downloadWebMedia( post.get( "file_url" ), "xbooru" )
 
 	# Send a message with the post inline if the post failed to download
 	if path == None: return { "content": "Score: **" + post.get( "score" ) + "**.\n||" + post.get( "file_url" ) + "||" }
@@ -192,7 +192,7 @@ async def furrybooru( message, arguments, client ):
 	post = random.choice( posts[ :10 ] )
 
 	# Download that post
-	path = downloadWebMedia( post.get( "file_url" ) )
+	path = downloadWebMedia( post.get( "file_url" ), "furrybooru" )
 
 	# Send a message with the post inline if the post failed to download
 	if path == None: return { "content": "Score: **" + post.get( "score" ) + "**.\n||" + post.get( "file_url" ) + "||" }
@@ -251,7 +251,7 @@ async def gelbooru( message, arguments, client ):
 	post = random.choice( posts[ :10 ] )
 
 	# Download that post
-	path = downloadWebMedia( post[ "file_url" ] )
+	path = downloadWebMedia( post[ "file_url" ], "gelbooru" )
 
 	# Send a message with the post inline if the post failed to download
 	if path == None: return { "content": "Score: **" + str( post[ "score" ] ) + "**.\n||" + post[ "file_url" ] + "||" }
@@ -313,7 +313,7 @@ async def danbooru( message, arguments, client ):
 	post = random.choice( posts[ :10 ] )
 
 	# Download that post
-	path = downloadWebMedia( post[ "file_url" ] )
+	path = downloadWebMedia( post[ "file_url" ], "danbooru" )
 
 	# Send a message with the post inline if the post failed to download
 	if path == None: return { "content": "Score: **" + str( post[ "score" ] ) + "**.\n||" + post[ "file_url" ] + "||" }
@@ -372,7 +372,7 @@ async def hypnohub( message, arguments, client ):
 	post = random.choice( posts[ :10 ] )
 
 	# Download that post
-	path = downloadWebMedia( post[ "file_url" ] )
+	path = downloadWebMedia( post[ "file_url" ], "hypnohub" )
 
 	# Send a message with the post inline if the post failed to download
 	if path == None: return { "content": "Score: **" + str( post[ "score" ] ) + "**.\n||" + post[ "file_url" ] + "||" }
