@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 docker run \
 	--name conspiracy-ai \
 	--tmpfs /tmp:noexec,nosuid,nodev,size=4G \
@@ -12,8 +14,8 @@ docker run \
 	--network host \
 	--tty \
 	--interactive \
-	--detach \
 	--restart unless-stopped \
+	--detach \
 	--pull always \
 	python:latest \
 	bash -c 'pip install --requirement modules.txt && python source/client.py'

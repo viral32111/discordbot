@@ -48,6 +48,7 @@ import emoji # Resolving unicode emojis to text
 import enum # Enumerations for custom classes
 import mcstatus # Minecraft server status querying
 import socket # Low level networking interface
+import slashcommands # My Slash Commands API wrapper
 
 # Console message
 print( "Imported modules." )
@@ -913,242 +914,13 @@ from commands import music
 print( "Defined chat commands." )
 
 ##############################################
-# Setup everything for Slash Commands
+# Define Slash Commands
 ##############################################
 
-# discord.com/developers/docs/interactions/slash-commands#applicationcommand
-#class ApplicationCommand:
-#	def __init__( self, data ):
-#		self.id = data[ "id" ]
-#		self.application_id = data[ "id" ]
-#		self.name = data[ "name" ]
-#		self.description = data[ "description" ]
-#
-#		if "options" in data:
-#			self.options = []
-#			for option in data[ "options" ]:
-#				self.options.append( ApplicationCommandOption( option ) )
-#		else:
-#			self.options = None
+# Import each chat command file
+from newcommands import minecraft # to-do: rename to just commands once all old commands are ported over
 
-# discord.com/developers/docs/interactions/slash-commands#interaction
-class Interaction:
-	def __init__( self, data ):
-		self.id = int( data[ "id" ] )
-		self.type = InteractionType( data[ "type" ] )
-		self.guild_id = int( data[ "guild_id" ] )
-		self.channel_id = int( data[ "channel_id" ] )
-		self.member = data[ "member" ]
-		self.token = data[ "token" ]
-		self.version = data[ "version" ]
-
-		if "data" in data:
-			self.data = ApplicationCommandInteractionData( data[ "data" ] )
-		else:
-			self.data = None
-
-# discord.com/developers/docs/interactions/slash-commands#interaction-interactiontype
-class InteractionType( enum.Enum ):
-	Ping = 1
-	ApplicationCommand = 2
-
-	# discord.com/developers/docs/interactions/slash-commands#interaction-applicationcommandinteractiondata
-class ApplicationCommandInteractionData:
-	def __init__( self, data ):
-		self.id = int( data[ "id" ] )
-		self.name = data[ "name" ]
-
-		if "options" in data:
-			self.options = []
-			for option in data[ "options" ]:
-				self.options.append( ApplicationCommandInteractionDataOption( option ) )
-		else:
-			self.options = None
-
-# discord.com/developers/docs/interactions/slash-commands#interaction-applicationcommandinteractiondataoption
-class ApplicationCommandInteractionDataOption:
-	def __init__( self, data ):
-		self.name = data[ "name" ]
-
-		if "value" in data:
-			self.value = data[ "value" ]
-		else:
-			self.value = None
-
-		if "options" in data:
-			self.options = []
-			for option in data[ "options" ]:
-				self.options.append( ApplicationCommandInteractionDataOption( option ) )
-		else:
-			self.options = None
-
-# discord.com/developers/docs/interactions/slash-commands#interaction-response
-class InteractionResponse:
-	def __init__( self, response_type, data = None ):
-		self.type = response_type
-		self.data = data
-
-	def json( self ):
-		response = {
-			"type": self.type.value,
-		}
-
-		if self.data:
-			response[ "data" ] = {
-				"tts": self.data.tts,
-				"content": self.data.content
-			}
-
-			if self.data.embeds:
-				response[ "data" ][ "embeds" ] = []
-				for embed in self.data.embeds:
-					response[ "data" ][ "embeds" ].append( embed.to_dict() )
-
-		# if self.data.allowed_mentions...
-
-		return response
-
-# discord.com/developers/docs/interactions/slash-commands#interaction-response-interactionresponsetype
-class InteractionResponseType( enum.Enum ):
-	Pong = 1
-	Acknowledge = 2
-	ChannelMessage = 3
-	ChannelMessageWithSource = 4
-	AcknowledgeWithSource = 5
-
-# discord.com/developers/docs/interactions/slash-commands#interaction-response-interactionapplicationcommandcallbackdata
-class InteractionApplicationCommandCallbackData:
-	def __init__( self, content, **extra ):
-		self.content = content
-		self.tts = extra.get( "tts", False )
-		self.embeds = extra.get( "embeds", None )
-		self.allowed_mentions = extra.get( "allowed_mentions", discord.AllowedMentions.none() )
-
-# discord.com/developers/docs/interactions/slash-commands#applicationcommandoption
-class ApplicationCommandOption:
-	def __init__( self, **arguments ):
-		self.type = arguments[ "type" ]
-		self.name = arguments[ "name" ]
-		self.description = arguments[ "description" ]
-		self.required = arguments.get( "required", False )
-		self.choices = arguments.get( "choices", None )
-		self.options = arguments.get( "options", None )
-
-	def json( self ):
-		data = {
-			"type": self.type.value,
-			"name": self.name,
-			"description": self.description,
-			"required": self.required
-		}
-
-		if self.choices:
-			data[ "choices" ] = []
-
-			for choice in self.choices:
-				data[ "choices" ].append( {
-					"name": choice.name,
-					"value": choice.value
-				} )
-
-		if self.options:
-			data[ "options" ] = []
-
-			for option in self.options:
-				data[ "options" ].append( option.json() )
-
-		return data
-
-# discord.com/developers/docs/interactions/slash-commands#applicationcommandoptiontype
-class ApplicationCommandOptionType( enum.Enum ):
-	SubCommand = 1
-	SubCommandGroup = 2
-	String = 3
-	Integer = 4
-	Boolean = 5
-	User = 6
-	Channel = 7
-	Role = 8
-
-# discord.com/developers/docs/interactions/slash-commands#applicationcommandoptionchoice
-class ApplicationCommandOptionChoice:
-	def __init__( self, name, value ):
-		self.name = name
-		self.value = value
-
-class SlashCommands:
-	def __init__( self ):
-		self.commands = {}
-
-	def __call__( self, **arguments ):
-		self.description = arguments[ "description" ]
-		self.options = arguments.get( "options", None )
-		self.dm = arguments.get( "dm", False )
-		self.early = arguments.get( "early", True )
-		return self.register
-
-	def __getitem__( self, name ):
-		return self.commands[ name ]
-
-	def register( self, function ):
-		self.name = function.__name__
-		self.commands[ self.name ] = {
-			"function": function,
-			"early": self.early
-		}
-
-		if self.dm:
-			url = f"https://discord.com/api/v8/applications/{ settings.appid }/commands"
-		else:
-			url = f"https://discord.com/api/v8/applications/{ settings.appid }/guilds/{ settings.guild }/commands"
-
-		payload = {
-			"name": self.name,
-			"description": self.description
-		}
-
-		if self.options:
-			payload[ "options" ] = []
-
-			for option in self.options:
-				payload[ "options" ].append( option.json() )
-
-		request = requests.post( url, json = payload, headers = {
-			"Accept": "application/json",
-			"Authorization": f"Bot { secrets.token }",
-			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
-		} )
-
-		if request.status_code != 200 and request.status_code != 201:
-			raise Exception( f"Error registering slash command '/{ self.name }': { request.status_code } { json.dumps( request.json(), indent = 4 ) }" )
-
-		commands = requests.get( f"https://discord.com/api/v8/applications/{ settings.appid }/guilds/{ settings.guild }/commands", headers = {
-			"Accept": "application/json",
-			"Authorization": f"Bot { secrets.token }",
-			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
-		} ).json()
-
-		for command in commands:
-			if command[ "name" ] in self.commands: continue
-
-			deleteRequest = requests.delete( f"https://discord.com/api/v8/applications/{ settings.appid }/guilds/{ settings.guild }/commands/{ command[ 'id' ] }", headers = {
-				"Accept": "application/json",
-				"Authorization": f"Bot { secrets.token }",
-				"User-Agent": USER_AGENT_HEADER,
-				"From": settings.email
-			} )
-
-			if deleteRequest.status_code != 204:
-				raise Exception( f"Error deleting slash command '/{ command[ 'name' ] }': { deleteRequest.status_code } { json.dumps( deleteRequest.json(), indent = 4 ) }" )
-
-		# to-do: delete global application commands too
-
-slashCommands = SlashCommands()
-
-from slashcommands import minecraft
-
+# Console message
 print( "Defined slash commands." )
 
 ##############################################
@@ -1166,7 +938,7 @@ client = discord.Client(
 
 	# Max messages to cache internally
 	max_messages = 10000,
-	
+
 	# Cache members that are offline
 	chunk_guilds_at_startup = True,
 
@@ -2176,103 +1948,7 @@ async def on_voice_state_update( member, before, after ):
 
 # Runs when any payload is received from the gateway (but we're using it for interactions)
 async def on_socket_response( payload ):
-
-	# Ignore anything that isn't an interaction
-	if payload[ "t" ] != "INTERACTION_CREATE": return
-
-	interaction = Interaction( payload[ "d" ] )
-
-	guild = client.get_guild( interaction.guild_id )
-	channel = guild.get_channel( interaction.channel_id )
-	member = guild.get_member( int( interaction.member[ "user" ][ "id" ] ) )
-
-	if channel.id != 241602380569772044: #commands
-		sendRequest = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", headers = {
-			"Authorization": f"Bot { secrets.token }",
-			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
-		}, json = {
-			"type": InteractionResponseType.ChannelMessage.value,
-			"data": {
-				"content": f":exclamation: { member.mention }, commands can only be used in <#241602380569772044>!",
-				"allowed_mentions": {
-					"parse": []
-				}
-			}
-		} )
-
-		if sendRequest.status_code != 204:
-			raise Exception( f"Error responding to slash command '/{ interaction.data.name }': { sendRequest.status_code } { json.dumps( sendRequest.json(), indent = 4 ) }" )
-
-		await asyncio.sleep( 10 )
-
-		deleteRequest = requests.delete( f"https://discord.com/api/v8/webhooks/{ settings.appid }/{ interaction.token }/messages/@original", headers = {
-			"Authorization": f"Bot { secrets.token }",
-			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
-		} )
-
-		if deleteRequest.status_code != 204:
-			raise Exception( f"Error deleting slash command response for '/{ interaction.data.name }': { deleteRequest.status_code } { json.dumps( deleteRequest.json(), indent = 4 ) }" )
-
-		return
-
-	command = slashCommands[ interaction.data.name ]
-
-	async with channel.typing():
-		if command[ "early" ] == True:
-			result = await command[ "function" ]( client, guild, channel, member, interaction.data.options, True )
-
-			if result:
-				response = result.json()
-			else:
-				response = {
-					"type": InteractionResponseType.ChannelMessageWithSource.value,
-					"data": {
-						"content": ":interrobang: Command was executed but it never gave any data back!"
-					}
-				}
-
-			earlyRequest = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", json = response, headers = {
-				"Authorization": f"Bot { secrets.token }",
-				"User-Agent": USER_AGENT_HEADER,
-				"From": settings.email
-			} )
-
-			if earlyRequest.status_code != 204:
-				raise Exception( f"Error executing early slash command '/{ interaction.data.name }': { earlyRequest.status_code } { json.dumps( earlyRequest.json(), indent = 4 ) }" )
-
-		result = await command[ "function" ]( client, guild, channel, member, interaction.data.options, False )
-
-		if result:
-			response = result.json()
-		else:
-			response = {
-				"type": InteractionResponseType.ChannelMessageWithSource.value,
-				"data": {
-					"content": ":interrobang: Command was executed but it never gave any data back!"
-				}
-			}
-
-		if command[ "early" ] == True:
-			request = requests.patch( f"https://discord.com/api/v8/webhooks/{ settings.appid }/{ interaction.token }/messages/@original", json = response[ "data" ], headers = {
-				"Authorization": f"Bot { secrets.token }",
-				"User-Agent": USER_AGENT_HEADER,
-				"From": settings.email
-			} )
-
-			if request.status_code != 200:
-				raise Exception( f"Error editing slash command response for '/{ interaction.data.name }': { request.status_code } { json.dumps( request.json(), indent = 4 ) }" )
-
-		else:
-			request = requests.post( f"https://discord.com/api/v8/interactions/{ interaction.id }/{ interaction.token }/callback", json = response, headers = {
-				"Authorization": f"Bot { secrets.token }",
-				"User-Agent": USER_AGENT_HEADER,
-				"From": settings.email
-			} )
-
-			if request.status_code != 204:
-				raise Exception( f"Error responding to slash command '/{ interaction.data.name }': { request.status_code } { json.dumps( request.json(), indent = 4 ) }" )
+	await slashcommands.run( payload, client )
 
 # Runs when the client is ready
 async def on_ready():
@@ -2291,7 +1967,6 @@ async def on_ready():
 	client.event( on_reaction_remove )
 	client.event( on_raw_reaction_remove )
 	client.event( on_voice_state_update )
-	client.event( on_socket_response )
 	print( "Registered callbacks." )
 
 	# Launch background tasks - keep this the same as on_ready()!
@@ -2331,6 +2006,7 @@ client.event( on_connect )
 client.event( on_resumed )
 client.event( on_disconnect )
 client.event( on_ready )
+client.event( on_socket_response )
 
 # Register the signal callbacks to shutdown the client on keyboard interrupts and terminations
 client.loop.add_signal_handler( signal.SIGINT, lambda: client.loop.create_task( shutdown() ) )

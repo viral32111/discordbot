@@ -21,40 +21,23 @@
 ##############################################
 
 # Import variables from the main script
-from __main__ import slashCommands, InteractionResponse, InteractionResponseType, InteractionApplicationCommandCallbackData, ApplicationCommandOption, ApplicationCommandOptionType, formatSeconds
+from __main__ import formatSeconds
 
 # Import required modules
-import discord, mcstatus, socket, requests, requests_unixsocket, datetime, dateutil.parser, os
+import discord, mcstatus, socket, requests, requests_unixsocket, datetime, dateutil.parser, os, slashcommands
 
 ##############################################
 # Define slash commands
 ##############################################
 
-# Minecraft
-@slashCommands( early = True, description = "Interact with viral32111's Minecraft server.", options = [
-	ApplicationCommandOption(
-		type = ApplicationCommandOptionType.SubCommand,
-		name = "status",
-		description = "A brief real-time status of the Minecraft server."
-	)
-] )
-async def minecraft( client, guild, channel, member, options, early ):
-	if early == True:
-		embed = discord.Embed( title = "", description = "Fetching server information...", color = 0xf7894a )
-		embed.set_footer( text = f"Requested by { member.name }#{ member.discriminator }." )
-		embed.set_author( name = "viral32111's minecraft server", icon_url = "https://viral32111.com/images/minecraft/brick.png" )
-		return InteractionResponse(
-			InteractionResponseType.ChannelMessage,
-			InteractionApplicationCommandCallbackData(
-				"",
-				embeds = [ embed ]
-			)
-		)
+# Minecraft Status
+@slashcommands.new( "The current status of the Minecraft server." )
+async def minecraft( interaction ):
+	server = mcstatus.MinecraftServer( "viral32111.com" )
 
-	server = mcstatus.MinecraftServer( "viral32111.com", 25565 )
-	embed = discord.Embed( title = "", description = "Nothing is known about the server at this time. Try again later.", color = 0xf7894a )
+	embed = discord.Embed( title = "", description = "Fetching server information...", color = 0xf7894a )
 	embed.set_author( name = "viral32111's minecraft server", icon_url = "https://viral32111.com/images/minecraft/brick.png" )
-	embed.set_footer( text = f"Requested by { member.name }#{ member.discriminator }." )
+	message = await interaction.respond( embeds = [ embed ] )
 
 	try:
 		status = server.status()
@@ -78,10 +61,4 @@ async def minecraft( client, guild, channel, member, options, early ):
 			playerText = "\n".join( [ f"• [{ discord.utils.escape_markdown( player.name ) }](https://namemc.com/profile/{ player.id })" for player in status.players.sample ] )
 			embed.add_field( name = "__Players__", value = playerText, inline = False )
 
-	return InteractionResponse(
-		InteractionResponseType.ChannelMessage,
-		InteractionApplicationCommandCallbackData(
-			"",
-			embeds = [ embed ]
-		)
-	)
+	await message.edit( embeds = [ embed ] )

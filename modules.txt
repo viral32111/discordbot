@@ -5,6 +5,7 @@ git+https://github.com/drgrib/dotmap
 git+https://github.com/mysql/mysql-connector-python
 git+https://github.com/Dinnerbone/mcstatus
 git+https://github.com/msabramo/requests-unixsocket
+git+https://github.com/viral32111/slashcommands
 python-dateutil
 hurry.filesize
 pytz
