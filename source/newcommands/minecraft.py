@@ -33,13 +33,13 @@ import discord, mcstatus, socket, requests, requests_unixsocket, datetime, dateu
 # Minecraft Status
 @slashcommands.new( "The current status of the Minecraft server." )
 async def minecraft( interaction ):
-	server = mcstatus.MinecraftServer( "viral32111.com" )
+	message = await interaction.think()
 
-	embed = discord.Embed( title = "", description = "Fetching server information...", color = 0xf7894a )
+	embed = discord.Embed( title = "", description = "", color = 0xF7894A )
 	embed.set_author( name = "viral32111's minecraft server", icon_url = "https://viral32111.com/images/minecraft/brick.png" )
-	message = await interaction.respond( embeds = [ embed ] )
 
 	try:
+		server = mcstatus.MinecraftServer( "viral32111.com" )
 		status = server.status()
 		query = server.query()
 
@@ -53,7 +53,6 @@ async def minecraft( interaction ):
 	except socket.timeout:
 		embed.description = "Timed out while fetching information! The server is likely offline at the moment."
 	else:
-		embed.description = ""
 		embed.add_field( name = "__Status__", value = f"• Players: { status.players.online } / { status.players.max }\n• Uptime: { formatSeconds( int( containerUptime.total_seconds() ) ) }\n• Version: { query.software.version }\n• Software: { query.software.brand }", inline = False )
 		embed.add_field( name = "__Resources__", value = f"• Processor: { cpuUsage }%\n• Memory: { memoryUsage }%", inline = False )
 
