@@ -903,7 +903,6 @@ chatCommands = ChatCommands()
 
 # Import each chat command file
 from commands import general
-from commands import nsfw
 from commands import dev
 from commands import links
 from commands import garrysmod
@@ -919,6 +918,7 @@ print( "Defined chat commands." )
 
 # Import each chat command file
 from newcommands import minecraft # to-do: rename to just commands once all old commands are ported over
+from newcommands import hentai
 
 # Console message
 print( "Defined slash commands." )
@@ -1948,7 +1948,11 @@ async def on_voice_state_update( member, before, after ):
 
 # Runs when any payload is received from the gateway (but we're using it for interactions)
 async def on_socket_response( payload ):
-	await slashcommands.run( payload, client )
+	command = await slashcommands.run( payload, client )
+	if command:
+		now = datetime.datetime.now().strftime( "%d-%m-%Y %H:%M:%S.%f" )
+		channel = client.get_channel( command.channelID )
+		print( f"[{ now }] { command.user.username }#{ command.user.discriminator } ({ command.user.id }) used /{ command.data.name } ({ command.data.id }) in #{ channel.name } ({ channel.id }) with arguments '{ command.arguments }'." )
 
 # Runs when the client is ready
 async def on_ready():
