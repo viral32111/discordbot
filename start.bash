@@ -67,16 +67,3 @@ else
 
 	docker attach conspiracy-ai
 fi
-
-
-
-
-
-
-
-
-
-
-
-
-
