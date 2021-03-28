@@ -11,7 +11,7 @@ if [ "$1" = "dev" ]; then
 		--mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
 		--mount type=bind,source=/home/viral32111/slashcommands,target=/slashcommands \
 		--workdir /srv/conspiracy-ai \
-		--env LOCAL_COMMIT_REFERENCE=$(cat /srv/conspiracy-ai/.git/refs/heads/master) \
+		--env LOCAL_COMMIT_REFERENCE=$(cat /srv/conspiracy-ai/.git/refs/heads/main) \
 		--network host \
 		--tty \
 		--interactive \
@@ -41,7 +41,7 @@ else
 		--mount type=bind,source=/srv/conspiracy-ai/config,target=/srv/conspiracy-ai/config,readonly \
 		--mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
 		--workdir /srv/conspiracy-ai \
-		--env LOCAL_COMMIT_REFERENCE=$(cat /srv/conspiracy-ai/.git/refs/heads/master) \
+		--env LOCAL_COMMIT_REFERENCE=$(cat /srv/conspiracy-ai/.git/refs/heads/main) \
 		--network host \
 		--tty \
 		--interactive \
