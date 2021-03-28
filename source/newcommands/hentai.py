@@ -364,7 +364,7 @@ async def hentai( interaction ):
 
 		# Use the sample image if the actual image's filesize is greater than 8MB - redd.it/aflp3p
 		imageURL = post[ "large_file_url" ] if fileSize > 8388119 else post[ "file_url" ]
-	
+
 		# Create an embed
 		embed = discord.Embed(
 			url = "https://danbooru.donmai.us/posts/" + str( post[ "id" ] ),
@@ -411,8 +411,8 @@ async def hentai( interaction ):
 		if len( posts ) < 1:
 
 			# Send an error message only to the calling user
-			await interaction.respond( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://hypnohub.net/help/cheatsheet>.", hidden = True )
-			
+			await message.edit( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://hypnohub.net/help/cheatsheet>." )
+
 			# Prevent further execution
 			return
 
@@ -439,7 +439,7 @@ async def hentai( interaction ):
 
 		# Use the sample image if the actual image's filesize is greater than 8MB - redd.it/aflp3p
 		imageURL = post[ "sample_url" ] if fileSize > 8388119 else post[ "file_url" ]
-	
+
 		# Create an embed
 		embed = discord.Embed(
 			url = "https://hypnohub.net/post/show/" + str( post[ "id" ] ),
