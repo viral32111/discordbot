@@ -131,9 +131,6 @@ lastDadJoke = time.time() - 60
 # A list to hold all of the created background tasks
 backgroundTasks = []
 
-# Holds the latest status of each server - by default all are nothing
-latestServerStatus = { server: None for server in settings.garrysmod.keys() }
-
 # Console message
 print( "Initalised global variables." )
 
@@ -598,104 +595,6 @@ def shouldLog( message ):
 	# Return true otherwise
 	return True
 
-# Update the locally cached status of a server
-async def updateLocalServerStatus( name ):
-
-	# Bring a few global variables into this scope
-	global latestServerStatus
-
-	# Construct the API URL of this server
-	apiServerURL = "http://" + settings.garrysmod[ name ].address + ":" + str( settings.garrysmod[ name ].port ) + "/info"
-
-	# Be safe!
-	try:
-
-		# Fetch current statistics and players from the API
-		serverRequest = requests.get( apiServerURL, timeout = 3, headers = {
-			"Authorization": secrets[ name ].key,
-			"From": settings.email,
-			"User-Agent": USER_AGENT_HEADER,
-			"Connection": "close"
-		} )
-
-	# The server is offline - crashed, shutdown, restarting
-	except requests.exceptions.ConnectionError:
-
-		# Update the global latest server status for this server
-		latestServerStatus[ name ] = 1
-
-	# The server is frozen - crashed, deadlocked, timing out
-	except requests.exceptions.ReadTimeout:
-
-		# Update the global latest server status for this server
-		latestServerStatus[ name ] = 2
-
-	# The server is online
-	else:
-
-		# Was the request unsuccessful?
-		if serverRequest.status_code != 200 or serverRequest.json()[ "success" ] == False:
-
-			# Throw an error
-			raise Exception( "Received non-success API response: " + str( serverRequest.status_code ) + "\n" + str( serverRequest.text ) )
-
-		# Parse the response
-		server = Server( serverRequest, settings.garrysmod[ name ] )
-
-		# Update the global latest server status for this server
-		latestServerStatus[ name ] = server
-
-# Update the status on a server category
-async def updateServerCategoryStatusWithLocal( name ):
-
-	# Fetch the server status
-	server = latestServerStatus[ name ]
-
-	# Placeholder for the status text
-	text = "Unknown"
-
-	# Is the status valid?
-	if type( server ) == Server:
-
-		# Store the total number of players currently on the server
-		players = len( server.players ) + len( server.admins ) + len( server.bots )
-
-		# Is the server empty?
-		if players == 0:
-
-			# Update the status text
-			text = "Empty"
-
-		# Is the server full?
-		elif players == server.maxPlayers:
-
-			# Update the status text
-			text = "Full"
-
-		# The server is between empty and full
-		else:
-
-			# Update the status text
-			text = str( players ) + " Playing"
-
-	# Is the status 1? - Connection error
-	elif server == 1:
-
-		# Update the status text
-		text = "Offline"
-
-	# Is the status 2? - Timed out
-	elif server == 2:
-
-		# Update the status text
-		text = "Crashed"
-	
-	# Fetch the category channel
-	category = client.get_channel( settings.channels.statuses[ name ] )
-
-	# Update the category name
-	await category.edit( name = "🔨 Sandbox (" + text + ")", reason = "Update server status in category name." )
-
 # Convert a string to just ASCII characters
 def ascii( string ):
 
@@ -710,56 +609,6 @@ def utf8( string ):
 
 # Console message
 print( "Defined helper functions." )
-
-##############################################
-# Define GMod Relay Classes
-##############################################
-
-# Player class
-class Player:
-	def __init__(self, playerDict, serverConfig):
-		self.name = playerDict["name"]
-		self.steamID = playerDict["steamid"]
-		self.group = playerDict["group"]
-		self.userID = round(playerDict["id"])
-		self.time = round(playerDict["time"])
-		self.timePretty = formatSeconds( self.time )
-		self.profileURL = f"https://steamcommunity.com/profiles/{self.steamID}"
-
-		if self.group in serverConfig[ "groups" ]:
-			self.groupPretty = serverConfig[ "groups" ][ self.group ]
-		else:
-			self.groupPretty = self.group
-
-# Bot Class
-class Bot:
-	def __init__(self, botDict):
-		self.name = botDict["name"]
-		self.userID = round(botDict["id"])
-
-# Server class
-class Server:
-	def __init__(self, request, serverConfig):
-		response = request.json()["response"]
-
-		self.latency = round( request.elapsed.total_seconds() * 1000 )
-		self.hostname = response[ "hostname" ]
-		self.gamemode = response[ "gamemode" ]
-		self.ipAddress = response[ "ip"]
-		self.map = response[ "map" ]
-		self.uptime = round( response[ "uptime" ] )
-		self.uptimePretty = formatSeconds( self.uptime )
-		self.maxPlayers = round( response[ "maxplayers" ] )
-		self.mapImage = "https://viral32111.com/images/conspiracyai/thumbnails" + response[ "map" ] + ".jpg"
-		self.players = [ Player( player, serverConfig ) for player in response[ "players" ] ]
-		self.admins = [ Player( admin, serverConfig ) for admin in response[ "admins" ] ]
-		self.bots = [ Bot( bot ) for bot in response[ "bots" ] ]
-		self.mapPretty = prettyMapName( response[ "map" ] )
-		self.mapLink = "https://" + settings.maps[ response[ "map" ] ] if response[ "map" ] in settings.maps else None
-		self.tickrate = round( ( 1 / response[ "frametime" ] ), 2 )
-
-# Console message
-print( "Defined relay classes." )
 
 ##############################################
 # Setup the chat commands
@@ -905,7 +754,6 @@ chatCommands = ChatCommands()
 from commands import general
 from commands import dev
 from commands import links
-from commands import garrysmod
 from commands import moderation
 from commands import music
 
@@ -1027,30 +875,6 @@ async def chooseRandomActivity():
 		# Console message
 		print( "Cancelled random activity chooser background task." )
 
-# Automatically update the status of the server categories - this is basically a wrapper function
-async def updateCategoryStatus():
-
-	# Be safe!
-	try:
-
-		# Loop forever
-		while not client.is_closed():
-
-			# Update the local server status cache
-			await updateLocalServerStatus( "sandbox" )
-
-			# Call the helper function
-			await updateServerCategoryStatusWithLocal( "sandbox" )
-
-			# Run this again in 1 minute
-			await asyncio.sleep( 60 )
-
-	# Catch task cancellation calls
-	except asyncio.CancelledError:
-
-		# Console message
-		print( "Cancelled update Sandbox category status background task." )
-
 # Update the Minecraft category name with the server's status
 async def updateMinecraftCategoryStatus():
 	try:
@@ -1090,7 +914,6 @@ async def on_resumed():
 
 	# Launch background tasks - keep this the same as on_ready()!
 	backgroundTasks.append( client.loop.create_task( chooseRandomActivity() ) )
-	backgroundTasks.append( client.loop.create_task( updateCategoryStatus() ) )
 	backgroundTasks.append( client.loop.create_task( updateMinecraftCategoryStatus() ) )
 	print( "Created background tasks." )
 
@@ -1426,120 +1249,6 @@ async def on_message( message ):
 
 				# Set the last dad joke date & time
 				lastDadJoke = unixTimestampNow
-
-			# Are we sending a message in a relay channel?
-			if str( message.channel.id ) in settings.channels.relays.keys():
-
-				# Placeholder for the message that will be sent
-				relayContent = message.clean_content
-
-				# Remove emojis from the message
-				relayContent = re.sub( r"<a?:([A-Za-z0-9_-]+):\d{18}\\?>", r":\1:", relayContent )
-
-				# Remove newlines from the message
-				relayContent = re.sub( r"\n", " ", relayContent )
-
-				# Loop through all attachments
-				for attachment in message.attachments:
-
-					# Download the attachment
-					path = downloadWebMedia( attachment.url, "relay" )
-
-					# Skip if the download failed
-					if path == None: continue
-
-					# Get the checksum of the file contents
-					checksum = fileChecksum( path )
-
-					# Query the database to fetch the link for this attachment
-					result = mysqlQuery( "SELECT Link FROM RelayShortlinks WHERE Checksum = '" + checksum + "';" )
-
-					# Placeholder for the shortlink
-					shortlink = ""
-
-					# Does it not exist in the database?
-					if len( result ) > 0:
-						
-						# Set the shortlink to the result from the database query
-						shortlink = "https://bit.ly/" + result[ 0 ][ 0 ]
-
-					# It does not exist in the database
-					else:
-
-						# Query the bit.ly and create a new link
-						bitlyRequest = requests.post( "https://api-ssl.bitly.com/v4/shorten", headers = {
-							"Accept": "application/json",
-							"Content-Type": "application/json",
-							"Authorization": "Bearer " + secrets.bitly.key,
-							"User-Agent": USER_AGENT_HEADER,
-							"From": settings.email
-						}, json = {
-							"long_url": attachment.url,
-							"tags": [ "Discord Relay" ]
-						} )
-
-						# Set the shortlink to the newly created bit.ly link from the response
-						shortlink = bitlyRequest.json()[ "link" ]
-
-						# Remove the schema and host from the shortlink
-						identifier = shortlink.replace( "https://bit.ly/", "" )
-
-						# Add it to the database
-						mysqlQuery( "INSERT INTO RelayShortlinks ( Checksum, Link ) VALUES ( '" + checksum + "', '" + identifier + "' );" )
-
-					# Append the shortlink to to the message that will be sent
-					relayContent += ( " " if len( relayContent ) > 0 else "" ) + shortlink
-
-				# Is their message 127+ characters?
-				if len( relayContent ) >= 127:
-
-					# Friendly message
-					await message.channel.send( ":grey_exclamation: Your message is too long to be relayed, please shorten it to below 127 characters (attachments count towards this limit.)", delete_after = 10 )
-
-					# Prevent further execution
-					return
-
-				# Get the config for this server
-				server = settings.garrysmod[ settings.channels.relays[ str( message.channel.id ) ] ]
-
-				# Construct the API's URL
-				apiURL = "http://" + server[ "address" ] + ":" + str( server[ "port" ] ) + "/discord"
-
-				# Store the color of their role
-				roleColor = message.author.top_role.colour
-
-				# Construct the request payload
-				payload = {
-					"message": relayContent,
-					"author": message.author.display_name,
-					"role": {
-						"name": message.author.top_role.name,
-						"color": [ roleColor.r, roleColor.g, roleColor.b ]
-					}
-				}
-
-				# Be safe!
-				try:
-
-					# Send the message to the API
-					requests.post( apiURL, json = payload, timeout = 2, headers = {
-						"Accept": "application/json",
-						"Authorization": secrets.sandbox.key,
-						"From": settings.email,
-						"User-Agent": USER_AGENT_HEADER
-					} )
-
-				# The server is offline - crashed, shutdown, restarting
-				except requests.exceptions.ConnectionError:
-
-					# Friendly message
-					await message.channel.send( ":interrobang: Your message was not relayed because the server is currently offline (shutdown/changing map/restarting).", delete_after = 10 )
-
-				# The server is frozen - crashed, deadlocked, timing out
-				except requests.exceptions.ReadTimeout:
-
-					## Friendly message
-					await message.channel.send( ":interrobang: Your message was not relayed because the connection to the server timed out (crashed/frozen/locked up).", delete_after = 10 )
 
 		# This message was sent over direct messages
 		else:
@@ -1975,7 +1684,6 @@ async def on_ready():
 
 	# Launch background tasks - keep this the same as on_ready()!
 	backgroundTasks.append( client.loop.create_task( chooseRandomActivity() ) )
-	backgroundTasks.append( client.loop.create_task( updateCategoryStatus() ) )
 	backgroundTasks.append( client.loop.create_task( updateMinecraftCategoryStatus() ) )
 	print( "Created background tasks." )
 

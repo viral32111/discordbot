@@ -60,10 +60,10 @@ async def hentai( interaction ):
 
 		# Send an error message only to the calling user
 		await interaction.respond( ":exclamation: This can only be used in <#682646257205903440>.", hidden = True )
-		
+
 		# Prevent further execution
 		return
-	
+
 	# Set the command status to thinking
 	message = await interaction.think()
 
@@ -92,8 +92,8 @@ async def hentai( interaction ):
 		if len( root ) < 1:
 
 			# Send an error message only to the calling user
-			await interaction.respond( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://rule34.xxx/index.php?page=help&topic=cheatsheet>.", hidden = True )
-			
+			await message.edit( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://rule34.xxx/index.php?page=help&topic=cheatsheet>." )
+
 			# Prevent further execution
 			return
 
@@ -124,7 +124,7 @@ async def hentai( interaction ):
 
 		# Use the sample image if the actual image's filesize is greater than 8MB - redd.it/aflp3p
 		imageURL = post.attrib[ "sample_url" ] if fileSize > 8388119 else post.attrib[ "file_url" ]
-	
+
 		# Create an embed
 		embed = discord.Embed(
 			url = "https://rule34.xxx/index.php?page=post&s=view&id=" + post.attrib[ "id" ],
@@ -174,8 +174,8 @@ async def hentai( interaction ):
 		if len( root ) < 1:
 
 			# Send an error message only to the calling user
-			await interaction.respond( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://xbooru.com/index.php?page=help&topic=cheatsheet>.", hidden = True )
-			
+			await message.edit( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://xbooru.com/index.php?page=help&topic=cheatsheet>." )
+
 			# Prevent further execution
 			return
 
@@ -206,7 +206,7 @@ async def hentai( interaction ):
 
 		# Use the sample image if the actual image's filesize is greater than 8MB - redd.it/aflp3p
 		imageURL = post.attrib[ "sample_url" ] if fileSize > 8388119 else post.attrib[ "file_url" ]
-	
+
 		# Create an embed
 		embed = discord.Embed(
 			url = "https://xbooru.com/index.php?page=post&s=view&id=" + post.attrib[ "id" ],
@@ -256,8 +256,8 @@ async def hentai( interaction ):
 		if len( root ) < 1:
 
 			# Send an error message only to the calling user
-			await interaction.respond( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://gelbooru.com/index.php?page=wiki&s=&s=view&id=26263>.", hidden = True )
-			
+			await message.edit( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://gelbooru.com/index.php?page=wiki&s=&s=view&id=26263>." )
+
 			# Prevent further execution
 			return
 
@@ -288,7 +288,7 @@ async def hentai( interaction ):
 
 		# Use the sample image if the actual image's filesize is greater than 8MB - redd.it/aflp3p
 		imageURL = post.attrib[ "sample_url" ] if fileSize > 8388119 else post.attrib[ "file_url" ]
-	
+
 		# Create an embed
 		embed = discord.Embed(
 			url = "https://gelbooru.com/index.php?page=post&s=view&id=" + post.attrib[ "id" ],
@@ -335,8 +335,8 @@ async def hentai( interaction ):
 		if len( posts ) < 1:
 
 			# Send an error message only to the calling user
-			await interaction.respond( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://danbooru.donmai.us/wiki_pages/help:cheatsheet>.", hidden = True )
-			
+			await message.edit( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://danbooru.donmai.us/wiki_pages/help:cheatsheet>." )
+
 			# Prevent further execution
 			return
 
