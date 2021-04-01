@@ -1260,10 +1260,10 @@ async def on_message( message ):
 			guild = client.get_guild( settings.guild )
 
 			_webhooks=await guild.webhooks()
-			anonymousWebhook=discord.utils.get(_webhooks,name="Anonymous")
+			anonymousWebhook=discord.utils.get(_webhooks,id=661697895434551337)
 
-			lurkerdiscord.utils.get(guild.roles,name="Lurker")
-			timeoutRole=discord.utils.get(guild.roles,name="Timeout")
+			lurkerRole = discord.utils.get(guild.roles,id=807559722127458304)
+			timeoutRole=discord.utils.get(guild.roles,id=539160858341933056)
 
 			# Disallow lurkers
 			if(lurkerRole in guildMember.roles):
@@ -1699,31 +1699,31 @@ async def on_ready():
 	print( "Ready." )
 
 	# April fools 2021
-	server = client.get_guild( 240167618575728644 )
-	print( f"[SERVER] { server.name } = { server.name[ ::-1 ] }" )
-	await server.edit( name = server.name[ ::-1 ], reason = "April Fools 2021 :)" )
-	for channel in server.text_channels:
-		print( f"[TEXT] #{ channel.name } = #{ channel.name[ ::-1 ] }" )
-		if channel.topic:
-			print( f"\t{ channel.topic } = { channel.topic[ ::-1 ] }" )
-			await channel.edit( name = channel.name[ ::-1 ], topic = channel.topic[ ::-1 ], reason = "April Fools 2021 :)" )
-		else:
-			await channel.edit( name = channel.name[ ::-1 ], reason = "April Fools 2021 :)" )
-	for channel in server.voice_channels:
-		print( f"[VOICE] { channel.name } = { channel.name[ ::-1 ] }" )
-		await channel.edit( name = channel.name[ ::-1 ], reason = "April Fools 2021 :)" )
-	for channel in server.categories:
-		print( f"[CATEGORY] { channel.name } = { channel.name[ ::-1 ] }" )
-		await channel.edit( name = channel.name[ ::-1 ], reason = "April Fools 2021 :)" )
-	for role in server.roles:
-		if role.is_default() or role.id == 701771584255557752: continue
-		print( f"[ROLE] @{ role.name } = @{ role.name[ ::-1 ] }" )
-		await role.edit( name = role.name[ ::-1 ], reason = "April Fools 2021 :)" )
-	for member in server.members:
-		if member.id == 480764191465144331 or member.id == 513872128156893189: continue
-		print( f"[MEMBER] @{ member.display_name } = @{ member.display_name[ ::-1 ] }" )
-		await member.edit( nick = member.display_name[ ::-1 ], reason = "April Fools 2021 :)" )
-	print( "It's done!~" )
+	#server = client.get_guild( 240167618575728644 )
+	#print( f"[SERVER] { server.name } = { server.name[ ::-1 ] }" )
+	#await server.edit( name = server.name[ ::-1 ], reason = "April Fools 2021 :)" )
+	#for channel in server.text_channels:
+	#	print( f"[TEXT] #{ channel.name } = #{ channel.name[ ::-1 ] }" )
+	#	if channel.topic:
+	#		print( f"\t{ channel.topic } = { channel.topic[ ::-1 ] }" )
+	#		await channel.edit( name = channel.name[ ::-1 ], topic = channel.topic[ ::-1 ], reason = "April Fools 2021 :)" )
+	#	else:
+	#		await channel.edit( name = channel.name[ ::-1 ], reason = "April Fools 2021 :)" )
+	#for channel in server.voice_channels:
+	#	print( f"[VOICE] { channel.name } = { channel.name[ ::-1 ] }" )
+	#	await channel.edit( name = channel.name[ ::-1 ], reason = "April Fools 2021 :)" )
+	#for channel in server.categories:
+	#	print( f"[CATEGORY] { channel.name } = { channel.name[ ::-1 ] }" )
+	#	await channel.edit( name = channel.name[ ::-1 ], reason = "April Fools 2021 :)" )
+	#for role in server.roles:
+	#	if role.is_default() or role.id == 701771584255557752: continue
+	#	print( f"[ROLE] @{ role.name } = @{ role.name[ ::-1 ] }" )
+	#	await role.edit( name = role.name[ ::-1 ], reason = "April Fools 2021 :)" )
+	#for member in server.members:
+	#	if member.id == 480764191465144331 or member.id == 513872128156893189: continue
+	#	print( f"[MEMBER] @{ member.display_name } = @{ member.display_name[ ::-1 ] }" )
+	#	await member.edit( nick = member.display_name[ ::-1 ], reason = "April Fools 2021 :)" )
+	#print( "It's done!~" )
 
 # Coroutine for shutting down the bot
 async def shutdown():
