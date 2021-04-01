@@ -130,4 +130,4 @@ async def shutdown( message, arguments, client ):
 	await client.change_presence( status = discord.Status.offline )
 
 	# Logout & disconnect
-	await client.logout()
+	await client.close()
