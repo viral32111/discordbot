@@ -43,7 +43,8 @@ import random, xml.etree.ElementTree, datetime, dateutil.parser
 			slashcommands.option.choice( "Xbooru", "xbooru" ),
 			slashcommands.option.choice( "Gelbooru", "gelbooru" ),
 			slashcommands.option.choice( "Danbooru", "danbooru" ),
-			slashcommands.option.choice( "HypnoHub", "hypnohub" )
+			slashcommands.option.choice( "Hypnohub", "hypnohub" ),
+			slashcommands.option.choice( "e621", "e621" )
 		]
 	),
 	slashcommands.option(
@@ -460,6 +461,79 @@ async def hentai( interaction ):
 
 		# set the embed footer
 		embed.set_footer( text = uploadedAt.strftime( "Uploaded on %A %d %B %Y, %H:%M:%S." ) )
+
+		# Send the embed
+		await message.edit( embeds = [ embed ] )
+
+	# Is this for e621?
+	elif interaction.arguments[ "source" ] == "e621":
+
+		# Send a request to the API for the most recent posts matching the provided tags
+		searchResponse = requests.request( "GET", "https://e621.net/posts.json", params = {
+			"tags": interaction.arguments[ "tags" ]
+		}, headers = {
+			"User-Agent": "1"
+		} )
+
+		# Throw an error if the request was unsuccessful
+		searchResponse.raise_for_status()
+
+		# Store the returned posts
+		posts = searchResponse.json()[ "posts" ]
+
+		# Are there no posts?
+		if len( posts ) < 1:
+
+			# Send an error message only to the calling user
+			await message.edit( f":mag_right: I could not find anything with the tags: `{ interaction.arguments[ 'tags' ] }`!\nMaybe you are searching wrong? Check out <https://e621.net/help/cheatsheet>." )
+
+			# Prevent further execution
+			return
+
+		# Sort the posts by highest to lowest score
+		posts.sort( key = lambda post: post[ "score" ][ "total" ], reverse = True )
+
+		# Get a random post from the top 10 highest scored posts
+		post = random.choice( posts[ :10 ] )
+
+		# Parse the uploaded and last modified times
+		uploadedAt = dateutil.parser.parse( post[ "created_at" ] )
+		modifiedAt = dateutil.parser.parse( post[ "updated_at" ] )
+
+		# Get all the tags as a safe Discord string
+		#tags = discord.utils.escape_markdown( post[ "tag_string" ] )
+
+		# Send a request to the image for getting the file size
+		sizeResponse = requests.request( "HEAD", post[ "file" ][ "url" ], headers = {
+			"User-Agent": "1"
+		} )
+
+		# Get the file size in bytes from the returned headers
+		fileSize = int( sizeResponse.headers[ "content-length" ] )
+
+		# Use the sample image if the actual image's filesize is greater than 8MB - redd.it/aflp3p
+		imageURL = post[ "sample" ][ "url" ] if fileSize > 8388119 else post[ "file" ][ "url" ]
+
+		# Create an embed
+		embed = discord.Embed(
+			url = "https://e621.net/posts/" + str( post[ "id" ] ),
+			title = "Score: " + str( post[ "score" ][ "total" ] ),
+			#description = ( tags[ :200 ].strip() + "... [[view all](https://danbooru.donmai.us/post_versions?search[post_id]=" + str( post[ "id" ] ) + ")]" if len( tags ) > 200 else tags ),
+			color = 0x152F56
+		)
+
+		# Set the embed author
+		embed.set_author(
+			name = "e621",
+			url = "https://e621.net",
+			icon_url = "https://viral32111.com/images/conspiracyai/icons/e621.png"
+		)
+
+		# Set the embed image
+		embed.set_image( url = imageURL )
+
+		# set the embed footer
+		embed.set_footer( text = modifiedAt.strftime( "Uploaded on %A %d %B %Y, %H:%M:%S." ) )
 
 		# Send the embed
 		await message.edit( embeds = [ embed ] )
