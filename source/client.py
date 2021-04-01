@@ -767,6 +767,7 @@ print( "Defined chat commands." )
 # Import each chat command file
 from newcommands import minecraft # to-do: rename to just commands once all old commands are ported over
 from newcommands import hentai
+from newcommands import fun
 
 # Console message
 print( "Defined slash commands." )
@@ -1606,6 +1607,11 @@ async def on_raw_reaction_remove( payload ):
 
 # Runs when a member's voice state changes
 async def on_voice_state_update( member, before, after ):
+
+	# Just give everyone music DJ for now
+	dj_role = member.guild.get_role( 784532835348381776 )
+	await member.add_roles( dj_role )
+	return
 
 	# Ignore bots
 	if member.bot: return
