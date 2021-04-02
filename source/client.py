@@ -1391,7 +1391,7 @@ async def on_member_join( member ):
 			yearJoined = member.joined_at.year
 
 			# Send a first welcome message to the join/leave messages channel
-			await joinleaveChannel.send( ":wave_tone1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#" + str( settings.channels.welcome ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
+			await joinleaveChannel.send( ":wave_tone1: Welcome " + member.mention + " to the community!", allowed_mentions = ALLOW_USER_MENTIONS )
 
 		# Fetch the role for the year we just set above
 		yearRole = member.guild.get_role( settings.roles.years[ str( yearJoined ) ] )
