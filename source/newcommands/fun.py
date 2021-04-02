@@ -35,6 +35,6 @@ import slashcommands
 		description = "The text to reverse.",
 		required = True
 	)
-], guild = 240167618575728644 )
+] )
 async def reverse( interaction ):
 	await interaction.respond( interaction.arguments[ "text" ][ ::-1 ], hidden = True )

@@ -53,7 +53,7 @@ import random, xml.etree.ElementTree, datetime, dateutil.parser
 		description = "Space-separated list of tags to search with.",
 		required = True
 	)
-], guild = 240167618575728644 )
+] )
 async def hentai( interaction ):
 
 	# If this is not the NSFW channel (or my testing channel)

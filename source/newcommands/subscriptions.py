@@ -64,7 +64,7 @@ import slashcommands
 			required = True
 		) ]
 	)
-], guild = 240167618575728644 )
+] )
 async def subscriptions( interaction ):
 	subCommand = interaction.data.options[ 0 ].name
 	notificationType = interaction.data.options[ 0 ].options[ 0 ].value
