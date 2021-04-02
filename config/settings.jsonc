@@ -24,13 +24,10 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 	"appid": 513872128156893189, // bot
 	"email": "contact@viral32111.com",
 	"subscriptions": {
-		"channel": 410507397166006274, // #info
-		"message": 805942214315606086,
 		"roles": {
-			":watermelon:": 805890826784866335,
-			":hammer:": 805891298720350218,
-			":brick:": 805891488532660256,
-			":floppy_disk:": 805891749658361896
+			"community": 805890826784866335,
+			"minecraft": 805891488532660256,
+			"conspiracy-ai": 805891749658361896
 		}
 	},
 	"channels": {
