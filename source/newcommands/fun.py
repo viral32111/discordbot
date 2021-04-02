@@ -27,7 +27,7 @@ import slashcommands
 # Define slash commands
 ##############################################
 
-# Minecraft Status
+# Reverse text
 @slashcommands.new( "Quickly reverse text, super useful for April Fools :)", options = [
 	slashcommands.option(
 		type = slashcommands.option.type.string,
