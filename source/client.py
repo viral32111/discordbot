@@ -1379,7 +1379,7 @@ async def on_member_join( member ):
 				await member.add_roles( membersRole, reason = "Member is already verified." )
 
 			# Send a welcome back message to the join/leave messages channel
-			await joinleaveChannel.send( ":wave::skin-tone-1: Welcome back " + member.mention + ", it's great to see you here again!", allowed_mentions = ALLOW_USER_MENTIONS )
+			await joinleaveChannel.send( ":wave_tone1: Welcome back " + member.mention + ", it's great to see you here again!", allowed_mentions = ALLOW_USER_MENTIONS )
 
 		# This is their first time joining (we didn't get any results from the database)
 		else:
@@ -1391,7 +1391,7 @@ async def on_member_join( member ):
 			yearJoined = member.joined_at.year
 
 			# Send a first welcome message to the join/leave messages channel
-			await joinleaveChannel.send( ":wave::skin-tone-1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#" + str( settings.channels.welcome ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
+			await joinleaveChannel.send( ":wave_tone1: Welcome " + member.mention + " to the Conspiracy Servers community! <:ConspiracyServers:540654522650066944>\nPlease be sure to read through the rules, guidelines and information in <#" + str( settings.channels.welcome ) + ">.", allowed_mentions = ALLOW_USER_MENTIONS )
 
 		# Fetch the role for the year we just set above
 		yearRole = member.guild.get_role( settings.roles.years[ str( yearJoined ) ] )
@@ -1429,7 +1429,7 @@ async def on_member_remove(member):
 		await joinleaveChannel.send(f":bangbang: {member} was banned by {moderator.mention}" + (f" for {reason}" if (reason) else "") + ".")
 		await log("Member banned", f"{member} was banned by {moderator.mention}" + (f" for `{reason}`" if (reason) else "") + ".", thumbnail=member.avatar_url)
 	else:
-		await joinleaveChannel.send(f":walking::skin-tone-1: {member} left the server.")
+		await joinleaveChannel.send(f":man_walking_tone1: {member} left the server.")
 		await log("Member left", f"{member} left the server.", thumbnail=member.avatar_url)
 
 # Runs when a message is deleted
@@ -1535,13 +1535,13 @@ async def on_reaction_remove(reaction, user):
 # Runs when a member's voice state changes
 async def on_voice_state_update( member, before, after ):
 
+	# Ignore bots
+	if member.bot: return
+
 	# Just give everyone music DJ for now
 	dj_role = member.guild.get_role( 784532835348381776 )
 	await member.add_roles( dj_role )
 	return
-
-	# Ignore bots
-	if member.bot: return
 
 	# Has the member joined the Music voice channel?
 	if after.channel != None and after.channel.id == 257480146762596352:
