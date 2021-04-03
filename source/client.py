@@ -769,6 +769,7 @@ from newcommands import hentai
 from newcommands import fun
 from newcommands import subscriptions
 from newcommands import links
+from newcommands import anime
 
 # Console message
 print( "Defined slash commands." )
@@ -1595,6 +1596,43 @@ async def on_socket_response( payload ):
 		now = datetime.datetime.now().strftime( "%d-%m-%Y %H:%M:%S.%f" )
 		channel = client.get_channel( command.channelID )
 		print( f"[{ now }] { command.user.username }#{ command.user.discriminator } ({ command.user.id }) used /{ command.data.name } ({ command.data.id }) in #{ channel.name } ({ channel.id }) with arguments '{ command.arguments }'." )
+
+		logEmbed = discord.Embed(
+			title = "Slash Command Used",
+			color = settings.color,
+			timestamp = datetime.datetime.utcnow()
+		)
+
+		logEmbed.add_field(
+			name = "__Member__",
+			value = f"<@{ command.user.id }>\n`{ command.user.id }`",
+			inline = True
+		)
+
+		logEmbed.add_field(
+			name = "__Command__",
+			value = f"`/{ command.data.name }`\n`{ command.data.id }`",
+			inline = True
+		)
+
+		logEmbed.add_field(
+			name = "__Location__",
+			value = f"<#{ channel.id }>\n`{ channel.id }`",
+			inline = True
+		)
+
+		logEmbed.add_field(
+			name = "__Arguments__",
+			value = f"```json\n{ command.arguments }\n```",
+			inline = False
+		)
+
+		logEmbed.set_footer(
+			text = formatTimestamp( datetime.datetime.utcnow() )
+		)
+
+		logsChannel = client.get_channel( 576904701304635405 )
+		await logsChannel.send( embed = logEmbed )
 
 # Runs when the client is ready
 async def on_ready():

@@ -28,7 +28,7 @@ import slashcommands
 ##############################################
 
 # Links
-@slashcommands.new( "Links to other community resources.", guild = 240167618575728644 )
+@slashcommands.new( "Links to other community resources." )
 async def links( interaction ):
 	await interaction.respond( """**__Website__**
 :paperclip: Clearnet: <https://viral32111.com/community>
