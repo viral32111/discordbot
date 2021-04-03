@@ -31,7 +31,7 @@ import discord, mcstatus, socket, requests, requests_unixsocket, datetime, dateu
 ##############################################
 
 # Minecraft Status
-@slashcommands.new( "The current status of the Minecraft server." )
+@slashcommands.new( "The current status of the Minecraft server.", guild = 240167618575728644 )
 async def minecraft( interaction ):
 	message = await interaction.think()
 

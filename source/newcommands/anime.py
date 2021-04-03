@@ -38,7 +38,7 @@ import slashcommands, requests, discord
 		description = "The name of the anime or manga to search for.",
 		required = True
 	)
-] )
+], guild = 240167618575728644 )
 async def anime( interaction ):
 	message = await interaction.think()
 
