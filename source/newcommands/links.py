@@ -20,40 +20,35 @@
 # Setup this script
 ##############################################
 
-# Import variables from the main script
-from __main__ import chatCommands
-
 # Import required modules
-import discord
+import slashcommands
 
 ##############################################
-# Define chat commands
+# Define slash commands
 ##############################################
 
-# Website
-@chatCommands( category = "Links", aliases = [ "site" ] )
-async def website( message, arguments, client ):
+# Links
+@slashcommands.new( "Links to other community resources.", guild = 240167618575728644 )
+async def links( interaction ):
+	await interaction.respond( """**__Website__**
+:paperclip: Clearnet: <https://viral32111.com/community>
+:paperclip: Darknet: http://viraldwfella5we7pdbi75pmzg4bcrehcwjstyy6tgjbqhdh6pgdi6yd.onion/community
 
-	# Respond with a simple message
-	return { "content": ":link: The community website is available at https://viral32111.com/community" }
+**__Discord__**
+:wave_tone1: Clearnet: <https://viral32111.com/discord>
+:wave_tone1: Darknet: http://viraldwfella5we7pdbi75pmzg4bcrehcwjstyy6tgjbqhdh6pgdi6yd.onion/discord
+​
+**__Steam Group__**
+:game_die: Clearnet: <https://viral32111.com/steamgroup>
+:game_die: Darknet: http://viraldwfella5we7pdbi75pmzg4bcrehcwjstyy6tgjbqhdh6pgdi6yd.onion/steamgroup
 
-# Steam Group
-@chatCommands( category = "Links", aliases = [ "steam" ] )
-async def steamgroup( message, arguments, client ):
+**__Donate__**
+:moneybag: Clearnet: <https://viral32111.com/donate>
+:moneybag: Darknet: http://viraldwfella5we7pdbi75pmzg4bcrehcwjstyy6tgjbqhdh6pgdi6yd.onion/donate
 
-	# Respond with a simple message
-	return { "content": ":link: The community Steam Group is available at https://viral32111.com/steamgroup" }
+**__Staff Application__**
+:coffee: Clearnet: <https://viral32111.com/apply>
+:coffee: Darknet: http://viraldwfella5we7pdbi75pmzg4bcrehcwjstyy6tgjbqhdh6pgdi6yd.onion/apply
 
-# Discord
-@chatCommands( category = "Links", aliases = [ "invite" ] )
-async def discord( message, arguments, client ):
-
-	# Respond with a simple message
-	return { "content": ":link: The community Discord invite link is https://viral32111.com/discord" }
-
-# Staff Application
-@chatCommands( category = "Links", aliases = [ "apply" ] )
-async def staffapplication( message, arguments, client ):
-
-	# Respond with a simple message
-	return { "content": ":link: You can apply for Staff by filling out the application available at https://viral32111.com/apply" }
+**__Discord Bot__**
+:desktop: Clearnet: <https://github.com/viral32111/conspiracy-ai>""", hidden = True )
