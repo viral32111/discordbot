@@ -85,37 +85,6 @@ with open( "config/secrets.jsonc", "r" ) as handle:
 print( "Loaded configuration files." )
 
 ##############################################
-# Load localisation strings
-##############################################
-
-# For all of the localisation strings
-strings = {}
-
-# Loop through all files & directories in the strings directory
-for name in os.listdir( "config/strings" ):
-
-	# Skip if it isn't a regular file
-	if not os.path.isfile( "config/strings/" + name ): continue
-
-	# Get the name of the locale
-	locale = os.path.splitext( name )[ 0 ]
-
-	# Open the file for reading
-	with open( "config/strings/" + name, "r" ) as handle:
-
-		# Read all the contents of the file
-		contents = handle.read()
-
-		# Strip all comments
-		stripped = re.sub( r"\/\*[^*]*\*\/| ?\/\/.*", "", contents )
-
-		# Parse the JSON into the main strings dictionary
-		strings[ locale ] = json.loads( stripped )
-
-# Console message
-print( "Loaded localisation strings." )
-
-##############################################
 # Initalise global variables
 ##############################################
 
