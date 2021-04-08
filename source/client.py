@@ -713,7 +713,6 @@ chatCommands = ChatCommands()
 
 # Import each chat command file
 from commands import general
-from commands import music
 
 # Console message
 print( "Defined chat commands." )
@@ -731,6 +730,7 @@ from newcommands import links
 from newcommands import anime
 from newcommands import moderation
 from newcommands import administration
+from newcommands import music
 
 # Console message
 print( "Defined slash commands." )
