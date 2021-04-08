@@ -42,7 +42,6 @@ import urllib.parse # Parsing URLs
 import bs4 # Parsing & web scraping HTML
 import difflib # For computing deltas
 import operator # Extra sorting methods
-import signal # Handling termination signals
 import emoji # Resolving unicode emojis to text
 import enum # Enumerations for custom classes
 import mcstatus # Minecraft server status querying
@@ -772,9 +771,6 @@ client = discord.Client(
 	intents = discord.Intents.all()
 
 )
-
-# Console message
-print( "Connecting to Discord..." )
 
 ##############################################
 # Define background tasks
@@ -1618,21 +1614,6 @@ async def on_ready():
 	# Console message
 	print( "Ready." )
 
-# Coroutine for shutting down the bot
-async def shutdown():
-
-	# Console message
-	print( "Shutting down..." )
-
-	# Cancel all background tasks
-	for backgroundTask in backgroundTasks: backgroundTask.cancel()
-
-	# Make the bot seem offline while the connection times out
-	await client.change_presence( status = discord.Status.offline )
-
-	# Logout & disconnect
-	await client.close()
-
 # Register a few initial callbacks
 client.event( on_connect )
 client.event( on_resumed )
@@ -1640,12 +1621,21 @@ client.event( on_disconnect )
 client.event( on_ready )
 client.event( on_socket_response )
 
-# Register the signal callbacks to shutdown the client on keyboard interrupts and terminations
-client.loop.add_signal_handler( signal.SIGINT, lambda: client.loop.create_task( shutdown() ) )
-client.loop.add_signal_handler( signal.SIGTERM, lambda: client.loop.create_task( shutdown() ) )
+try:
+	print( "Logging in..." )
+	client.loop.run_until_complete( client.login( os.environ[ "DISCORD_TOKEN" ] ) )
 
-# Start the client
-client.loop.run_until_complete( client.start( os.environ[ "DISCORD_TOKEN" ] ) )
+	print( "Connecting..." )
+	client.loop.run_until_complete( client.connect() )
+except KeyboardInterrupt:
+	if not client.is_ready():
+		print( "Waiting until client is ready..." )
+		client.loop.run_until_complete( client.wait_until_ready() )
 
-# Console message
-print( "Shutdown." )
+	print( "Closing..." )
+	for backgroundTask in backgroundTasks: backgroundTask.cancel()
+	client.loop.run_until_complete( client.change_presence( status = discord.Status.offline ) )
+	client.loop.run_until_complete( client.close() )
+finally:
+	client.loop.close()
+	print( "Closed." )
