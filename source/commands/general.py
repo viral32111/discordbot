@@ -46,7 +46,7 @@ async def help( message, arguments, client ):
 		name = "About Us",
 
 		# The description of the field
-		value = "Conspiracy Servers is a Garry's Mod community founded by <@" + str( settings.owner ) + "> and <@213413722943651841> in early 2016. We've been going for nearly 5 years now and have always kept our non-serious, relaxed and casual approach towards our community and the servers which we run."
+		value = "Conspiracy Servers is a Garry's Mod community founded by <@" + str( message.guild.owner_id ) + "> and <@213413722943651841> in early 2016. We've been going for nearly 5 years now and have always kept our non-serious, relaxed and casual approach towards our community and the servers which we run."
 
 	)
 

@@ -1031,7 +1031,7 @@ async def on_message( message ):
 						break
 
 				# Is this command work-in-progress & is the author not me?
-				if metadata.wip and message.author.id != settings.owner:
+				if metadata.wip and message.author.id != message.guild.owner_id:
 
 					# Give a response
 					await message.channel.send( ":wrench: This command is work-in-progress, please refrain from using it until it's released." )
@@ -1130,7 +1130,7 @@ async def on_message( message ):
 					print( traceback.format_exc() )
 
 					# Friendly message
-					await message.channel.send( ":interrobang: I encountered an error while attempting to execute that command, <@" + str( settings.owner ) + "> needs to fix this.", allowed_mentions = ALLOW_USER_MENTIONS )
+					await message.channel.send( ":interrobang: I encountered an error while attempting to execute that command, <@" + str( message.guild.owner_id ) + "> needs to fix this.", allowed_mentions = ALLOW_USER_MENTIONS )
 
 				# No errors occured
 				else:
