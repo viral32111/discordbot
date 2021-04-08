@@ -18,7 +18,6 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 
 {
 	"prefix": "/",
-	"appid": 513872128156893189, // bot
 	"email": "contact@viral32111.com",
 	"subscriptions": {
 		"roles": {
