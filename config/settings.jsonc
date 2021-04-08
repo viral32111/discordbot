@@ -20,12 +20,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 	"prefix": "/",
 	"email": "contact@viral32111.com",
 	"channels": {
-		"logs": {
-			"id": 576904701304635405,
-			"exclude": [
-				728352621420609666 // Development Category
-			]
-		},
+		"logs": 576904701304635405,
 		"anonymous": 661694045600612352,
 		"joinleave": 240167618575728644,
 		"welcome": 410507397166006274,

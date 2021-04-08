@@ -288,7 +288,7 @@ def formatSeconds( secs ):
 async def log( title, description, **kwargs ):
 
 	# Fetch the logs channel
-	logsChannel = client.get_channel( settings.channels.logs.id )
+	logsChannel = client.get_channel( settings.channels.logs )
 
 	guild = client.guilds[ 0 ]
 
@@ -584,15 +584,6 @@ def shouldLog( message ):
 
 	# Return false if this message is from a bot
 	if message.author.bot: return False
-
-	# Return false if this message's channel is an excluded channel
-	if message.channel.id in settings.channels.logs.exclude: return False
-
-	# Return false if this message's channel category is an excluded channel category
-	if message.channel.id in settings.channels.logs.exclude: return False
-
-	# Is this not in a log exclusion channel?
-	if message.channel.category_id in settings.channels.logs.exclude: return False
 
 	# Return true otherwise
 	return True
@@ -1146,12 +1137,6 @@ async def on_message( message ):
 
 					# Display a console message
 					print( "(" + ascii( message.channel.category.name ) + " -> #" + message.channel.name + ") " + str( message.author ) + " (" + message.author.display_name + ") executed command '" + command + "'" + ( " with arguments '" + ", ".join( arguments ) + "'" if len( arguments ) > 0 else "" ) + "." )
-
-					# Don't continue if the channel is an excluded channel
-					if message.channel.id in settings.channels.logs.exclude: return
-
-					# Don't continue if this channel's category is an excluded channel category
-					if message.channel.category_id in settings.channels.logs.exclude: return
 
 					# Log the usage of the command
 					await log( "Command executed", message.author.mention + " executed command `" + command + "`" + ( " with arguments `" + " ".join( arguments ) + "`" if len( arguments ) > 0 else "" ) + " in " + message.channel.mention, jump = message.jump_url )
