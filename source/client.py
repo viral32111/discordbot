@@ -1376,14 +1376,14 @@ async def on_member_join( member ):
 			# Set their year role to whatever joined at date & time was in the database
 			yearJoined = results[ 0 ][ 0 ].year
 
-			# Is the steam community ID column not null (i.e. are they verified)?
+			# Do they have their Steam account linked?
 			if results[ 0 ][ 1 ]:
 
-				# Fetch the members role
-				membersRole = member.guild.get_role( settings.roles.members )
+				# Fetch the Steam Linked role
+				membersRole = member.guild.get_role( settings.roles.steamlink )
 
-				# Give the member that year role and the members role
-				await member.add_roles( membersRole, reason = "Member is already verified." )
+				# Give the member that year role and the Steam Linked role
+				await member.add_roles( membersRole, reason = "Member has their Steam account linked." )
 
 			# Send a welcome back message to the join/leave messages channel
 			await joinleaveChannel.send( ":wave_tone1: Welcome back " + member.mention + ", it's great to see you here again!", allowed_mentions = ALLOW_USER_MENTIONS )
@@ -1400,8 +1400,8 @@ async def on_member_join( member ):
 			# Send a first welcome message to the join/leave messages channel
 			await joinleaveChannel.send( ":wave_tone1: Welcome " + member.mention + " to the community!", allowed_mentions = ALLOW_USER_MENTIONS )
 
-		# Fetch the role for the year we just set above
-		yearRole = member.guild.get_role( settings.roles.years[ str( yearJoined ) ] )
+		# Fetch the role for the year we just set above (WARNING: THIS WILL BREAK ON NEW YEAR UNLESS A ROLE FOR THAT YEAR IS MANUALLY CREATED)
+		yearRole = discord.utils.get( member.guild.roles, name = str( yearJoined ) )
 
 		# Give the member that year role
 		await member.add_roles( yearRole, reason = "Member joined the server." )

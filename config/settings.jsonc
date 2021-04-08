@@ -19,13 +19,6 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 {
 	"prefix": "/",
 	"email": "contact@viral32111.com",
-	"subscriptions": {
-		"roles": {
-			"community": 805890826784866335,
-			"minecraft": 805891488532660256,
-			"conspiracy-ai": 805891749658361896
-		}
-	},
 	"channels": {
 		"logs": {
 			"id": 576904701304635405,
@@ -55,14 +48,11 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 	},
 	"roles": {
 		"timeout": 539160858341933056,
-		"members": 410501918104879124,
-		"years": {
-			"2016": 664889273832439818,
-			"2017": 673897457570283561,
-			"2018": 673897536817463308,
-			"2019": 673897608397455360,
-			"2020": 673897596019933217,
-			"2021": 804869340225863691
+		"steamlink": 410501918104879124,
+		"subscriptions": {
+			"community": 805890826784866335,
+			"minecraft": 805891488532660256,
+			"conspiracy-ai": 805891749658361896
 		}
 	},
 	"activities": [
