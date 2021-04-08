@@ -8,6 +8,7 @@ docker run \
 	--mount type=bind,source=$(pwd)/source,target=/usr/local/discordbot/src,readonly \
 	--mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
 	--env-file secrets.conf \
+	--network host \
 	--interactive \
 	--tty \
 	--rm \
