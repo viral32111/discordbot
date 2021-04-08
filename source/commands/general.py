@@ -24,7 +24,7 @@
 from __main__ import chatCommands, configuration, fileChecksum, USER_AGENT_HEADER, mysqlQuery, DAY_SUFFIXES, formatTimestamp, anonymousMessageHashes
 
 # Import required modules
-import discord, youtube_dl, requests, pytz, datetime, re
+import discord, youtube_dl, requests, pytz, datetime, re, os
 
 ##############################################
 # Define chat commands
@@ -94,13 +94,6 @@ async def help( message, arguments, client ):
 
 	# Respond with this embed
 	return { "embed": embed }
-
-# Link Steam account
-@chatCommands( category = "General" )
-async def link( message, arguments, client ):
-
-	# Respond with a simple message
-	return { "content": ":link: Visit <https://viral32111.com/link> to link your Steam account." }
 
 # View available commands
 @chatCommands( category = "General", aliases = [ "cmds" ] )
