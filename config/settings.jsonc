@@ -53,20 +53,6 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 		"port": 3306,
 		"name": "ConspiracyAI"
 	},
-	"anonymous": {
-		"avatars": [
-			"1cbd08c76f8af6dddce02c5138971129", // Red
-			"0e291f67c9274a1abdddeb3fd919cbaa", // Orange
-			"dd4dbc0016779df1378e7812eabaa04d", // Green
-			"322c936a8c8be1b803cd94861bdfa868", // Grey
-			"6debd47ed13483642cf09e832ed0bc1b" // Blurple
-		]
-	},
-	"webhooks": {
-		"anonymous": {
-			"id": 661697895434551337
-		}
-	},
 	"roles": {
 		"timeout": 539160858341933056,
 		"members": 410501918104879124,

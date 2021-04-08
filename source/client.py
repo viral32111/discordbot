@@ -1262,13 +1262,11 @@ async def on_message( message ):
 ######################### ALL CODE BELOW THIS LINE NEEDS REFORMATTING & CLEANING UP ######################### 
 #############################################################################################################
 
-			guild = client.guilds[ 0 ]
+			anonymousChannel = message.guild.get_channel( settings.channels.anonymous )
+			anonymousWebhook = await anonymousChannel.webhooks()[ 0 ]
 
-			_webhooks=await guild.webhooks()
-			anonymousWebhook=discord.utils.get(_webhooks,id=661697895434551337)
-
-			lurkerRole = discord.utils.get(guild.roles,id=807559722127458304)
-			timeoutRole=discord.utils.get(guild.roles,id=539160858341933056)
+			lurkerRole = discord.utils.get(message.guild.roles,id=807559722127458304)
+			timeoutRole=discord.utils.get(message.guild.roles,id=539160858341933056)
 
 			# Disallow lurkers
 			if(lurkerRole in guildMember.roles):
@@ -1298,7 +1296,13 @@ async def on_message( message ):
 
 			# Pick random username and avatar
 			username = random.choice( settings.anonymousNames )
-			randomAvatarHash = random.choice( settings.anonymous.avatars )
+			randomAvatarHash = random.choice( [
+				"1cbd08c76f8af6dddce02c5138971129",
+				"0e291f67c9274a1abdddeb3fd919cbaa",
+				"dd4dbc0016779df1378e7812eabaa04d",
+				"322c936a8c8be1b803cd94861bdfa868",
+				"6debd47ed13483642cf09e832ed0bc1b"
+			] )
 			avatar = f"https://discordapp.com/assets/{ randomAvatarHash }.png"
 
 			# A placeholder list for all the discord file objects
