@@ -36,7 +36,7 @@ async def minecraft( interaction ):
 	message = await interaction.think()
 
 	embed = discord.Embed( title = "", description = "", color = 0xF7894A )
-	embed.set_author( name = "viral32111's minecraft server", icon_url = "https://viral32111.com/images/minecraft/brick.png" )
+	embed.set_author( name = "viral32111's minecraft server", icon_url = "https://viral32111.github.io/conspiracy-ai/icons/minecraft/brick.png" )
 
 	try:
 		server = mcstatus.MinecraftServer( "viral32111.com" )

@@ -138,7 +138,7 @@ async def hentai( interaction ):
 		embed.set_author(
 			name = "Rule 34",
 			url = "https://rule34.xxx",
-			icon_url = "https://viral32111.com/images/conspiracyai/icons/rule34.png"
+			icon_url = "https://viral32111.github.io/conspiracy-ai/icons/hentai/rule34.png"
 		)
 
 		# Set the embed image
@@ -220,7 +220,7 @@ async def hentai( interaction ):
 		embed.set_author(
 			name = "Xbooru",
 			url = "https://xbooru.com",
-			icon_url = "https://viral32111.com/images/conspiracyai/icons/xbooru.png"
+			icon_url = "https://viral32111.github.io/conspiracy-ai/icons/hentai/xbooru.png"
 		)
 
 		# Set the embed image
@@ -302,7 +302,7 @@ async def hentai( interaction ):
 		embed.set_author(
 			name = "Gelbooru",
 			url = "https://gelbooru.com",
-			icon_url = "https://viral32111.com/images/conspiracyai/icons/gelbooru.png"
+			icon_url = "https://viral32111.github.io/conspiracy-ai/icons/hentai/gelbooru.png"
 		)
 
 		# Set the embed image
@@ -378,7 +378,7 @@ async def hentai( interaction ):
 		embed.set_author(
 			name = "Danbooru",
 			url = "https://danbooru.donmai.us",
-			icon_url = "https://viral32111.com/images/conspiracyai/icons/danbooru.png"
+			icon_url = "https://viral32111.github.io/conspiracy-ai/icons/hentai/danbooru.png"
 		)
 
 		# Set the embed image
@@ -453,7 +453,7 @@ async def hentai( interaction ):
 		embed.set_author(
 			name = "Hypnohub",
 			url = "https://hypnohub.net",
-			icon_url = "https://viral32111.com/images/conspiracyai/icons/hypnohub.png"
+			icon_url = "https://viral32111.github.io/conspiracy-ai/icons/hentai/hypnohub.png"
 		)
 
 		# Set the embed image
@@ -526,7 +526,7 @@ async def hentai( interaction ):
 		embed.set_author(
 			name = "e621",
 			url = "https://e621.net",
-			icon_url = "https://viral32111.com/images/conspiracyai/icons/e621.png"
+			icon_url = "https://viral32111.github.io/conspiracy-ai/icons/hentai/e621.png"
 		)
 
 		# Set the embed image
