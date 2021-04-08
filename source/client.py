@@ -372,7 +372,7 @@ def mysqlQuery( sql ):
 
 	# Connect to the database
 	connection = mysql.connector.connect(
-		host = settings.database.address,
+		host = settings.database.host,
 		port = settings.database.port,
 		user = secrets.database.user,
 		password = secrets.database.passwd,
