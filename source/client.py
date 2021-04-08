@@ -1180,8 +1180,8 @@ async def on_message( message ):
 			# Create or increment the message sent statistic for this member
 			mysqlQuery( "INSERT INTO MemberStatistics ( Member ) VALUES ( LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) ) ) ) ON DUPLICATE KEY UPDATE Messages = Messages + 1;" )
 
-			# Are we not in a repost excluded channel?
-			if message.channel.id not in settings.reposts.exclude:
+			# Is this the memes channel?
+			if message.channel.id == settings.channels.memes:
 
 				# Loop through all of those inline links and attachment links
 				for url in itertools.chain( attachmentURLs, inlineURLs ):
@@ -1191,9 +1191,6 @@ async def on_message( message ):
 
 					# Skip if the information is nothing - this means the link is not an image/video/audio file, or is over 100 MiB
 					if repostInformation == None: continue
-
-					# Skip if this checksum is in the repost exclude list
-					if repostInformation[ 1 ] in settings.reposts.excludeChecksums: continue
 
 					# Is this not a repost?
 					if repostInformation[ 0 ] == False:
