@@ -21,7 +21,7 @@
 ##############################################
 
 # Import variables, globals and functions from the main script
-from __main__ import settings, USER_AGENT_HEADER
+from __main__ import configuration, USER_AGENT_HEADER
 
 # Import required modules
 import slashcommands, requests, discord
@@ -47,7 +47,7 @@ async def anime( interaction ):
 	}, headers = {
 		"Accept": "application/json",
 		"User-Agent": USER_AGENT_HEADER,
-		"From": settings.email
+		"From": configuration[ "general" ][ "email" ]
 	} )
 
 	apiResponse.raise_for_status()

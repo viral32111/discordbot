@@ -21,7 +21,7 @@
 ##############################################
 
 # Import variables, globals and functions from the main script
-from __main__ import settings
+from __main__ import configuration
 
 # Import required modules
 import slashcommands
@@ -71,7 +71,7 @@ async def subscriptions( interaction ):
 
 	guild = interaction.client.guilds[ 0 ]
 	member = guild.get_member( interaction.user.id )
-	role = guild.get_role( settings.roles.subscriptions[ notificationType ] )
+	role = guild.get_role( configuration[ "roles" ][ "subscriptions" ][ notificationType ] )
 
 	if subCommand == "join":
 		await member.add_roles( role, reason = f"Subscribed to { role }." )

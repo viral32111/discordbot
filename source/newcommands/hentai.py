@@ -21,7 +21,7 @@
 ##############################################
 
 # Import variables, globals and functions from the main script
-from __main__ import settings, USER_AGENT_HEADER
+from __main__ import configuration, USER_AGENT_HEADER
 
 # Import required modules
 import discord, requests, slashcommands
@@ -80,7 +80,7 @@ async def hentai( interaction ):
 		}, headers = {
 			"Accept": "application/xml",
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Throw an error if the request was unsuccessful
@@ -117,7 +117,7 @@ async def hentai( interaction ):
 		# Send a request to the image for getting the file size
 		sizeResponse = requests.request( "HEAD", post.attrib[ "file_url" ], headers = {
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Get the file size in bytes from the returned headers
@@ -162,7 +162,7 @@ async def hentai( interaction ):
 		}, headers = {
 			"Accept": "application/xml",
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Throw an error if the request was unsuccessful
@@ -199,7 +199,7 @@ async def hentai( interaction ):
 		# Send a request to the image for getting the file size
 		sizeResponse = requests.request( "HEAD", post.attrib[ "file_url" ], headers = {
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Get the file size in bytes from the returned headers
@@ -244,7 +244,7 @@ async def hentai( interaction ):
 		}, headers = {
 			"Accept": "application/xml",
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Throw an error if the request was unsuccessful
@@ -281,7 +281,7 @@ async def hentai( interaction ):
 		# Send a request to the image for getting the file size
 		sizeResponse = requests.request( "HEAD", post.attrib[ "file_url" ], headers = {
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Get the file size in bytes from the returned headers
@@ -323,7 +323,7 @@ async def hentai( interaction ):
 		}, headers = {
 			"Accept": "application/json",
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Throw an error if the request was unsuccessful
@@ -357,7 +357,7 @@ async def hentai( interaction ):
 		# Send a request to the image for getting the file size
 		sizeResponse = requests.request( "HEAD", post[ "file_url" ], headers = {
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Get the file size in bytes from the returned headers
@@ -399,7 +399,7 @@ async def hentai( interaction ):
 		}, headers = {
 			"Accept": "application/json",
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Throw an error if the request was unsuccessful
@@ -432,7 +432,7 @@ async def hentai( interaction ):
 		# Send a request to the image for getting the file size
 		sizeResponse = requests.request( "HEAD", post[ "file_url" ], headers = {
 			"User-Agent": USER_AGENT_HEADER,
-			"From": settings.email
+			"From": configuration[ "general" ][ "email" ]
 		} )
 
 		# Get the file size in bytes from the returned headers

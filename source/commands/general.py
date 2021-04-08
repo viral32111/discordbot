@@ -21,7 +21,7 @@
 ##############################################
 
 # Import variables from the main script
-from __main__ import chatCommands, settings, fileChecksum, USER_AGENT_HEADER, mysqlQuery, secrets, DAY_SUFFIXES, formatTimestamp, anonymousMessageHashes
+from __main__ import chatCommands, configuration, fileChecksum, USER_AGENT_HEADER, mysqlQuery, secrets, DAY_SUFFIXES, formatTimestamp, anonymousMessageHashes
 
 # Import required modules
 import discord, youtube_dl, requests, pytz, datetime, re
@@ -71,7 +71,7 @@ async def help( message, arguments, client ):
 		name = "Chat Commands",
 
 		# The description of the field
-		value = "Type `" + settings.prefix + "commands` for a list of chat commands. Keep command usage in <#241602380569772044> to avoid cluttering the discussion channels.",
+		value = "Type `" + configuration[ "general" ][ "prefix" ] + "commands` for a list of chat commands. Keep command usage in <#241602380569772044> to avoid cluttering the discussion channels.",
 
 		# Don't place this field inline with the other fields
 		inline = False
@@ -136,10 +136,10 @@ async def commands( message, arguments, client ):
 		for command, aliases in commands.items():
 
 			# Construct a string out of the list of command aliases
-			aliasesString = " (" + ", ".join( [ "`" + settings.prefix + alias + "`" for alias in aliases ] ) + ")"
+			aliasesString = " (" + ", ".join( [ "`" + configuration[ "general" ][ "prefix" ] + alias + "`" for alias in aliases ] ) + ")"
 
 			# Append the command name and it's aliases (if any are available) to the final embed description
-			value += "• `" + settings.prefix + command + "`" + ( aliasesString if len( aliases ) > 0 else "" ) + "\n"
+			value += "• `" + configuration[ "general" ][ "prefix" ] + command + "`" + ( aliasesString if len( aliases ) > 0 else "" ) + "\n"
 
 		# Add the field to the embed for this category
 		embed.add_field( name = category, value = value, inline = False )
@@ -289,7 +289,7 @@ async def weather( message, arguments, client ):
 	# Make the API request
 	weatherRequest = requests.get( apiURL, headers = {
 		"Accept": "application/json",
-		"From": settings.email,
+		"From": configuration[ "general" ][ "email" ],
 		"User-Agent": USER_AGENT_HEADER
 	} )
 
@@ -361,13 +361,13 @@ async def delete( message, arguments, client ):
 
 		# Friendly message
 		# TO-DO: delete after 10 seconds
-		return { "content": ":grey_exclamation: You must specify the ID of the <#" + str( settings.channels.anonymous ) + "> message to delete." }
+		return { "content": ":grey_exclamation: You must specify the ID of the <#" + str( configuration[ "channels" ][ "anonymous" ] ) + "> message to delete." }
 
 	# Fetch the guild
 	guild = client.guilds[ 0 ]
 
 	# Fetch the anonymous channel
-	anonymousChannel = guild.get_channel( settings.channels.anonymous )
+	anonymousChannel = guild.get_channel( configuration[ "channels" ][ "anonymous" ] )
 
 	# Be safe!
 	try:
@@ -398,7 +398,7 @@ async def delete( message, arguments, client ):
 
 		# Friendly message
 		# TO-DO: delete after 10 seconds
-		return { "content": ":mag_right: I wasn't able to find a <#" + str( settings.channels.anonymous ) + "> message with that ID." }
+		return { "content": ":mag_right: I wasn't able to find a <#" + str( configuration[ "channels" ][ "anonymous" ] ) + "> message with that ID." }
 
 	# The specified ID wasn't really an ID
 	except ValueError:
@@ -424,7 +424,7 @@ async def delete( message, arguments, client ):
 
 			# Friendly message
 			# TO-DO: delete after 10 seconds
-			return { "content": ":no_entry_sign: The message has not been deleted because your ownership of it could not be verified.\n(Please note, <#" + str( settings.channels.anonymous ) + "> messages sent before the 22nd July 2020 cannot be deleted as no ownership information exists for them.)" }
+			return { "content": ":no_entry_sign: The message has not been deleted because your ownership of it could not be verified.\n(Please note, <#" + str( sconfiguration[ "channels" ][ "anonymous" ] ) + "> messages sent before the 22nd July 2020 cannot be deleted as no ownership information exists for them.)" }
 
 			# Prevent further execution
 			return

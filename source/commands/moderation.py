@@ -21,7 +21,7 @@
 ##############################################
 
 # Import variables from the main script
-from __main__ import chatCommands, settings
+from __main__ import chatCommands, configuration
 
 # Import required modules
 import discord
@@ -47,7 +47,7 @@ async def timeout( message, arguments, client ):
 		return { "content": ":grey_exclamation: You must mention at least one member." }
 
 	# Fetch the timeout role
-	timeoutRole = message.channel.guild.get_role( settings.roles.timeout )
+	timeoutRole = message.channel.guild.get_role( configuration[ "roles" ][ "timeout" ] )
 
 	# Loop through every mentioned member
 	for member in message.mentions:
@@ -75,7 +75,7 @@ async def untimeout( message, arguments, client ):
 		return { "content": ":grey_exclamation: You must mention at least one member." }
 
 	# Fetch the timeout role
-	timeoutRole = message.channel.guild.get_role( settings.roles.timeout )
+	timeoutRole = message.channel.guild.get_role( configuration[ "roles" ][ "timeout" ] )
 
 	# Loop through every mentioned member
 	for member in message.mentions:

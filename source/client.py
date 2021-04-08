@@ -57,17 +57,32 @@ print( "Imported modules." )
 # Load configuration files
 ##############################################
 
-# Open the settings file
-with open( "config/settings.jsonc", "r" ) as handle:
+# Create a global variable for holding the configuration
+configuration = {}
 
-	# Read all the file contents
-	contents = handle.read()
+# Loop through all files and directories in the config directory
+for listing in os.listdir( "config" ):
 
-	# Strip all comments
-	stripped = re.sub( r"\/\*[^*]*\*\/| ?\/\/.*", "", contents )
+	# Store the path of this one
+	path = os.path.join( "config", listing )
 
-	# Parse JSON into a map
-	settings = dotmap.DotMap( json.loads( stripped ) )
+	# Ignore anything that isn't a file
+	if not os.path.isfile( path ): continue
+
+	# Ignore anything that isn't a JSON file
+	if not listing.endswith( ".json" ): continue
+
+	# Ignore the secrets file
+	if not listing == "secrets.json": continue
+
+	# Open this configuration file as read only
+	with open( path, "r" ) as configFile:
+
+		# Store just the name of the file without the extension
+		name = os.path.splitext( listing )[ 0 ]
+
+		# Load this one into the global configuration
+		configuration[ name ] = json.loads( configFile.read() )
 
 # Open the secrets file
 with open( "config/secrets.jsonc", "r" ) as handle:
@@ -108,7 +123,7 @@ print( "Initalised global variables." )
 ##############################################
 
 # User agent header for HTTP requests
-USER_AGENT_HEADER = "Conspiracy AI/" + os.environ[ 'LOCAL_COMMIT_REFERENCE' ][:7] + " (Linux; Discord Bot) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (github.com/viral32111/conspiracy-ai; " + settings.email + ")"
+USER_AGENT_HEADER = "Conspiracy AI/" + os.environ[ 'LOCAL_COMMIT_REFERENCE' ][:7] + " (Linux; Discord Bot) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (github.com/viral32111/conspiracy-ai; " + configuration[ "general" ][ "email" ] + ")"
 
 # Day suffixes for formatting timestamps
 DAY_SUFFIXES = {
@@ -257,7 +272,7 @@ def formatSeconds( secs ):
 async def log( title, description, **kwargs ):
 
 	# Fetch the logs channel
-	logsChannel = client.get_channel( settings.channels.logs )
+	logsChannel = client.get_channel( configuration[ "channels" ][ "logs ] )
 
 	guild = client.guilds[ 0 ]
 
@@ -341,11 +356,11 @@ def mysqlQuery( sql ):
 
 	# Connect to the database
 	connection = mysql.connector.connect(
-		host = settings.database.host,
-		port = settings.database.port,
+		host = configuration[ "database" ][ "host" ],
+		port = configuration[ "database" ][ "port" ],
 		user = secrets.database.user,
 		password = secrets.database.passwd,
-		database = settings.database.name
+		database = configuration[ "database" ][ "name" ]
 	)
 	
 	# Placeholder for the final results
@@ -402,7 +417,7 @@ def extractDirectTenorURL( vanityURL ):
 	vanity = requests.get( vanityURL, headers = {
 		"Accept": "text/html, */*",
 		"User-Agent": USER_AGENT_HEADER,
-		"From": settings.email
+		"From": configuration[ "general" ][ "email" ]
 	} )
 
 	# Create parsing soup from the received HTML
@@ -433,7 +448,7 @@ def downloadWebMedia( originalURL, subDirectory = "downloads" ):
 	head = requests.head( originalURL, headers = {
 		"Accept": "image/*, video/*, audio/*, */*",
 		"User-Agent": USER_AGENT_HEADER,
-		"From": settings.email
+		"From": configuration[ "general" ][ "email" ]
 	} )
 
 	# Store the headers except with lowercase field names
@@ -479,7 +494,7 @@ def downloadWebMedia( originalURL, subDirectory = "downloads" ):
 	get = requests.get( originalURL, stream = True, headers = {
 		"Accept": "image/*, video/*, audio/*, */*",
 		"User-Agent": USER_AGENT_HEADER,
-		"From": settings.email
+		"From": configuration[ "general" ][ "email" ]
 	} )
 
 	# Open the local file in binary write mode
@@ -791,7 +806,7 @@ async def chooseRandomActivity():
 		while not client.is_closed():
 
 			# Choose a random activity
-			activity = random.choice( settings.activities )
+			activity = random.choice( configuration[ "activities" ] )
 
 			# Set the default activity type
 			activityType = discord.ActivityType.playing
@@ -931,7 +946,7 @@ async def on_message( message ):
 	if message.content == "<@!513872128156893189>":
 
 		# Friendly message
-		await message.channel.send( ":information_source: Type `" + settings.prefix + "commands` to view a list of commands." )
+		await message.channel.send( ":information_source: Type `" + configuration[ "general" ][ "prefix" ] + "commands` to view a list of commands." )
 
 		# Prevent further execution
 		return
@@ -949,7 +964,7 @@ async def on_message( message ):
 	unixTimestampNow = time.time()
 
 	# Is this message a chat command?
-	if message.content.startswith( settings.prefix ):
+	if message.content.startswith( configuration[ "general" ][ "prefix" ] ):
 	
 		# Get both the command and the arguments
 		command = ( message.content.lower()[ 1: ].split( " " )[ 0 ] if message.content.lower()[ 1: ] != "" else None )
@@ -1120,7 +1135,7 @@ async def on_message( message ):
 				sortedSimilarMatches = sorted( similarMatches, key = similarMatches.get, reverse = True )
 
 				# Send back a message
-				await message.channel.send( ":grey_question: I didn't recognise that command, " + ( "did you mean `" + settings.prefix + sortedSimilarMatches[ 0 ] + "`? If not, " if len( sortedSimilarMatches ) > 0 else "" ) + "type `" + settings.prefix + "commands` to see a list of commands." )
+				await message.channel.send( ":grey_question: I didn't recognise that command, " + ( "did you mean `" + configuration[ "general" ][ "prefix" ] + sortedSimilarMatches[ 0 ] + "`? If not, " if len( sortedSimilarMatches ) > 0 else "" ) + "type `" + configuration[ "general" ][ "prefix" ] + "commands` to see a list of commands." )
 
 	# This message is not a chat command
 	else:
@@ -1135,7 +1150,7 @@ async def on_message( message ):
 			mysqlQuery( "INSERT INTO MemberStatistics ( Member ) VALUES ( LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) ) ) ) ON DUPLICATE KEY UPDATE Messages = Messages + 1;" )
 
 			# Is this the memes channel?
-			if message.channel.id == settings.channels.memes:
+			if message.channel.id == configuration[ "channels" ][ "memes" ]:
 
 				# Loop through all of those inline links and attachment links
 				for url in itertools.chain( attachmentURLs, inlineURLs ):
@@ -1213,7 +1228,7 @@ async def on_message( message ):
 ######################### ALL CODE BELOW THIS LINE NEEDS REFORMATTING & CLEANING UP ######################### 
 #############################################################################################################
 
-			anonymousChannel = message.guild.get_channel( settings.channels.anonymous )
+			anonymousChannel = message.guild.get_channel( configuration[ "channels" ][ "anonymous" ] )
 			anonymousWebhook = await anonymousChannel.webhooks()[ 0 ]
 
 			lurkerRole = discord.utils.get(message.guild.roles,id=807559722127458304)
@@ -1246,7 +1261,7 @@ async def on_message( message ):
 			if(message.clean_content!=""):lastSentMessage[str(message.author.id)]=message.clean_content
 
 			# Pick random username and avatar
-			username = random.choice( settings.anonymousNames )
+			username = random.choice( configuration[ "names" ] )
 			randomAvatarHash = random.choice( [
 				"1cbd08c76f8af6dddce02c5138971129",
 				"0e291f67c9274a1abdddeb3fd919cbaa",
@@ -1313,7 +1328,7 @@ async def on_member_join( member ):
 	else:
 
 		# Fetch the join/leave messages channel
-		welcomeChannel = client.get_channel( settings.channels.welcome )
+		welcomeChannel = client.get_channel( configuration[ "channels" ][ "welcome" ] )
 
 		# Log this member join event
 		await log( "Member joined", member.mention + " joined the server.", thumbnail = member.avatar_url )
@@ -1331,7 +1346,7 @@ async def on_member_join( member ):
 			if results[ 0 ][ 1 ]:
 
 				# Fetch the Steam Linked role
-				membersRole = member.guild.get_role( settings.roles.steamlink )
+				membersRole = member.guild.get_role( configuration[ "roles" ][ "steamlink" ] )
 
 				# Give the member that year role and the Steam Linked role
 				await member.add_roles( membersRole, reason = "Member has their Steam account linked." )
@@ -1362,7 +1377,7 @@ async def on_member_remove(member):
 	await client.wait_until_ready()
 
 	# Fetch the join/leave messages channel
-	welcomeChannel = client.get_channel( settings.channels.welcome )
+	welcomeChannel = client.get_channel( configuration[ "channels" ][ "welcome" ] )
 
 	moderator, reason, event = None, None, 0
 	after = datetime.datetime.now()-datetime.timedelta(seconds=5)
