@@ -64,7 +64,7 @@ async def timeout( interaction ):
 	type = slashcommands.option.type.user,
 	required = True
 ) ], guild = 240167618575728644 )
-async def timeout( interaction ):
+async def untimeout( interaction ):
 	permissions = discord.Permissions( permissions = interaction.member.permissions )
 
 	# Does the user not have the manage messages permission?
