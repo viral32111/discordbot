@@ -21,7 +21,7 @@
 ##############################################
 
 # Import variables from the main script
-from __main__ import chatCommands, configuration, fileChecksum, USER_AGENT_HEADER, mysqlQuery, secrets, DAY_SUFFIXES, formatTimestamp, anonymousMessageHashes
+from __main__ import chatCommands, configuration, fileChecksum, USER_AGENT_HEADER, mysqlQuery, DAY_SUFFIXES, formatTimestamp, anonymousMessageHashes
 
 # Import required modules
 import discord, youtube_dl, requests, pytz, datetime, re
@@ -152,7 +152,7 @@ async def commands( message, arguments, client ):
 async def statistics( message, arguments, client ):
 
 	# Fetch this member's statistics
-	statistics = mysqlQuery( "SELECT Messages, Edits, Deletions FROM MemberStatistics WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) ) );" )[ 0 ]
+	statistics = mysqlQuery( "SELECT Messages, Edits, Deletions FROM MemberStatistics WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_STATISTICS" ] + "', 512 ) ) ) ) );" )[ 0 ]
 
 	# Format each statistic
 	messages = "{:,}".format( statistics[ 0 ] )
@@ -167,7 +167,7 @@ async def statistics( message, arguments, client ):
 async def topstatistics( message, arguments, client ):
 
 	# Fetch the top 20 member statistics
-	topStatistics = mysqlQuery( "SELECT AES_DECRYPT( UNHEX( Member ), UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) AS Member, Messages, Edits, Deletions FROM MemberStatistics ORDER BY Messages DESC LIMIT 18;" )
+	topStatistics = mysqlQuery( "SELECT AES_DECRYPT( UNHEX( Member ), UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_STATISTICS" ] + "', 512 ) ) ) AS Member, Messages, Edits, Deletions FROM MemberStatistics ORDER BY Messages DESC LIMIT 18;" )
 
 	#guild = client.guilds[ 0 ]
 
@@ -215,7 +215,7 @@ async def topstatistics( message, arguments, client ):
 async def joined( message, arguments, client ):
 
 	# Fetch this date & time the member joined
-	joinedAt = mysqlQuery( "SELECT FROM_UNIXTIME( AES_DECRYPT( Joined, UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) AS Joined FROM Members WHERE Member = AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) );" )[ 0 ][ 0 ]
+	joinedAt = mysqlQuery( "SELECT FROM_UNIXTIME( AES_DECRYPT( Joined, UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_MEMBERS" ] + "', 512 ) ) ) ) AS Joined FROM Members WHERE Member = AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_MEMBERS" ] + "', 512 ) ) );" )[ 0 ][ 0 ]
 
 	# Fetch the appropriate day suffix
 	daySuffix = DAY_SUFFIXES.get( joinedAt.day, "th" )
@@ -284,7 +284,7 @@ async def weather( message, arguments, client ):
 
 	# Construct request URL
 	locationQuery = "%20".join( arguments )
-	apiURL = "https://api.openweathermap.org/data/2.5/weather?appid=" + secrets.apiKeys.openWeatherMap + "&units=metric&lang=en&q=" + locationQuery
+	apiURL = "https://api.openweathermap.org/data/2.5/weather?appid=" + os.environ[ "OPENWEATHERMAP_APIKEY" ] + "&units=metric&lang=en&q=" + locationQuery
 
 	# Make the API request
 	weatherRequest = requests.get( apiURL, headers = {

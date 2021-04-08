@@ -39,7 +39,6 @@ import pytz # Parsing timezone names/identifiers
 import inspect # View the code of a function
 import itertools # Chained iteration
 import urllib.parse # Parsing URLs
-import dotmap # Attribute style access to dictionary keys
 import bs4 # Parsing & web scraping HTML
 import difflib # For computing deltas
 import operator # Extra sorting methods
@@ -72,9 +71,6 @@ for listing in os.listdir( "config" ):
 	# Ignore anything that isn't a JSON file
 	if not listing.endswith( ".json" ): continue
 
-	# Ignore the secrets file
-	if not listing == "secrets.json": continue
-
 	# Open this configuration file as read only
 	with open( path, "r" ) as configFile:
 
@@ -83,18 +79,6 @@ for listing in os.listdir( "config" ):
 
 		# Load this one into the global configuration
 		configuration[ name ] = json.loads( configFile.read() )
-
-# Open the secrets file
-with open( "config/secrets.jsonc", "r" ) as handle:
-
-	# Read all the file contents
-	contents = handle.read()
-
-	# Strip all comments
-	stripped = re.sub( r"\/\*[^*]*\*\/| ?\/\/.*", "", contents )
-
-	# Parse JSON into a map
-	secrets = dotmap.DotMap( json.loads( stripped ) )
 
 # Console message
 print( "Loaded configuration files." )
@@ -325,7 +309,7 @@ def prettyMapName( genericName ):
 def anonymousMessageHashes( anonymousMessage, directMessage ):
 
 	# Store the secret sauce
-	secretSauce = secrets.anonymous.sauce
+	secretSauce = os.environ[ "ANONYMOUS_SALT" ]
 
 	# The message identifier, soon to be hashed!
 	messageIdentifier = str( anonymousMessage.id ).encode( "utf-8" )
@@ -358,8 +342,8 @@ def mysqlQuery( sql ):
 	connection = mysql.connector.connect(
 		host = configuration[ "database" ][ "host" ],
 		port = configuration[ "database" ][ "port" ],
-		user = secrets.database.user,
-		password = secrets.database.passwd,
+		user = os.environ[ "DATABASE_USERNAME" ],
+		password = os.environ[ "DATABASE_PASSWORD" ],
 		database = configuration[ "database" ][ "name" ]
 	)
 	
@@ -1147,7 +1131,7 @@ async def on_message( message ):
 			print( "(" + ascii( message.channel.category.name ) + " -> #" + message.channel.name + ") " + str( message.author ) + " (" + message.author.display_name + "): " + message.content + ( "\n\t".join( attachmentURLs ) if len( attachmentURLs ) > 0 else "" ) )
 
 			# Create or increment the message sent statistic for this member
-			mysqlQuery( "INSERT INTO MemberStatistics ( Member ) VALUES ( LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) ) ) ) ON DUPLICATE KEY UPDATE Messages = Messages + 1;" )
+			mysqlQuery( "INSERT INTO MemberStatistics ( Member ) VALUES ( LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_STATISTICS" ] + "', 512 ) ) ) ) ) ) ON DUPLICATE KEY UPDATE Messages = Messages + 1;" )
 
 			# Is this the memes channel?
 			if message.channel.id == configuration[ "channels" ][ "memes" ]:
@@ -1334,7 +1318,7 @@ async def on_member_join( member ):
 		await log( "Member joined", member.mention + " joined the server.", thumbnail = member.avatar_url )
 
 		# Query the date & time that the member joined from the database
-		results = mysqlQuery( "SELECT FROM_UNIXTIME( AES_DECRYPT( Joined, UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) ) AS Joined, AES_DECRYPT( Steam, UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) AS Steam FROM Members WHERE Member = AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) );" )
+		results = mysqlQuery( "SELECT FROM_UNIXTIME( AES_DECRYPT( Joined, UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_MEMBERS" ] + "', 512 ) ) ) ) AS Joined, AES_DECRYPT( Steam, UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_MEMBERS" ] + "', 512 ) ) ) AS Steam FROM Members WHERE Member = AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_MEMBERS" ] + "', 512 ) ) );" )
 
 		# Have they been in the server before? (we got results from the database)
 		if len( results ) > 0:
@@ -1358,7 +1342,7 @@ async def on_member_join( member ):
 		else:
 
 			# Add the member to the database
-			mysqlQuery( "INSERT INTO Members ( Member, Joined ) VALUES ( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ), AES_ENCRYPT( UNIX_TIMESTAMP( STR_TO_DATE( '" + member.joined_at.strftime( "%Y-%m-%d %H:%M:%S" ) + "', '%Y-%m-%d %H:%i:%S' ) ), UNHEX( SHA2( '" + secrets.encryptionKeys.members + "', 512 ) ) ) );" )
+			mysqlQuery( "INSERT INTO Members ( Member, Joined ) VALUES ( AES_ENCRYPT( '" + str( member.id ) + "', UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_MEMBERS" ] + "', 512 ) ) ), AES_ENCRYPT( UNIX_TIMESTAMP( STR_TO_DATE( '" + member.joined_at.strftime( "%Y-%m-%d %H:%M:%S" ) + "', '%Y-%m-%d %H:%i:%S' ) ), UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_MEMBERS" ] + "', 512 ) ) ) );" )
 
 			# Set their year role to when they joined (which should always be right now, unless Discord is taking a shit)
 			yearJoined = member.joined_at.year
@@ -1436,7 +1420,7 @@ async def on_message_delete( message ):
 	if deleter.id == message.author.id:
 
 		# Increment the message deletion statistic for the original author
-		mysqlQuery( "UPDATE MemberStatistics SET Deletions = Deletions + 1 WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) ) );" )
+		mysqlQuery( "UPDATE MemberStatistics SET Deletions = Deletions + 1 WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_STATISTICS" ] + "', 512 ) ) ) ) );" )
 
 	# Prevent further execution if this event should not be logged
 	if not shouldLog( message ): return
@@ -1474,7 +1458,7 @@ async def on_message_edit(originalMessage, editedMessage):
 	if (not isValid(originalMessage)) or (originalMessage.clean_content == editedMessage.clean_content): return
 
 	# Increment the message edit statistic for this member
-	mysqlQuery( "UPDATE MemberStatistics SET Edits = Edits + 1 WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( originalMessage.author.id ) + "', UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) ) );" )
+	mysqlQuery( "UPDATE MemberStatistics SET Edits = Edits + 1 WHERE Member = LOWER( HEX( AES_ENCRYPT( '" + str( originalMessage.author.id ) + "', UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_STATISTICS" ] + "', 512 ) ) ) ) );" )
 
 	# Prevent further execution if this event shouldn't be logged
 	if not shouldLog( originalMessage ): return
@@ -1660,7 +1644,7 @@ client.loop.add_signal_handler( signal.SIGINT, lambda: client.loop.create_task( 
 client.loop.add_signal_handler( signal.SIGTERM, lambda: client.loop.create_task( shutdown() ) )
 
 # Start the client
-client.loop.run_until_complete( client.start( secrets.token ) )
+client.loop.run_until_complete( client.start( os.environ[ "DISCORD_TOKEN" ] ) )
 
 # Console message
 print( "Shutdown." )

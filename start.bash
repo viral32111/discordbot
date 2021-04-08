@@ -11,6 +11,7 @@ if [ "$1" = "dev" ]; then
 		--mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
 		--mount type=bind,source=/home/viral32111/slashcommands,target=/slashcommands \
 		--workdir /srv/conspiracy-ai \
+		--env-file secrets.conf \
 		--env LOCAL_COMMIT_REFERENCE=$(cat /srv/conspiracy-ai/.git/refs/heads/main) \
 		--network host \
 		--tty \
@@ -22,7 +23,6 @@ if [ "$1" = "dev" ]; then
 			git+https://github.com/Rapptz/discord.py \
 			git+https://github.com/ytdl-org/youtube-dl \
 			git+https://github.com/psf/requests \
-			git+https://github.com/drgrib/dotmap \
 			git+https://github.com/mysql/mysql-connector-python \
 			git+https://github.com/Dinnerbone/mcstatus \
 			git+https://github.com/msabramo/requests-unixsocket \
@@ -41,6 +41,7 @@ else
 		--mount type=bind,source=/srv/conspiracy-ai/config,target=/srv/conspiracy-ai/config,readonly \
 		--mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
 		--workdir /srv/conspiracy-ai \
+		--env-file secrets.conf \
 		--env LOCAL_COMMIT_REFERENCE=$(cat /srv/conspiracy-ai/.git/refs/heads/main) \
 		--network host \
 		--tty \
@@ -53,7 +54,6 @@ else
 			git+https://github.com/Rapptz/discord.py \
 			git+https://github.com/ytdl-org/youtube-dl \
 			git+https://github.com/psf/requests \
-			git+https://github.com/drgrib/dotmap \
 			git+https://github.com/mysql/mysql-connector-python \
 			git+https://github.com/Dinnerbone/mcstatus \
 			git+https://github.com/msabramo/requests-unixsocket \
