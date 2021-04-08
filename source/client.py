@@ -60,10 +60,10 @@ print( "Imported modules." )
 configuration = {}
 
 # Loop through all files and directories in the config directory
-for listing in os.listdir( "config" ):
+for listing in os.listdir( "etc" ):
 
 	# Store the path of this one
-	path = os.path.join( "config", listing )
+	path = os.path.join( "etc", listing )
 
 	# Ignore anything that isn't a file
 	if not os.path.isfile( path ): continue
@@ -107,7 +107,7 @@ print( "Initalised global variables." )
 ##############################################
 
 # User agent header for HTTP requests
-USER_AGENT_HEADER = "Conspiracy AI/" + os.environ[ 'LOCAL_COMMIT_REFERENCE' ][:7] + " (Linux; Discord Bot) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (github.com/viral32111/conspiracy-ai; " + configuration[ "general" ][ "email" ] + ")"
+USER_AGENT_HEADER = "Conspiracy AI/" + os.environ[ 'VERSION' ] + " (Discord Bot) Python/" + str( sys.version_info.major ) + "." + str( sys.version_info.minor ) + "." + str( sys.version_info.micro ) + " discord.py/" + discord.__version__ + " (github.com/viral32111/conspiracy-ai; " + configuration[ "general" ][ "email" ] + ")"
 
 # Day suffixes for formatting timestamps
 DAY_SUFFIXES = {
@@ -256,7 +256,7 @@ def formatSeconds( secs ):
 async def log( title, description, **kwargs ):
 
 	# Fetch the logs channel
-	logsChannel = client.get_channel( configuration[ "channels" ][ "logs ] )
+	logsChannel = client.get_channel( configuration[ "channels" ][ "logs" ] )
 
 	guild = client.guilds[ 0 ]
 
@@ -1212,11 +1212,12 @@ async def on_message( message ):
 ######################### ALL CODE BELOW THIS LINE NEEDS REFORMATTING & CLEANING UP ######################### 
 #############################################################################################################
 
-			anonymousChannel = message.guild.get_channel( configuration[ "channels" ][ "anonymous" ] )
-			anonymousWebhook = await anonymousChannel.webhooks()[ 0 ]
+			anonymousChannel = client.guilds[ 0 ].get_channel( configuration[ "channels" ][ "anonymous" ] )
+			anonymousChannelWebhooks = await anonymousChannel.webhooks()
+			anonymousWebhook = anonymousChannelWebhooks[ 0 ]
 
-			lurkerRole = discord.utils.get(message.guild.roles,id=807559722127458304)
-			timeoutRole=discord.utils.get(message.guild.roles,id=539160858341933056)
+			lurkerRole = discord.utils.get(client.guilds[ 0 ].roles,id=807559722127458304)
+			timeoutRole=discord.utils.get(client.guilds[ 0 ].roles,id=539160858341933056)
 
 			# Disallow lurkers
 			if(lurkerRole in guildMember.roles):
