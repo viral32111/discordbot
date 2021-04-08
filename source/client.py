@@ -1344,7 +1344,7 @@ async def on_member_join( member ):
 	else:
 
 		# Fetch the join/leave messages channel
-		joinleaveChannel = client.get_channel( settings.channels.joinleave )
+		welcomeChannel = client.get_channel( settings.channels.welcome )
 
 		# Log this member join event
 		await log( "Member joined", member.mention + " joined the server.", thumbnail = member.avatar_url )
@@ -1368,7 +1368,7 @@ async def on_member_join( member ):
 				await member.add_roles( membersRole, reason = "Member has their Steam account linked." )
 
 			# Send a welcome back message to the join/leave messages channel
-			await joinleaveChannel.send( ":wave_tone1: Welcome back " + member.mention + ", it's great to see you here again!", allowed_mentions = ALLOW_USER_MENTIONS )
+			await welcomeChannel.send( ":wave_tone1: Welcome back " + member.mention + ", it's great to see you here again!", allowed_mentions = ALLOW_USER_MENTIONS )
 
 		# This is their first time joining (we didn't get any results from the database)
 		else:
@@ -1380,7 +1380,7 @@ async def on_member_join( member ):
 			yearJoined = member.joined_at.year
 
 			# Send a first welcome message to the join/leave messages channel
-			await joinleaveChannel.send( ":wave_tone1: Welcome " + member.mention + " to the community!", allowed_mentions = ALLOW_USER_MENTIONS )
+			await welcomeChannel.send( ":wave_tone1: Welcome " + member.mention + " to the community!", allowed_mentions = ALLOW_USER_MENTIONS )
 
 		# Fetch the role for the year we just set above (WARNING: THIS WILL BREAK ON NEW YEAR UNLESS A ROLE FOR THAT YEAR IS MANUALLY CREATED)
 		yearRole = discord.utils.get( member.guild.roles, name = str( yearJoined ) )
@@ -1393,7 +1393,7 @@ async def on_member_remove(member):
 	await client.wait_until_ready()
 
 	# Fetch the join/leave messages channel
-	joinleaveChannel = client.get_channel( settings.channels.joinleave )
+	welcomeChannel = client.get_channel( settings.channels.welcome )
 
 	moderator, reason, event = None, None, 0
 	after = datetime.datetime.now()-datetime.timedelta(seconds=5)
@@ -1412,13 +1412,13 @@ async def on_member_remove(member):
 				break
 
 	if (event == 1):
-		await joinleaveChannel.send(f":bangbang: {member} was kicked by {moderator.mention}" + (f" for {reason}" if (reason) else "") + ".")
+		await welcomeChannel.send(f":bangbang: {member} was kicked by {moderator.mention}" + (f" for {reason}" if (reason) else "") + ".")
 		await log("Member kicked", f"{member} was kicked by {moderator.mention}" + (f" for `{reason}`" if (reason) else "") + ".", thumbnail=member.avatar_url)
 	elif (event == 2):
-		await joinleaveChannel.send(f":bangbang: {member} was banned by {moderator.mention}" + (f" for {reason}" if (reason) else "") + ".")
+		await welcomeChannel.send(f":bangbang: {member} was banned by {moderator.mention}" + (f" for {reason}" if (reason) else "") + ".")
 		await log("Member banned", f"{member} was banned by {moderator.mention}" + (f" for `{reason}`" if (reason) else "") + ".", thumbnail=member.avatar_url)
 	else:
-		await joinleaveChannel.send(f":man_walking_tone1: {member} left the server.")
+		await welcomeChannel.send(f":man_walking_tone1: {member} left the server.")
 		await log("Member left", f"{member} left the server.", thumbnail=member.avatar_url)
 
 # Runs when a message is deleted

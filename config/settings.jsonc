@@ -22,7 +22,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 	"channels": {
 		"logs": 576904701304635405,
 		"anonymous": 661694045600612352,
-		"joinleave": 240167618575728644,
+		"welcome": 240167618575728644,
 		"memes": 723595564016599091
 	},
 	"database": {
