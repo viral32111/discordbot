@@ -69,7 +69,7 @@ async def subscriptions( interaction ):
 	subCommand = interaction.data.options[ 0 ].name
 	notificationType = interaction.data.options[ 0 ].options[ 0 ].value
 
-	guild = interaction.client.get_guild( settings.guild )
+	guild = interaction.client.guilds[ 0 ]
 	member = guild.get_member( interaction.user.id )
 	role = guild.get_role( settings.subscriptions.roles[ notificationType ] )
 

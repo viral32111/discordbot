@@ -290,8 +290,10 @@ async def log( title, description, **kwargs ):
 	# Fetch the logs channel
 	logsChannel = client.get_channel( settings.channels.logs.id )
 
+	guild = client.guilds[ 0 ]
+
 	# Create an embed
-	embed = discord.Embed( title = title, description = description, color = settings.color )
+	embed = discord.Embed( title = title, description = description, color = guild.me.top_role.color.value )
 
 	# Set the footer to the current date & time
 	embed.set_footer( text = formatTimestamp( datetime.datetime.utcnow() ) )
@@ -948,7 +950,7 @@ async def on_message( message ):
 	if message.type != discord.MessageType.default: return
 
 	# Try to get the member from the guild members directly
-	guildMember = discord.utils.get( client.get_guild( settings.guild ).members, id = message.author.id )
+	guildMember = discord.utils.get( client.guilds[ 0 ].members, id = message.author.id )
 
 	# Ignore direct messages if the author isn't in the discord server
 	if message.guild == None and guildMember == None:
@@ -1242,7 +1244,7 @@ async def on_message( message ):
 								print( "Incrementing repost count for message attachment with checksum '" + repostInformation[ 3 ] + "' in the repost history database." )
 
 								# Inform them via reply
-								await message.reply( ":recycle: This is a repost, I've seen it **" + str( repostInformation[ 2 ] ) + "** time" + ( "s" if repostInformation[ 2 ] > 1 else "" ) + " before!\n*(Original: <https://discord.com/channels/" + str( settings.guild ) + "/" + str( repostInformation[ 0 ] ) + "/" + str( repostInformation[ 1 ] ) + ">)*", mention_author = False )
+								await message.reply( ":recycle: This is a repost, I've seen it **" + str( repostInformation[ 2 ] ) + "** time" + ( "s" if repostInformation[ 2 ] > 1 else "" ) + " before!\n*(Original: <https://discord.com/channels/" + str( client.guilds[ 0 ].id ) + "/" + str( repostInformation[ 0 ] ) + "/" + str( repostInformation[ 1 ] ) + ">)*", mention_author = False )
 
 			# Does the message start with "Im " and has it been 15 seconds since the last one?
 			if message.content.startswith( "Im " ) and ( lastDadJoke + 15 ) < unixTimestampNow:
@@ -1260,7 +1262,7 @@ async def on_message( message ):
 ######################### ALL CODE BELOW THIS LINE NEEDS REFORMATTING & CLEANING UP ######################### 
 #############################################################################################################
 
-			guild = client.get_guild( settings.guild )
+			guild = client.guilds[ 0 ]
 
 			_webhooks=await guild.webhooks()
 			anonymousWebhook=discord.utils.get(_webhooks,id=661697895434551337)
@@ -1597,9 +1599,11 @@ async def on_socket_response( payload ):
 		channel = client.get_channel( command.channelID )
 		print( f"[{ now }] { command.user.username }#{ command.user.discriminator } ({ command.user.id }) used /{ command.data.name } ({ command.data.id }) in #{ channel.name } ({ channel.id }) with arguments '{ command.arguments }'." )
 
+		guild = client.guilds[ 0 ]
+
 		logEmbed = discord.Embed(
 			title = "Slash Command Used",
-			color = settings.color,
+			color = guild.me.top_role.color.value,
 			timestamp = datetime.datetime.utcnow()
 		)
 

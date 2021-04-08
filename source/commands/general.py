@@ -34,8 +34,10 @@ import discord, youtube_dl, requests, pytz, datetime, re
 @chatCommands( category = "General" )
 async def help( message, arguments, client ):
 
+	guild = client.guilds[ 0 ]
+
 	# Create a blank embed
-	embed = discord.Embed( title = "", description = "", color = settings.color )
+	embed = discord.Embed( title = "", description = "", color = guild.me.top_role.color.value )
 
 	# Add the about field to the embed
 	embed.add_field(
@@ -119,8 +121,10 @@ async def commands( message, arguments, client ):
 		# Add this command as the key and it's aliases as the value to the dictionary
 		availableChatCommands[ metadata.category ][ command ] = metadata.aliases
 
+	guild = client.guilds[ 0 ]
+
 	# Create a basic embed
-	embed = discord.Embed( title = "Chat Commands", description = "", color = settings.color )
+	embed = discord.Embed( title = "Chat Commands", description = "", color = guild.me.top_role.color.value )
 
 	# Loop through all categories & their commands
 	for category, commands in availableChatCommands.items():
@@ -165,8 +169,10 @@ async def topstatistics( message, arguments, client ):
 	# Fetch the top 20 member statistics
 	topStatistics = mysqlQuery( "SELECT AES_DECRYPT( UNHEX( Member ), UNHEX( SHA2( '" + secrets.encryptionKeys.memberStatistics + "', 512 ) ) ) AS Member, Messages, Edits, Deletions FROM MemberStatistics ORDER BY Messages DESC LIMIT 18;" )
 
+	#guild = client.guilds[ 0 ]
+
 	# Create a blank embed
-	#embed = discord.Embed( title = "Top 20", description = "", color = settings.color )
+	#embed = discord.Embed( title = "Top 20", description = "", color = guild.me.top_role.color.value )
 
 	# Set a notice in the embed footer
 	#embed.set_footer( text = "Statistics from before 02/08/2020 07:01:05 UTC may not be 100% accurate." )
@@ -358,7 +364,7 @@ async def delete( message, arguments, client ):
 		return { "content": ":grey_exclamation: You must specify the ID of the <#" + str( settings.channels.anonymous ) + "> message to delete." }
 
 	# Fetch the guild
-	guild = client.get_guild( settings.guild )
+	guild = client.guilds[ 0 ]
 
 	# Fetch the anonymous channel
 	anonymousChannel = guild.get_channel( settings.channels.anonymous )
