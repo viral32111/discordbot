@@ -1272,7 +1272,7 @@ async def on_message( message ):
 			async def afterSentAnonMessage( anonMessage, directMessage ):
 
 				# Calculate the message identifier and real deletion token
-				messageIdentifier, deletionToken = anonymousMessageHashes( anonMessage, directMessage )
+				messageIdentifier, deletionToken = anonymousMessageHashes( anonMessage, directMessage.author.id )
 
 				# Add this message into the database
 				insertResult = mysqlQuery( "INSERT INTO AnonMessages ( Message, Token ) VALUES ( '" + messageIdentifier + "', '" + deletionToken + "' );" )

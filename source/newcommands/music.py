@@ -42,7 +42,7 @@ async def toggledj( interaction ):
 	musicChannel = interaction.client.guilds[ 0 ].get_channel( 257480146762596352 )
 
 	author = interaction.client.guilds[ 0 ].get_member( interaction.user.id )
-	member = interaction.client.guilds[ 0 ].get_member( interaction.arguments[ "member" ] )
+	member = interaction.client.guilds[ 0 ].get_member( int( interaction.arguments[ "member" ] ) )
 
 	# Send a message if the caller is not a Music DJ
 	if musicDJ not in author.roles:
@@ -58,7 +58,7 @@ async def toggledj( interaction ):
 	if musicDJ in member.roles:
 
 		# Remove the role from them
-		await member.remove_roles( musicDJ, reason = "Member was removed from Music DJ by " + str( message.author ) + "." )
+		await member.remove_roles( musicDJ, reason = "Member was removed from Music DJ by " + str( author ) + "." )
 
 		# Send a message
 		await interaction.respond( ":white_check_mark: " + member.mention + " is no longer a " + musicDJ.mention + ".", hidden = True )
@@ -67,7 +67,7 @@ async def toggledj( interaction ):
 	else:
 
 		# Add the role to them
-		await member.add_roles( musicDJ, reason = "Member was added to Music DJ added by " + str( message.author ) + "." )
+		await member.add_roles( musicDJ, reason = "Member was added to Music DJ added by " + str( author ) + "." )
 
 		# Send a message
 		await interaction.respond( ":white_check_mark: " + member.mention + " is now a " + musicDJ.mention + ".", hidden = True )

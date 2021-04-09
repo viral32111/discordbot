@@ -115,7 +115,7 @@ async def joined( interaction ):
 # Get the time in a specific timezone
 @slashcommands.new( "Get the time in a specific timezone", options = [ slashcommands.option(
 	name = "timezone",
-	description = "The name of the timezone (e.g. US/Eastern) (im sry things like GMT, EST, CET dont work yet cuz im dumb and cant code).",
+	description = "The name of the timezone (e.g. US/Eastern).",
 	type = slashcommands.option.type.string,
 	required = True
 ) ], guild = 240167618575728644 )
@@ -296,7 +296,7 @@ async def anonymousdelete( interaction ):
 		if not hasOwnership:
 
 			# Friendly message
-			await interaction.respond( ":no_entry_sign: The message has not been deleted because your ownership of it could not be verified.\n(Please note, <#" + str( sconfiguration[ "channels" ][ "anonymous" ] ) + "> messages sent before the 22nd July 2020 cannot be deleted as no ownership information exists for them.)", hidden = True )
+			await interaction.respond( ":no_entry_sign: The message has not been deleted because your ownership of it could not be verified.\n(Please note, <#" + str( configuration[ "channels" ][ "anonymous" ] ) + "> messages sent before the 22nd July 2020 cannot be deleted as no ownership information exists for them.)", hidden = True )
 			return
 
 		# Delete the message from the anonymous channel

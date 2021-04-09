@@ -24,7 +24,7 @@
 from __main__ import log, backgroundTasks
 
 # Import required modules
-import slashcommands
+import slashcommands, discord
 
 ##############################################
 # Define slash commands
