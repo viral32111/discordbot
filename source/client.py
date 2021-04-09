@@ -133,50 +133,6 @@ ALLOW_USER_MENTIONS = discord.AllowedMentions(
 
 )
 
-# This is the default metadata for chat commands
-DEFAULT_COMMAND_METADATA = {
-
-	# The category displayed in the /commands response
-	"category": "Other",
-
-	# Additional ways to call/execute the same command (empty list = no aliases)
-	"aliases": [],
-
-	# True if the command gives NSFW responses, false otherwise (auto-restricts it to only NSFW channels)
-	"nsfw": False,
-
-	# Permissions a member requires to use the command (none = everyone can use/no specific permissions needed)
-	"permissions": None,
-
-	# Channels the command can only be used in (empty list = can be used in all channels)
-	"channels": [],
-
-	# Roles a member requires to use the command (empty list = any role can use)
-	"roles": [],
-
-	# True if the command can only be used in direct messages, false otherwise
-	"dm": False,
-
-	# True if the input command/calling action should be deleted after this command is used
-	"delete": False,
-
-	# True if the command is work-in-progress, this means it cannot be used by anyone else other than me :)
-	"wip": False,
-
-	# The only users who can use this command (empty list = any user can use)
-	"users": [],
-
-	# The command's parent command (none = no parent command)
-	"parent": None,
-
-	# Additional ways to call/execute the same subcommand (empty list = no aliases, only works if parent is set)
-	"subaliases": [],
-
-	# A message explaining the command, showing usage examples, etc. (none = no help available)
-	"help": None
-
-}
-
 # Console message
 print( "Initalised global constants." )
 print( "User-Agent set to '" + USER_AGENT_HEADER + "'." )
@@ -279,30 +235,6 @@ async def log( title, description, **kwargs ):
 
 	# Send the embed to the logs channel
 	await logsChannel.send( embed = embed )
-
-# Get the pretty name of a Garry's Mod map
-def prettyMapName( genericName ):
-
-	# Split the generic name up every underscore
-	parts = genericName.split( "_" )
-
-	# Is there just one part of the generic name?
-	if len( parts ) == 1:
-
-		# Return the generic name with a capital start
-		return genericName.title()
-
-	# There are multiple parts of the generic name
-	else:
-
-		# Convert the gamemode prefix to uppercase
-		prefix = parts[ 0 ].upper()
-
-		# Capitalise the start of each word for the rest of the generic name
-		theRest = " ".join( parts[ 1: ] ).title()
-
-		# Return both combined
-		return prefix + " " + theRest
 
 # Get the message identifier and deletion token for an anonymous message send/delete
 def anonymousMessageHashes( anonymousMessage, authorID ):
@@ -571,163 +503,20 @@ def utf8( string ):
 print( "Defined helper functions." )
 
 ##############################################
-# Setup the chat commands
-##############################################
-
-# A chat command class that inherits from a dictionary
-class ChatCommand( dict ):
-
-	# Called when the class is initalised
-	def __init__( self, metadata, parentMetadata ):
-
-		# Call the dictionary class' init method
-		super( ChatCommand, self ).__init__( metadata )
-
-		# Copy all default command metadata to a local dictionary
-		data = DEFAULT_COMMAND_METADATA.copy()
-
-		# Has the parent metadata been provided?
-		if parentMetadata:
-
-			# Update the local dictionary with certain metadata properties from the parent command
-			data.update( {
-				"category": parentMetadata.category,
-				"nsfw": parentMetadata.nsfw,
-				"permissions": parentMetadata.permissions,
-				"channels": parentMetadata.channels,
-				"roles": parentMetadata.roles,
-				"dm": parentMetadata.dm,
-				"delete": parentMetadata.delete,
-				"wip": parentMetadata.wip,
-				"users": parentMetadata.users,
-			} )
-
-		# Update the local dictionary with any metadata passed to this method
-		data.update( metadata )
-
-		# Add each key & value pair in the local dictionary to this object
-		for key, value in data.items(): self[ key ] = value
-
-	# Called when there is an attempt to get an attribute
-	def __getattr__( self, name ):
-
-		# Attempt to fetch the attribute by its name, return none if not found
-		return self.get( name, None )
-
-	# Called when there is an attempt to set an attribute
-	def __setattr__( self, key, value ):
-
-		# Call the dictionary class' set item method with the same arguments
-		self.__setitem__( key, value )
-
-	# Called when there is an attempt to delete an attribute
-	def __delattr__( self, item ):
-
-		# Call the dictionary class' delete item method with the same arguments
-		self.__delitem__( item )
-
-# A class that holds all easily registered chat commands
-class ChatCommands:
-
-	# Called when the class is initalised
-	def __init__( self ):
-
-		# Create a dictionary to hold the registered/usable chat commands
-		self.commands = {}
-
-		# Create a dictionary to hold lookup references for every registered chat command
-		self.lookup = {}
-
-	# Called when this object is called like a function
-	def __call__( self, **metadata ):
-
-		# Placeholder for the parent metadata
-		parentMetadata = None
-
-		# Set the parent metadata to the parent command's metadata if this a subcommand and inheriting from parent is enabled
-		if "parent" in metadata and metadata[ "parent" ]: parentMetadata = self.lookup[ metadata[ "parent" ] ]
-
-		# Create a chat command object from the passed metadata and parent metadata (if applicable) as keyword arguments and temporarily store it
-		self.command = ChatCommand( metadata, parentMetadata )
-
-		# Return the command register function so the decorator can continue
-		return self.register
-
-	# Called to check if an object contains an item (the 'in' statement)
-	def __contains__( self, item ):
-
-		# Return a boolean if the queried item is in the registered commands dictionary
-		return item in self.commands
-
-	# Called to get an item from this object
-	def __getitem__( self, name ):
-
-		# Return the item with the same name in the registered commands dictionary
-		return self.commands[ name ]
-
-	# Called when iterating over this object
-	def __iter__( self ):
-
-		# Return an iterator for the items in the registered commands dictionary
-		return iter( self.commands.items() )
-
-	# A function to register new chat commands
-	def register( self, function ):
-
-		# Set the chat command object's execute property to the passed function reference
-		self.command.execute = function
-
-		# Add an empty dictionary for subcommands to be added to later
-		self.command.subcmds = {}
-
-		# Is this a subcommand?
-		if self.command.parent:
-
-			# Add the subcommand to the subcmds dictionary of the parent command
-			self.lookup[ self.command.parent ].subcmds[ function.__name__ ] = self.command
-
-			# Register all subaliases for this subcommand with their values as a reference to the existing subcommand above
-			for name in self.command.subaliases: self.lookup[ self.command.parent ].subcmds[ name ] = self.lookup[ self.command.parent ].subcmds[ function.__name__ ]
-
-			# Register all aliases for this subcommand with their values as a reference to the existing subcommand above
-			for name in self.command.aliases: self.commands[ name ] = self.lookup[ self.command.parent ].subcmds[ function.__name__ ]
-
-		# This is not a subcommand
-		else:
-
-			# Add the command to the registered commands dictionary by using the function's name as a key
-			self.commands[ function.__name__ ] = self.command
-
-			# Register all aliases for this command with their values as a reference to the existing main command above
-			for name in self.command.aliases: self.commands[ name ] = self.commands[ function.__name__ ]
-
-		# Register the command/subcommand in the lookup reference dictionary
-		self.lookup[ function.__name__ ] = self.command
-
-		# Delete the temporarily stored chat command object
-		del self.command
-
-# Inistansiate an object from the chat commands holder class
-chatCommands = ChatCommands()
-
-# Console message
-print( "Defined chat commands." )
-
-##############################################
 # Define Slash Commands
 ##############################################
 
 # Import each chat command file
-from newcommands import minecraft # to-do: rename to just commands once all old commands are ported over
-from newcommands import hentai
-from newcommands import fun
-from newcommands import subscriptions
-from newcommands import links
-from newcommands import anime
-from newcommands import moderation
-from newcommands import administration
-from newcommands import music
-from newcommands import general
+from commands import minecraft
+from commands import hentai
+from commands import fun
+from commands import subscriptions
+from commands import links
+from commands import anime
+from commands import moderation
+from commands import administration
+from commands import music
+from commands import general
 
 # Console message
 print( "Defined slash commands." )
@@ -920,15 +709,6 @@ async def on_message( message ):
 		# Appreciation reaction
 		await message.add_reaction( random.choice( [ "❤️", "💟", "❣️", "😍", "♥️", "🖤", "💙", "🤎", "💚", "💝", "💖", "💕", "🤍", "💛", "🧡", "💜", "💞", "🥰", "💓", "😘", "💗", "🤟", "💘" ] ) )
 
-	# Is the message just a ping to the bot?
-	if message.content == "<@!513872128156893189>":
-
-		# Friendly message
-		await message.channel.send( ":information_source: Type `" + configuration[ "general" ][ "prefix" ] + "commands` to view a list of commands." )
-
-		# Prevent further execution
-		return
-
 	# Escape markdown and remove pings
 	safeContent = discord.utils.escape_markdown( message.clean_content )
 
@@ -941,358 +721,177 @@ async def on_message( message ):
 	# Store the current unix timestamp for later use
 	unixTimestampNow = time.time()
 
-	# Is this message a chat command?
-	if message.content.startswith( configuration[ "general" ][ "prefix" ] ):
-	
-		# Get both the command and the arguments
-		command = ( message.content.lower()[ 1: ].split( " " )[ 0 ] if message.content.lower()[ 1: ] != "" else None )
+	# Is this message sent from a guild?
+	if message.guild != None:
 
-		# Prevent further execution if there's no command
-		if command == None: return
+		# Console message
+		print( "(" + ascii( message.channel.category.name ) + " -> #" + message.channel.name + ") " + str( message.author ) + " (" + message.author.display_name + "): " + message.content + ( "\n\t".join( attachmentURLs ) if len( attachmentURLs ) > 0 else "" ) )
 
-		# Type forever until all of the chat command's processing is finished
-		async with message.channel.typing():
+		# Create or increment the message sent statistic for this member
+		mysqlQuery( "INSERT INTO MemberStatistics ( Member ) VALUES ( LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_STATISTICS" ] + "', 512 ) ) ) ) ) ) ON DUPLICATE KEY UPDATE Messages = Messages + 1;" )
 
-			# Is the chat command valid?
-			if command in chatCommands:
+		# Is this the memes channel?
+		if message.channel.id == configuration[ "channels" ][ "memes" ]:
 
-				# Fetch the command metadata
-				metadata = chatCommands[ command ]
+			# Loop through all of those inline links and attachment links
+			for url in itertools.chain( attachmentURLs, inlineURLs ):
 
-				# Create the list of arguments
-				arguments = message.content[ len( command ) + 2 : ].split()
+				# Get any repost information
+				repostInformation = isRepost( url )
 
-				# Loop so long as there is at least one argument
-				while len( arguments ) > 0:
+				# Skip if the information is nothing - this means the link is not an image/video/audio file, or is over 100 MiB
+				if repostInformation == None: continue
 
-					# Is the first argument a subcommand?
-					if arguments[ 0 ] in metadata.subcmds:
+				# Is this not a repost?
+				if repostInformation[ 0 ] == False:
 
-						# Update the command variable to the first argument
-						command = arguments[ 0 ]
+					# Get the location information using a regular expression
+					location = re.search( r"(\d+)/(\d+)$", message.jump_url )
 
-						# Remove the command from the arguments
-						del arguments[ 0 ]
+					# Add repost information to the database
+					mysqlQuery( "INSERT INTO RepostHistory ( Checksum, Channel, Message ) VALUES ( '" + repostInformation[ 1 ] + "', " + location.group( 1 ) + ", " + location.group( 2 ) + " );" )
 
-						# Fetch the subcommand metadata
-						metadata = metadata.subcmds[ command ]
+					# Console message
+					print( "Adding original message attachment with checksum '" + repostInformation[ 1 ] + "' to the repost history database for the first time." )
 
-					# It's not a subcommand
-					else:
-
-						# Break out of the loop
-						break
-
-				# Is this command work-in-progress & is the author not me?
-				if metadata.wip and message.author.id != message.guild.owner_id:
-
-					# Give a response
-					await message.channel.send( ":wrench: This command is work-in-progress, please refrain from using it until it's released." )
-
-					# Prevent further execution
-					return
-
-				# Is this command restricted to certain users & is this user not one of them?
-				if len( metadata.users ) > 0 and message.author.id not in metadata.users:
-
-					# Convert the list of users to a clean string
-					users = ", ".join( [ client.get_user( userID ).mention for userID in metadata.users ] )
-
-					# Give a response
-					await message.channel.send( ":no_entry_sign: This command can only be used by " + users + "." )
-
-					# Prevent further execution
-					return
-
-				# Is this command DM only & is this not a direct message?
-				if metadata.dm and message.guild:
-
-					# Give a response
-					await message.channel.send( ":exclamation: This command can only be used over Direct Messages." )
-
-					# Prevent further execution
-					return
-
-				# Is this not a direct message?
-				if message.guild:
-
-					# Is this command NSFW & is this not an NSFW channel?
-					if metadata.nsfw and not message.channel.is_nsfw():
-
-						# Give a response
-						await message.channel.send( ":exclamation: This command can only be used in NSFW channels." )
-
-						# Prevent further execution
-						return
-
-					# Is this command only available in certain channels and is this not one of those channels?
-					if len( metadata.channels ) > 0 and message.channel.id not in metadata.channels:
-
-						# Convert the list of channels to a clean string
-						channels = ", ".join( [ client.get_channel( channelID ).mention for channelID in metadata.channels ] )
-
-						# Give a response
-						await message.channel.send( ":exclamation: This command can only be used in " + channels + "." )
-
-						# Prevent further execution
-						return
-
-				# Create a list of the role IDs this member has
-				roleIDs = [ role.id for role in guildMember.roles ]
-
-				# Create a list of the roles this member requires to execute this command (if there are any)
-				requiredRoles = [ message.guild.get_role( roleID ) for roleID in metadata.roles if roleID not in roleIDs ]
-
-				# Is there at least one additional role that this member requires?
-				if len( requiredRoles ) > 0:
-
-					# Convert the list of roles to a clean string
-					roles = ", ".join( [ role.mention for role in requiredRoles ] )
-
-					# Give a response
-					await message.channel.send( ":no_entry_sign: This command can only be used by members with the role " + roles + "." )
-
-					# Prevent further execution
-					return
-
-				# Use channel permissions if this message is not from direct messages, otherwise use overall guild permissions
-				#permissions = ( message.author.permissions_in( message.channel ) if message.guild else guildMember.guild_permissions )
-
-				# Does this command require certain permissions and does this member not have those permissions?
-				#if metadata.permissions and permissions < metadata.permissions:
-
-					# Give a response
-					#await message.channel.send( ":no_entry_sign: You don't have the necessary permissions to use this command." )
-
-					# Prevent further execution
-					#return
-
-				# Delete the command caller/input if it's set to do so
-				if metadata.delete: await message.delete()
-
-				# Be safe!
-				try:
-
-					# Execute the command and store it's response
-					response = await metadata.execute( message, arguments, client )
-
-				# Catch all errors that occur
-				except Exception:
-
-					# Print a stacktrace
-					print( traceback.format_exc() )
-
-					# Friendly message
-					await message.channel.send( ":interrobang: I encountered an error while attempting to execute that command, <@" + str( message.guild.owner_id ) + "> needs to fix this.", allowed_mentions = ALLOW_USER_MENTIONS )
-
-				# No errors occured
+				# It is a repost
 				else:
 
-					# Send a response with user mention capability if it was provided
-					if response != None: await message.channel.send( **response, allowed_mentions = ALLOW_USER_MENTIONS )
+					# Be safe!
+					try:
 
-				# We're done here
-				finally:
+						# Get the channel it was sent in
+						channel = client.get_channel( repostInformation[ 0 ] )
 
-					# Don't continue if this is a direct message - I respect privacy!
-					if not message.guild: return
+						# Raise not found if channel is nothing
+						if channel == None: raise discord.NotFound()
 
-					# Display a console message
-					print( "(" + ascii( message.channel.category.name ) + " -> #" + message.channel.name + ") " + str( message.author ) + " (" + message.author.display_name + ") executed command '" + command + "'" + ( " with arguments '" + ", ".join( arguments ) + "'" if len( arguments ) > 0 else "" ) + "." )
+						# Fetch the original message from that channel
+						originalMessage = await channel.fetch_message( repostInformation[ 1 ] )
 
-					# Log the usage of the command
-					await log( "Command executed", message.author.mention + " executed command `" + command + "`" + ( " with arguments `" + " ".join( arguments ) + "`" if len( arguments ) > 0 else "" ) + " in " + message.channel.mention, jump = message.jump_url )
-
-			# Unknown chat command
-			else:
-
-				# Calculate the ratio of how similar the attempted command is to all other commands
-				similarMatches = { name : difflib.SequenceMatcher( None, command, name ).ratio() for name, metadata in chatCommands } # WHEN RELEASING ADD: 'if not metadata.wip'
-
-				# Sort by the highest ratio (the most accurate/similar match)
-				sortedSimilarMatches = sorted( similarMatches, key = similarMatches.get, reverse = True )
-
-				# Send back a message
-				await message.channel.send( ":grey_question: I didn't recognise that command, " + ( "did you mean `" + configuration[ "general" ][ "prefix" ] + sortedSimilarMatches[ 0 ] + "`? If not, " if len( sortedSimilarMatches ) > 0 else "" ) + "type `" + configuration[ "general" ][ "prefix" ] + "commands` to see a list of commands." )
-
-	# This message is not a chat command
-	else:
-
-		# Is this message sent from a guild?
-		if message.guild != None:
-
-			# Console message
-			print( "(" + ascii( message.channel.category.name ) + " -> #" + message.channel.name + ") " + str( message.author ) + " (" + message.author.display_name + "): " + message.content + ( "\n\t".join( attachmentURLs ) if len( attachmentURLs ) > 0 else "" ) )
-
-			# Create or increment the message sent statistic for this member
-			mysqlQuery( "INSERT INTO MemberStatistics ( Member ) VALUES ( LOWER( HEX( AES_ENCRYPT( '" + str( message.author.id ) + "', UNHEX( SHA2( '" + os.environ[ "ENCRYPTION_STATISTICS" ] + "', 512 ) ) ) ) ) ) ON DUPLICATE KEY UPDATE Messages = Messages + 1;" )
-
-			# Is this the memes channel?
-			if message.channel.id == configuration[ "channels" ][ "memes" ]:
-
-				# Loop through all of those inline links and attachment links
-				for url in itertools.chain( attachmentURLs, inlineURLs ):
-
-					# Get any repost information
-					repostInformation = isRepost( url )
-
-					# Skip if the information is nothing - this means the link is not an image/video/audio file, or is over 100 MiB
-					if repostInformation == None: continue
-
-					# Is this not a repost?
-					if repostInformation[ 0 ] == False:
+					# The original message does not exist
+					except discord.NotFound:
 
 						# Get the location information using a regular expression
 						location = re.search( r"(\d+)/(\d+)$", message.jump_url )
 
-						# Add repost information to the database
-						mysqlQuery( "INSERT INTO RepostHistory ( Checksum, Channel, Message ) VALUES ( '" + repostInformation[ 1 ] + "', " + location.group( 1 ) + ", " + location.group( 2 ) + " );" )
+						# Update the record in the database to have this message as the first one
+						mysqlQuery( "UPDATE RepostHistory SET Channel = " + location.group( 1 ) + ", Message = " + location.group( 2 ) + ", Count = 1 WHERE Checksum = '" + repostInformation[ 3 ] + "';" )
 
-						# Console message
-						print( "Adding original message attachment with checksum '" + repostInformation[ 1 ] + "' to the repost history database for the first time." )
-
-					# It is a repost
+					# The original message exists
 					else:
 
-						# Be safe!
-						try:
+						# Is this not the original author reposting their own content?
+						if originalMessage.author.id != message.author.id:
 
-							# Get the channel it was sent in
-							channel = client.get_channel( repostInformation[ 0 ] )
+							# Update the count in the database
+							mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 3 ] + "';" )
 
-							# Raise not found if channel is nothing
-							if channel == None: raise discord.NotFound()
+							# Console message
+							print( "Incrementing repost count for message attachment with checksum '" + repostInformation[ 3 ] + "' in the repost history database." )
 
-							# Fetch the original message from that channel
-							originalMessage = await channel.fetch_message( repostInformation[ 1 ] )
+							# Inform them via reply
+							await message.reply( ":recycle: This is a repost, I've seen it **" + str( repostInformation[ 2 ] ) + "** time" + ( "s" if repostInformation[ 2 ] > 1 else "" ) + " before!\n*(Original: <https://discord.com/channels/" + str( client.guilds[ 0 ].id ) + "/" + str( repostInformation[ 0 ] ) + "/" + str( repostInformation[ 1 ] ) + ">)*", mention_author = False )
 
-						# The original message does not exist
-						except discord.NotFound:
+		# Does the message start with "Im " and has it been 15 seconds since the last one?
+		if message.content.startswith( "Im " ) and ( lastDadJoke + 15 ) < unixTimestampNow:
 
-							# Get the location information using a regular expression
-							location = re.search( r"(\d+)/(\d+)$", message.jump_url )
+			# Send dadbot response
+			await message.channel.send( "Hi " + message.clean_content[ 3: ] + ", I'm dad!" )
 
-							# Update the record in the database to have this message as the first one
-							mysqlQuery( "UPDATE RepostHistory SET Channel = " + location.group( 1 ) + ", Message = " + location.group( 2 ) + ", Count = 1 WHERE Checksum = '" + repostInformation[ 3 ] + "';" )
+			# Set the last dad joke date & time
+			lastDadJoke = unixTimestampNow
 
-						# The original message exists
-						else:
+	# This message was sent over direct messages
+	else:
 
-							# Is this not the original author reposting their own content?
-							if originalMessage.author.id != message.author.id:
+		anonymousChannel = client.guilds[ 0 ].get_channel( configuration[ "channels" ][ "anonymous" ] )
+		anonymousChannelWebhooks = await anonymousChannel.webhooks()
+		anonymousWebhook = anonymousChannelWebhooks[ 0 ]
 
-								# Update the count in the database
-								mysqlQuery( "UPDATE RepostHistory SET Count = Count + 1 WHERE Checksum = '" + repostInformation[ 3 ] + "';" )
+		lurkerRole = discord.utils.get(client.guilds[ 0 ].roles,id=807559722127458304)
+		timeoutRole=discord.utils.get(client.guilds[ 0 ].roles,id=539160858341933056)
 
-								# Console message
-								print( "Incrementing repost count for message attachment with checksum '" + repostInformation[ 3 ] + "' in the repost history database." )
+		# Disallow lurkers
+		if(lurkerRole in guildMember.roles):
+			await message.author.dm_channel.send( f"Sorry, to use the anonymous chat system, you cannot be a lurker in the Discord server.", delete_after = 10 )
+			return
 
-								# Inform them via reply
-								await message.reply( ":recycle: This is a repost, I've seen it **" + str( repostInformation[ 2 ] ) + "** time" + ( "s" if repostInformation[ 2 ] > 1 else "" ) + " before!\n*(Original: <https://discord.com/channels/" + str( client.guilds[ 0 ].id ) + "/" + str( repostInformation[ 0 ] ) + "/" + str( repostInformation[ 1 ] ) + ">)*", mention_author = False )
+		# Disallow members in timeout
+		if (timeoutRole in guildMember.roles):
+			await message.author.dm_channel.send( "Sorry, you've been temporarily restricted from using the anonymous chat, because you're in timeout.", delete_after = 10 )
+			return
 
-			# Does the message start with "Im " and has it been 15 seconds since the last one?
-			if message.content.startswith( "Im " ) and ( lastDadJoke + 15 ) < unixTimestampNow:
-	
-				# Send dadbot response
-				await message.channel.send( "Hi " + message.clean_content[ 3: ] + ", I'm dad!" )
-
-				# Set the last dad joke date & time
-				lastDadJoke = unixTimestampNow
-
-		# This message was sent over direct messages
-		else:
-
-#############################################################################################################
-######################### ALL CODE BELOW THIS LINE NEEDS REFORMATTING & CLEANING UP ######################### 
-#############################################################################################################
-
-			anonymousChannel = client.guilds[ 0 ].get_channel( configuration[ "channels" ][ "anonymous" ] )
-			anonymousChannelWebhooks = await anonymousChannel.webhooks()
-			anonymousWebhook = anonymousChannelWebhooks[ 0 ]
-
-			lurkerRole = discord.utils.get(client.guilds[ 0 ].roles,id=807559722127458304)
-			timeoutRole=discord.utils.get(client.guilds[ 0 ].roles,id=539160858341933056)
-
-			# Disallow lurkers
-			if(lurkerRole in guildMember.roles):
-				await message.author.dm_channel.send( f"Sorry, to use the anonymous chat system, you cannot be a lurker in the Discord server.", delete_after = 10 )
+		# Don't allow them to send the same message twice
+		if(message.clean_content!="" and str(message.author.id)in lastSentMessage):
+			if(lastSentMessage[str(message.author.id)]==message.clean_content):
+				await message.author.dm_channel.send( "Please do not send the same message twice.", delete_after = 10 )
 				return
 
-			# Disallow members in timeout
-			if (timeoutRole in guildMember.roles):
-				await message.author.dm_channel.send( "Sorry, you've been temporarily restricted from using the anonymous chat, because you're in timeout.", delete_after = 10 )
+		# Wait 5 seconds before sending another message
+		if(str(message.author.id)in userCooldowns):
+			if(time.time()-userCooldowns[str(message.author.id)]<=5):
+				await message.author.dm_channel.send( "Please wait at least 5 seconds before sending another message.", delete_after = 10 )
 				return
 
-			# Don't allow them to send the same message twice
-			if(message.clean_content!="" and str(message.author.id)in lastSentMessage):
-				if(lastSentMessage[str(message.author.id)]==message.clean_content):
-					await message.author.dm_channel.send( "Please do not send the same message twice.", delete_after = 10 )
-					return
+		# Update cooldown and last message sent
+		userCooldowns[str(message.author.id)]=time.time()
+		if(message.clean_content!=""):lastSentMessage[str(message.author.id)]=message.clean_content
 
-			# Wait 5 seconds before sending another message
-			if(str(message.author.id)in userCooldowns):
-				if(time.time()-userCooldowns[str(message.author.id)]<=5):
-					await message.author.dm_channel.send( "Please wait at least 5 seconds before sending another message.", delete_after = 10 )
-					return
+		# Pick random username and avatar
+		username = random.choice( configuration[ "names" ] )
+		randomAvatarHash = random.choice( [
+			"1cbd08c76f8af6dddce02c5138971129",
+			"0e291f67c9274a1abdddeb3fd919cbaa",
+			"dd4dbc0016779df1378e7812eabaa04d",
+			"322c936a8c8be1b803cd94861bdfa868",
+			"6debd47ed13483642cf09e832ed0bc1b"
+		] )
+		avatar = f"https://discordapp.com/assets/{ randomAvatarHash }.png"
 
-			# Update cooldown and last message sent
-			userCooldowns[str(message.author.id)]=time.time()
-			if(message.clean_content!=""):lastSentMessage[str(message.author.id)]=message.clean_content
+		# A placeholder list for all the discord file objects
+		files = []
 
-			# Pick random username and avatar
-			username = random.choice( configuration[ "names" ] )
-			randomAvatarHash = random.choice( [
-				"1cbd08c76f8af6dddce02c5138971129",
-				"0e291f67c9274a1abdddeb3fd919cbaa",
-				"dd4dbc0016779df1378e7812eabaa04d",
-				"322c936a8c8be1b803cd94861bdfa868",
-				"6debd47ed13483642cf09e832ed0bc1b"
-			] )
-			avatar = f"https://discordapp.com/assets/{ randomAvatarHash }.png"
+		# Loop through all attachments that the user uploads
+		for attachment in message.attachments:
 
-			# A placeholder list for all the discord file objects
-			files = []
+			# Download the attachment
+			path = downloadWebMedia( attachment.url, "anonymous" )
 
-			# Loop through all attachments that the user uploads
-			for attachment in message.attachments:
+			# Skip if the attachment wasn't downloaded
+			if path == None: continue
 
-				# Download the attachment
-				path = downloadWebMedia( attachment.url, "anonymous" )
+			# Get the file extension
+			_, extension = os.path.splitext( path )
 
-				# Skip if the attachment wasn't downloaded
-				if path == None: continue
+			# Create an identical discord file object and append it to the files list
+			files.append( discord.File( path, filename = "unknown" + extension, spoiler = attachment.is_spoiler() ) )
 
-				# Get the file extension
-				_, extension = os.path.splitext( path )
+		# What to do after sending a message
+		async def afterSentAnonMessage( anonMessage, directMessage ):
 
-				# Create an identical discord file object and append it to the files list
-				files.append( discord.File( path, filename = "unknown" + extension, spoiler = attachment.is_spoiler() ) )
+			# Calculate the message identifier and real deletion token
+			messageIdentifier, deletionToken = anonymousMessageHashes( anonMessage, directMessage.author.id )
 
-			# What to do after sending a message
-			async def afterSentAnonMessage( anonMessage, directMessage ):
+			# Add this message into the database
+			insertResult = mysqlQuery( "INSERT INTO AnonMessages ( Message, Token ) VALUES ( '" + messageIdentifier + "', '" + deletionToken + "' );" )
 
-				# Calculate the message identifier and real deletion token
-				messageIdentifier, deletionToken = anonymousMessageHashes( anonMessage, directMessage.author.id )
-
-				# Add this message into the database
-				insertResult = mysqlQuery( "INSERT INTO AnonMessages ( Message, Token ) VALUES ( '" + messageIdentifier + "', '" + deletionToken + "' );" )
-
-			# Send to the anonymous channel
-			try:
-				if(len(files)==1):
-					anonMessage = await anonymousWebhook.send(message.clean_content,file=files[0],username=username,avatar_url=avatar, wait = True )
-					await afterSentAnonMessage( anonMessage, message )
-				elif(len(files)>1):
-					anonMessage = await anonymousWebhook.send(message.clean_content,files=files,username=username,avatar_url=avatar, wait = True )
-					await message.author.dm_channel.send("You seem to have uploaded multiple files in a single message, while this can be relayed it is prone to issues by sometimes not relaying all of the uploaded files at once and instead only relaying the last uploaded file. To avoid this, upload all your files in seperate messages.", delete_after = 10 )
-					await afterSentAnonMessage( anonMessage, message )
-				elif(message.clean_content!=""):
-					anonMessage = await anonymousWebhook.send(message.clean_content,username=username,avatar_url=avatar, wait = True )
-					await afterSentAnonMessage( anonMessage, message )
-			except discord.errors.HTTPException as errorMessage:
-				if(errorMessage.code==40005):
-					await message.author.dm_channel.send("Sorry, I wasn't able to relay that message because it was too large. If you uploaded multiple files in a single message, try uploading them in seperate messages.", delete_after = 10 )
-					pass
+		# Send to the anonymous channel
+		try:
+			if(len(files)==1):
+				anonMessage = await anonymousWebhook.send(message.clean_content,file=files[0],username=username,avatar_url=avatar, wait = True )
+				await afterSentAnonMessage( anonMessage, message )
+			elif(len(files)>1):
+				anonMessage = await anonymousWebhook.send(message.clean_content,files=files,username=username,avatar_url=avatar, wait = True )
+				await message.author.dm_channel.send("You seem to have uploaded multiple files in a single message, while this can be relayed it is prone to issues by sometimes not relaying all of the uploaded files at once and instead only relaying the last uploaded file. To avoid this, upload all your files in seperate messages.", delete_after = 10 )
+				await afterSentAnonMessage( anonMessage, message )
+			elif(message.clean_content!=""):
+				anonMessage = await anonymousWebhook.send(message.clean_content,username=username,avatar_url=avatar, wait = True )
+				await afterSentAnonMessage( anonMessage, message )
+		except discord.errors.HTTPException as errorMessage:
+			if(errorMessage.code==40005):
+				await message.author.dm_channel.send("Sorry, I wasn't able to relay that message because it was too large. If you uploaded multiple files in a single message, try uploading them in seperate messages.", delete_after = 10 )
+				pass
 
 # Runs when a member joins the server
 async def on_member_join( member ):
