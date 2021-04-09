@@ -305,7 +305,7 @@ def prettyMapName( genericName ):
 		return prefix + " " + theRest
 
 # Get the message identifier and deletion token for an anonymous message send/delete
-def anonymousMessageHashes( anonymousMessage, directMessage ):
+def anonymousMessageHashes( anonymousMessage, authorID ):
 
 	# Store the secret sauce
 	secretSauce = os.environ[ "ANONYMOUS_SALT" ]
@@ -314,7 +314,7 @@ def anonymousMessageHashes( anonymousMessage, directMessage ):
 	messageIdentifier = str( anonymousMessage.id ).encode( "utf-8" )
 
 	# The deletion token, soon to be hashed!
-	deletionToken = ( str( time.mktime( anonymousMessage.created_at.timetuple() ) ) + str( directMessage.author.id ) ).encode( "utf-8" )
+	deletionToken = ( str( time.mktime( anonymousMessage.created_at.timetuple() ) ) + str( authorID ) ).encode( "utf-8" )
 
 	# Iterate for the length of the secret sauce
 	for iteration in range( 1, len( secretSauce ) ):
@@ -710,9 +710,6 @@ class ChatCommands:
 # Inistansiate an object from the chat commands holder class
 chatCommands = ChatCommands()
 
-# Import each chat command file
-from commands import general
-
 # Console message
 print( "Defined chat commands." )
 
@@ -730,6 +727,7 @@ from newcommands import anime
 from newcommands import moderation
 from newcommands import administration
 from newcommands import music
+from newcommands import general
 
 # Console message
 print( "Defined slash commands." )

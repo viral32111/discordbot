@@ -42,11 +42,11 @@ async def shutdown( interaction ):
 
 	await interaction.respond( "Shutting down...", hidden = True )
 
-	await log( "Bot shutdown", "The bot was shutdown by <@" + interaction.user.id + ">" )
+	await log( "Bot shutdown", "The bot was shutdown by <@" + str( interaction.user.id ) + ">" )
 
 	for backgroundTask in backgroundTasks: backgroundTask.cancel()
 	backgroundTasks.clear()
 
-	await client.change_presence( status = discord.Status.offline )
+	await interaction.client.change_presence( status = discord.Status.offline )
 
-	await client.close()
+	await interaction.client.close()

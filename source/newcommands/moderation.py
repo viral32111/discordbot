@@ -46,7 +46,7 @@ async def timeout( interaction ):
 		return
 
 	# Fetch the member to time out
-	member = interaction.client.guilds[ 0 ].get_member( interaction.arguments[ "member" ] )
+	member = interaction.client.guilds[ 0 ].get_member( int( interaction.arguments[ "member" ] ) )
 
 	# Fetch the timeout role
 	timeoutRole = interaction.client.guilds[ 0 ].get_role( configuration[ "roles" ][ "timeout" ] )
@@ -73,7 +73,7 @@ async def untimeout( interaction ):
 		return
 
 	# Fetch the member to time out
-	member = interaction.client.guilds[ 0 ].get_member( interaction.arguments[ "member" ] )
+	member = interaction.client.guilds[ 0 ].get_member( int( interaction.arguments[ "member" ] ) )
 
 	# Are they using it on themselves?
 	if member.id == interaction.user.id:
