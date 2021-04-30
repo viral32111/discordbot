@@ -1,0 +1,33 @@
+name: Bug Report
+description: Create a bug report if you have noticed unexpected behaviour within the code.
+title: 'Bug: '
+labels: Bug
+assignees:
+  - viral32111
+
+body:
+  - type: textarea
+    attributes:
+      label: Bug Description
+      description: Explain the bug you have encountered in as much detail as possible.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Explain how to recreate the bug you have encountered in a step-by-step style.
+    validations:
+      required: true
+
+  - type: checkboxes
+    attributes:
+      label: Confirmation
+      description: Make sure you have done the following before submitting.
+      options:
+        - label: I have ensured that this bug exists on the latest release.
+          required: true
+        - label: I have searched through existing bug reports to see if this has already been reported.
+          required: true
+    validations:
+      required: true
