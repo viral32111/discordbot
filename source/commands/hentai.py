@@ -68,6 +68,9 @@ async def hentai( interaction ):
 	# Set the command status to thinking
 	message = await interaction.think()
 
+	# Make sure dangerous stuff is not searched for
+	interaction.arguments[ "tags" ] += " -loli -shota"
+
 	# Is this for Rule 34?
 	if interaction.arguments[ "source" ] == "rule34":
 
