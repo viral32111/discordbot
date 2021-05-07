@@ -517,6 +517,7 @@ from commands import moderation
 from commands import administration
 from commands import music
 from commands import general
+from commands import nhentai
 
 # Console message
 print( "Defined slash commands." )
