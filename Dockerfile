@@ -2,7 +2,7 @@
 FROM python:latest
 
 # Set the current version of the bot in the environment
-ENV VERSION=3.0.0
+ENV VERSION=3.1.0
 
 # Use a keyboard interrupt signal for stopping this image
 STOPSIGNAL SIGINT
