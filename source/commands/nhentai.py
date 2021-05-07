@@ -75,7 +75,7 @@ async def nhentai( interaction ):
 		tempData = apiResponse.json()
 
 		if len( tempData[ "result" ] ) <= 0:
-			await message.edit( ":mag_right: I was not able to find anything matching that search query." )
+			await message.edit( ":mag_right: I was not able to find anything matching that search query.\nMaybe you are searching wrong? Check the Search category under <https://nhentai.net/info> for help." )
 			return
 
 		data = tempData[ "result" ][ 0 ]
