@@ -1,3 +1,0 @@
-# Suimin
-
-Coming soon!
