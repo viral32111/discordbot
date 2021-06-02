@@ -12,4 +12,4 @@ docker run \
 	--interactive \
 	--tty \
 	--rm \
-	discordbot:local client.py
+	discordbot:local main.py
