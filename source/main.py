@@ -5,6 +5,12 @@ bot = discord.Client( intents = discord.Intents.all() )
 
 async def on_ready():
 	print( "Ready!" )
+
+	guild = bot.get_guild( 517858059213733901 )
+	systemChannelFlags = guild.system_channel_flags
+	systemChannelFlags.join_notifications = False
+	await guild.edit( system_channel_flags = systemChannelFlags, reason = "Disable default welcome messages now that I'm online." )
+
 	await bot.change_presence( activity = discord.Activity( name = "all of you.", type = discord.ActivityType.watching ) )
 
 async def on_message( message ):
@@ -57,6 +63,12 @@ try:
 	bot.loop.run_until_complete( bot.start( os.environ[ "BOT_TOKEN" ] ) )
 except KeyboardInterrupt:
 	print( "Stopping..." )
+
+	guild = bot.get_guild( 517858059213733901 )
+	systemChannelFlags = guild.system_channel_flags
+	systemChannelFlags.join_notifications = True
+	bot.loop.run_until_complete( guild.edit( system_channel_flags = systemChannelFlags, reason = "Enable default welcome messages now that I'm offline." ) )
+
 	bot.loop.run_until_complete( bot.change_presence( status = discord.Status.offline ) )
 	bot.loop.run_until_complete( bot.close() )
 finally:
