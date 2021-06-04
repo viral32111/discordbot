@@ -1,7 +1,17 @@
-import os
-import discord
+# TO-DO: Discord to Minecraft relay - Datagram unix sockets, steal bridge code
+# TO-DO: #anonymous relay - Client-only slash commands?
+# TO-DO: #market channel buy/sell listings for the Minecraft server
+# TO-DO: Logging for every gateway event.
+# TO-DO: Basic music bot to replace Groovy.
+# TO-DO: /minecraft slash command to fetch Minecraft server info & status.
+
+import os, functools
+import discord, requests
 
 bot = discord.Client( intents = discord.Intents.all() )
+
+async def httpRequest( *args, **kwargs ):
+	return await bot.loop.run_in_executor( None, functools.partial( requests.request, *args, **kwargs ) )
 
 async def on_ready():
 	print( "Ready!" )
@@ -65,11 +75,128 @@ async def on_guild_channel_update( oldChannel, newChannel ):
 	if newChannel.id == 826908363392680026 and newChannel.name != "Stage":
 		await newChannel.edit( name = "Stage", reason = "Do not rename this channel! >:(" )
 
+async def on_socket_response( payload ):
+	if payload[ "t" ] != "INTERACTION_CREATE": return
+
+	if "guild_id" not in payload[ "d" ]:
+		print( "{userName}#{userTag} attempted to use my commands in Direct Messages".format(
+			userName = payload[ "d" ][ "user" ][ "username" ],
+			userTag = payload[ "d" ][ "user" ][ "discriminator" ],
+		) )
+
+		return await httpRequest( "POST", "https://discord.com/api/v9/interactions/{interactionID}/{interactionToken}/callback".format(
+			interactionID = payload[ "d" ][ "id" ],
+			interactionToken = payload[ "d" ][ "token" ]
+		), headers = {
+			"Accept": "application/json",
+			"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
+			"User-Agent": "viral32111's community discord bot (https://viral32111.com/contact; contact@viral32111.com)",
+			"From": "contact@viral32111.com",
+				"X-Audit-Log-Reason": "Attempting to use me in Direct Messages."
+		}, json = {
+			"type": 4,
+			"data": {
+				"content": "Sorry, I do not work in Direct Messages yet! Please stick to using my commands in the server for now.",
+				"flags": 64
+			}
+		} )
+
+	guild = bot.get_guild( int( payload[ "d" ][ "guild_id" ] ) )
+	channel = guild.get_channel( int( payload[ "d" ][ "channel_id" ] ) )
+	member = guild.get_member( int( payload[ "d" ][ "member" ][ "user" ][ "id" ] ) )
+
+	if payload[ "d" ][ "data" ][ "name" ] == "activity":
+		if not member.voice:
+			print( "{memberName}#{memberTag} attempted to start a voice activity without being in a voice channel".format(
+				memberName = member.name,
+				memberTag = member.discriminator
+			) )
+
+			return await httpRequest( "POST", "https://discord.com/api/v9/interactions/{interactionID}/{interactionToken}/callback".format(
+				interactionID = payload[ "d" ][ "id" ],
+				interactionToken = payload[ "d" ][ "token" ]
+			), headers = {
+				"Accept": "application/json",
+				"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
+				"User-Agent": "viral32111's community discord bot (https://viral32111.com/contact; contact@viral32111.com)",
+				"From": "contact@viral32111.com",
+				"X-Audit-Log-Reason": "Attempting to use voice activities without calling member in a voice channel."
+			}, json = {
+				"type": 4,
+				"data": {
+					"content": "You first need to join a voice channel to start an activity!",
+					"flags": 64
+				}
+			} )
+
+		if member.voice.channel.type != discord.ChannelType.voice:
+			print( "{memberName}#{memberTag} attempted to start a voice activity without being in a regular voice channel".format(
+				memberName = member.name,
+				memberTag = member.discriminator
+			) )
+
+			return await httpRequest( "POST", "https://discord.com/api/v9/interactions/{interactionID}/{interactionToken}/callback".format(
+				interactionID = payload[ "d" ][ "id" ],
+				interactionToken = payload[ "d" ][ "token" ]
+			), headers = {
+				"Accept": "application/json",
+				"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
+				"User-Agent": "viral32111's community discord bot (https://viral32111.com/contact; contact@viral32111.com)",
+				"From": "contact@viral32111.com",
+				"X-Audit-Log-Reason": "Attempting to use voice activities in a non-voice channel."
+			}, json = {
+				"type": 4,
+				"data": {
+					"content": "Only regular voice channels are supported!",
+					"flags": 64
+				}
+			} )
+
+		inviteResponse = await httpRequest( "POST", "https://discord.com/api/v9/channels/{voiceChannelID}/invites".format(
+			voiceChannelID = member.voice.channel.id
+		), headers = {
+			"Accept": "application/json",
+			"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
+			"User-Agent": "viral32111's community discord bot (https://viral32111.com/contact; contact@viral32111.com)",
+			"From": "contact@viral32111.com",
+			"X-Audit-Log-Reason": "Starting activity in a voice channel."
+		}, json = {
+			"max_age": 3600,
+			"target_type": 2,
+			"target_application_id": payload[ "d" ][ "data" ][ "options" ][ 0 ][ "value" ]
+		} )
+
+		await httpRequest( "POST", "https://discord.com/api/v9/interactions/{interactionID}/{interactionToken}/callback".format(
+			interactionID = payload[ "d" ][ "id" ],
+			interactionToken = payload[ "d" ][ "token" ]
+		), headers = {
+			"Accept": "application/json",
+			"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
+			"User-Agent": "viral32111's community discord bot (https://viral32111.com/contact; contact@viral32111.com)",
+			"From": "contact@viral32111.com",
+			"X-Audit-Log-Reason": "Voice activity started."
+		}, json = {
+			"type": 4,
+			"data": {
+				"content": "[Click me to start!](<https://discord.gg/{inviteCode}>) This link will expire in 1 hour.".format( inviteCode = inviteResponse.json()[ "code" ] ),
+				"allowed_mentions": { "parse": [] }
+			}
+		} )
+
+		print( "{memberName}#{memberTag} started voice activity {activityID} in voice channel {voiceChannelID}: discord.gg/{inviteCode}".format(
+			memberName = member.name,
+			memberTag = member.discriminator,
+			activityID = payload[ "d" ][ "data" ][ "options" ][ 0 ][ "value" ],
+			voiceChannelID = member.voice.channel.id,
+			inviteCode = inviteResponse.json()[ "code" ]
+		) )
+
 bot.event( on_ready )
 bot.event( on_message )
 bot.event( on_member_join )
 bot.event( on_member_remove )
 bot.event( on_guild_channel_update )
+bot.event( on_socket_response )
 
 try:
 	print( "Connecting..." )
