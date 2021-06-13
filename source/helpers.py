@@ -1,7 +1,5 @@
-import tempfile, mimetypes, functools
+import asyncio, tempfile, mimetypes, functools, os
 import requests
-
-_eventLoop = None
 
 def daySuffix( dayNumber ):
 	if 4 <= dayNumber <= 20 or 24 <= dayNumber <= 30:
@@ -14,7 +12,7 @@ async def httpRequest( *args, **kwargs ):
 	kwargs[ "headers" ][ "User-Agent" ] = "viral32111's discord bot (https://viral32111.com/contact; contact@viral32111.com)"
 	kwargs[ "headers" ][ "From" ] = "contact@viral32111.com"
 
-	return await _eventLoop.run_in_executor( None, functools.partial( requests.request, *args, **kwargs ) )
+	return await asyncio.get_event_loop().run_in_executor( None, functools.partial( requests.request, *args, **kwargs ) )
 
 async def respondToInteraction( interactionData, responseType, responseData ):
 	return await httpRequest( "POST", "https://discord.com/api/v9/interactions/{interactionID}/{interactionToken}/callback".format(
@@ -36,6 +34,7 @@ async def downloadImage( imageURL ):
 
 	fileExtension = mimetypes.guess_extension( response.headers[ "content-type" ] )
 
+	# TO-DO: Make this async???
 	with tempfile.NamedTemporaryFile( dir = "/tmp", prefix = "discordbot-download-", suffix = fileExtension, delete = False ) as imageFile:
 		for binaryChunk in response.iter_content( 1024 ):
 			imageFile.write( binaryChunk )
