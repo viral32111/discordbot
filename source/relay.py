@@ -15,7 +15,7 @@ class type( enum.Enum ):
 	message = 2
 	command = 3
 
-def cleanup():
+def close():
 	if os.path.exists( _myPath ):
 		os.remove( _myPath )
 
@@ -24,7 +24,7 @@ def setup( myName ):
 
 	_myPath = _SOCKET_PATH_FORMAT.format( myName )
 
-	cleanup()
+	close()
 
 	_relaySocket.bind( _myPath )
 	_relaySocket.settimeout( 1.0 )

@@ -6,15 +6,15 @@
 # TO-DO: /minecraft slash command to fetch Minecraft server info & status.
 # TO-DO: Store member information and statistics in SQLite database.
 # TO-DO: Repost detection.
-# TO-DO: Seperate files for logging functions.
+# TO-DO: Seperate files for history log functions.
 
 # Import dependencies
 import os, re, datetime
 import discord, requests, emoji, colorthief
-import relay, helpers
+import relay, helpers, logs
 
-# Set global constant variables
-LOG_PATH = "logs/{0}.log"
+# Set global constant configuration variables
+LOG_PATH_TEMPLATE = "logs/{0}.log"
 PRIMARY_SERVER_ID = 240167618575728644
 MARKET_CHANNEL_ID = 852114085750636584
 RELAY_CHANNEL_ID = 851437359237169183
@@ -25,7 +25,6 @@ YEAR_2021_ROLE_ID = 804869340225863691
 
 # Define global variables
 primaryServer = None
-logFile = None
 auditLogCache = {}
 bot = discord.Client(
 	max_messages = 1000000, # Cache way more messages 
@@ -33,32 +32,14 @@ bot = discord.Client(
 	allowed_mentions = discord.AllowedMentions.none() # Prevent mentioning anyone
 )
 
+# Start logging
+logs.start( LOG_PATH_TEMPLATE )
+
 # Setup the relay
 relay.setup( "discordbot" )
-
-# For logging nessages to the console and file
-def consoleLog( message ):
-	# Rules of logging:
-	# * User controlled values should be wrapped in single quotes
-	# * Additional information comes after primary information in brackets
-	# * Applicable values should be prefixed or suffixed to indicate what they mean
-	# * Lists should be wrapped in square brackets
-	# * Anything that is void should be replaced with a placeholder hyphen
-	# * Do not relog past information, just give an ID to refer back to it
-	# * Respect user privacy and redact information for direct messages
-
-	# The full message to log
-	fullMessage = "[{datetime:%d-%m-%Y %H:%M:%S.%f %z}] {message}".format(
-		datetime = datetime.datetime.now( datetime.timezone.utc ),
-		message = message
-	)
-
-	# Log to the file
-	logFile.write( fullMessage + "\n" )
-	logFile.flush()
-
-	# Log to the console
-	print( fullMessage )
+logs.write( "Setup the relay socket in '{socketPath}'.".format(
+	socketPath = relay._myPath
+) )
 
 def cleanMessageForLogs( content ):
 	# Escape codeblocks
@@ -163,28 +144,20 @@ async def fetchMessageDeleter( guildID, channelID, authorID ):
 	else:
 		return authorID, authorID
 
-# Calculate and open the log file
-logNumber = 1
-while os.path.isfile( LOG_PATH.format( logNumber ) ): logNumber += 1
-logFile = open( LOG_PATH.format( logNumber ), "w" )
-consoleLog( "Opened log file '{logPath}'.".format(
-	logPath = logFile.name
-) )
-
 # Runs when the session is opened
 async def on_connect():
 	# Log a message to the console
-	consoleLog( "Connected!" )
+	logs.write( "Connected!" )
 
 # Runs when the session is closed
 async def on_disconnect():
 	# Log a message to the console
-	consoleLog( "Disconnected." )
+	logs.write( "Disconnected." )
 
 # Runs when the session is reopened
 async def on_resume():
 	# Log a message to the console
-	consoleLog( "Resumed!" )
+	logs.write( "Resumed!" )
 
 # Runs when a message is received...
 async def on_message( message ):
@@ -192,7 +165,7 @@ async def on_message( message ):
 	if message.type == discord.MessageType.pins_add or message.type == discord.MessageType.new_member: return
 
 	# Log this event to the console
-	consoleLog( "{authorName} ({authorNick}, {authorTag}, {authorID}) sent {messageType} message {messageContent} [{attachments}] [{stickers}] [{embeds}] {application} ({messageLength}, {messageID}) {messageReference}in {location}.".format(
+	logs.write( "{authorName} ({authorNick}, {authorTag}, {authorID}) sent {messageType} message {messageContent} [{attachments}] [{stickers}] [{embeds}] {application} ({messageLength}, {messageID}) {messageReference}in {location}.".format(
 		authorName = ( "'{0}'".format( emoji.demojize( message.author.name ) ) if message.guild else "-HIDDEN-" ),
 		authorNick = ( "'{0}'".format( emoji.demojize( message.author.nick ) ) if not message.author.bot and message.guild and message.author.nick else "-" ),
 		authorTag = ( "-" if message.webhook_id else ( "#{0}".format( message.author.discriminator ) if message.guild else "-HIDDEN-" ) ),
@@ -286,7 +259,7 @@ async def on_raw_message_delete( rawMessage ):
 		deleter = rawMessage.cached_message.author
 
 	# Log this event to the console
-	consoleLog( "{deleterName} ({deleterNick}, {deleterTag}, {deleterID}) deleted {messageType} message {{{messageID}}} sent by {authorName} ({authorNick}, {authorTag}, {authorID}) in {location}.".format(
+	logs.write( "{deleterName} ({deleterNick}, {deleterTag}, {deleterID}) deleted {messageType} message {{{messageID}}} sent by {authorName} ({authorNick}, {authorTag}, {authorID}) in {location}.".format(
 		deleterName = ( ( "'{0}'".format( emoji.demojize( deleter.name ) ) if deleter else "-" ) if rawMessage.cached_message.guild else "-HIDDEN-" ),
 		deleterNick = ( "'{0}'".format( emoji.demojize( deleter.nick ) ) if rawMessage.guild_id and deleter and deleter.nick else "-" ),
 		deleterTag = ( ( "#{0}".format( deleter.discriminator ) if deleter else "-" ) if rawMessage.cached_message.guild else "-HIDDEN-" ),
@@ -373,7 +346,7 @@ async def on_raw_message_edit( rawMessage ):
 	if not "content" in rawMessage.data: return
 
 	# Log this to the console
-	consoleLog( "{authorName} ({authorNick}, {authorTag}, {authorID}) edited {messageType} message {{{messageID}}} to {messageContent} ({messageLength}) in {location}.".format(
+	logs.write( "{authorName} ({authorNick}, {authorTag}, {authorID}) edited {messageType} message {{{messageID}}} to {messageContent} ({messageLength}) in {location}.".format(
 		authorName = ( "'{0}'".format( emoji.demojize( rawMessage.cached_message.author.name ) ) if rawMessage.cached_message.guild else "-HIDDEN-" ),
 		authorNick = ( "'{0}'".format( emoji.demojize( rawMessage.cached_message.author.nick ) ) if not rawMessage.cached_message.author.bot and rawMessage.cached_message.guild and rawMessage.cached_message.author.nick else "-" ),
 		authorTag = ( "-" if rawMessage.cached_message.webhook_id else ( "#{0}".format( rawMessage.cached_message.author.discriminator ) if rawMessage.cached_message.guild else "-HIDDEN-" ) ),
@@ -461,7 +434,7 @@ async def on_guild_update( oldServer, newServer ):
 
 	serverTemplate = ( await newServer.templates() )[ 0 ]
 	await serverTemplate.sync()
-	consoleLog( "Synced template '{templateName}' ({templateCode}) due to server update event.".format(
+	logs.write( "Synced template '{templateName}' ({templateCode}) due to server update event.".format(
 		templateName = serverTemplate.name,
 		templateCode = serverTemplate.code
 	) )
@@ -469,7 +442,7 @@ async def on_guild_update( oldServer, newServer ):
 async def on_guild_channel_create( channel ):
 	serverTemplate = ( await channel.guild.templates() )[ 0 ]
 	await serverTemplate.sync()
-	consoleLog( "Synced template '{templateName}' ({templateCode}) due to channel create event.".format(
+	logs.write( "Synced template '{templateName}' ({templateCode}) due to channel create event.".format(
 		templateName = serverTemplate.name,
 		templateCode = serverTemplate.code
 	) )
@@ -477,7 +450,7 @@ async def on_guild_channel_create( channel ):
 async def on_guild_channel_delete( channel ):
 	serverTemplate = ( await channel.guild.templates() )[ 0 ]
 	await serverTemplate.sync()
-	consoleLog( "Synced template '{templateName}' ({templateCode}) due to channel delete event.".format(
+	logs.write( "Synced template '{templateName}' ({templateCode}) due to channel delete event.".format(
 		templateName = serverTemplate.name,
 		templateCode = serverTemplate.code
 	) )
@@ -491,7 +464,7 @@ async def on_guild_channel_update( oldChannel, newChannel ):
 
 	serverTemplate = ( await newChannel.guild.templates() )[ 0 ]
 	await serverTemplate.sync()
-	consoleLog( "Synced template '{templateName}' ({templateCode}) due to channel update event.".format(
+	logs.write( "Synced template '{templateName}' ({templateCode}) due to channel update event.".format(
 		templateName = serverTemplate.name,
 		templateCode = serverTemplate.code
 	) )
@@ -499,7 +472,7 @@ async def on_guild_channel_update( oldChannel, newChannel ):
 async def on_guild_role_create( role ):
 	serverTemplate = ( await role.guild.templates() )[ 0 ]
 	await serverTemplate.sync()
-	consoleLog( "Synced template '{templateName}' ({templateCode}) due to role create event.".format(
+	logs.write( "Synced template '{templateName}' ({templateCode}) due to role create event.".format(
 		templateName = serverTemplate.name,
 		templateCode = serverTemplate.code
 	) )
@@ -507,7 +480,7 @@ async def on_guild_role_create( role ):
 async def on_guild_role_delete( role ):
 	serverTemplate = ( await role.guild.templates() )[ 0 ]
 	await serverTemplate.sync()
-	consoleLog( "Synced template '{templateName}' ({templateCode}) due to role delete event.".format(
+	logs.write( "Synced template '{templateName}' ({templateCode}) due to role delete event.".format(
 		templateName = serverTemplate.name,
 		templateCode = serverTemplate.code
 	) )
@@ -515,14 +488,14 @@ async def on_guild_role_delete( role ):
 async def on_guild_role_update( oldRole, newRole ):
 	serverTemplate = ( await newRole.guild.templates() )[ 0 ]
 	await serverTemplate.sync()
-	consoleLog( "Synced template '{templateName}' ({templateCode}) due to role update event.".format(
+	logs.write( "Synced template '{templateName}' ({templateCode}) due to role update event.".format(
 		templateName = serverTemplate.name,
 		templateCode = serverTemplate.code
 	) )
 
 async def on_application_command( data ):
 	if "guild_id" not in data:
-		consoleLog( "{userName}#{userTag} attempted to use my commands in Direct Messages".format(
+		logs.write( "{userName}#{userTag} attempted to use my commands in Direct Messages".format(
 			userName = data[ "user" ][ "username" ],
 			userTag = data[ "user" ][ "discriminator" ],
 		) )
@@ -538,7 +511,7 @@ async def on_application_command( data ):
 
 	if data[ "data" ][ "name" ] == "activity":
 		if not member.voice:
-			consoleLog( "{memberName}#{memberTag} attempted to start a voice activity without being in a voice channel.".format(
+			logs.write( "{memberName}#{memberTag} attempted to start a voice activity without being in a voice channel.".format(
 				memberName = member.name,
 				memberTag = member.discriminator
 			) )
@@ -549,7 +522,7 @@ async def on_application_command( data ):
 			} )
 
 		if member.voice.channel.type != discord.ChannelType.voice:
-			consoleLog( "{memberName}#{memberTag} attempted to start a voice activity without being in a regular voice channel.".format(
+			logs.write( "{memberName}#{memberTag} attempted to start a voice activity without being in a regular voice channel.".format(
 				memberName = member.name,
 				memberTag = member.discriminator
 			) )
@@ -576,7 +549,7 @@ async def on_application_command( data ):
 			"allowed_mentions": { "parse": [] }
 		} )
 
-		consoleLog( "{memberName}#{memberTag} started voice activity {activityID} in voice channel {channelID}: discord.gg/{inviteCode}.".format(
+		logs.write( "{memberName}#{memberTag} started voice activity {activityID} in voice channel {channelID}: discord.gg/{inviteCode}.".format(
 			memberName = member.name,
 			memberTag = member.discriminator,
 			activityID = data[ "data" ][ "options" ][ 0 ][ "value" ],
@@ -762,10 +735,10 @@ async def on_ready():
 	bot.event( on_application_command )
 	bot.event( on_message_component )
 	bot.event( on_socket_response )
-	consoleLog( "Registered post-ready event handlers." )
+	logs.write( "Registered post-ready event handlers." )
 
 	# Log a message to the console
-	consoleLog( "Logged in as '{botName}' (#{botTag}, {botID}) on {serverCount} server(s): {serverList}.".format(
+	logs.write( "Logged in as '{botName}' (#{botTag}, {botID}) on {serverCount} server(s): {serverList}.".format(
 		botName = bot.user.name,
 		botTag = bot.user.discriminator,
 		botID = bot.user.id,
@@ -778,7 +751,7 @@ async def on_ready():
 
 	# Store the primary server instance for later use
 	primaryServer = bot.get_guild( PRIMARY_SERVER_ID )
-	consoleLog( "The primary server is '{serverName}' ({serverID}).".format(
+	logs.write( "The primary server is '{serverName}' ({serverID}).".format(
 		serverName = emoji.demojize( primaryServer.name ),
 		serverID = primaryServer.id
 	) )
@@ -790,7 +763,7 @@ async def on_ready():
 		system_channel_flags = systemChannelFlags,
 		reason = "Disable default join messages in favour of custom join messages."
 	)
-	consoleLog( "Disabled default join messages for '{serverName}' ({serverID}).".format(
+	logs.write( "Disabled default join messages for '{serverName}' ({serverID}).".format(
 		serverName = emoji.demojize( primaryServer.name ),
 		serverID = primaryServer.id
 	) )
@@ -800,7 +773,7 @@ async def on_ready():
 		name = "all of you.",
 		type = discord.ActivityType.watching
 	) )
-	consoleLog( "Current activity set to '{activityType}' '{activityName}'.".format(
+	logs.write( "Current activity set to '{activityType}' '{activityName}'.".format(
 		activityType = primaryServer.me.activity.type.name.capitalize(),
 		activityName = primaryServer.me.activity.name
 	) )
@@ -820,23 +793,26 @@ async def on_ready():
 	auditLogResponse.raise_for_status()
 	auditLogResults = auditLogResponse.json()
 	auditLogCache = { entry[ "id" ]: entry[ "options" ][ "count" ] for entry in auditLogResults[ "audit_log_entries" ] }
-	consoleLog( "Cached the last 100 message deletion events from the primary server's Audit Log." )
+	logs.write( "Cached the last 100 message deletion Audit Log events for '{serverName}' ({serverID}).".format(
+		serverName = emoji.demojize( primaryServer.name ),
+		serverID = primaryServer.id
+	) )
 
 	# Log a message to the console
-	consoleLog( "Ready!" )
+	logs.write( "Ready!" )
 
 # Register pre-ready event handlers
 bot.event( on_connect )
 bot.event( on_disconnect )
 bot.event( on_resume )
 bot.event( on_ready )
-consoleLog( "Registered pre-ready event handlers." )
+logs.write( "Registered pre-ready event handlers." )
 
 try:
-	consoleLog( "Connecting..." )
+	logs.write( "Connecting..." )
 	bot.loop.run_until_complete( bot.start( os.environ[ "BOT_TOKEN" ] ) )
 except KeyboardInterrupt:
-	consoleLog( "Stopping..." )
+	logs.write( "Stopping..." )
 
 	# Remove all event handlers
 	del bot.on_connect
@@ -858,11 +834,13 @@ except KeyboardInterrupt:
 	del bot.on_application_command
 	del bot.on_message_component
 	del bot.on_socket_response
-	consoleLog( "Removed all event handlers." )
+	logs.write( "Removed all event handlers." )
 
-	# Cleanup the relay
-	relay.cleanup()
-	consoleLog( "Cleaned up the relay." )
+	# Close the relay
+	relay.close()
+	logs.write( "Closed the relay socket in '{socketPath}'.".format(
+		socketPath = relay._myPath
+	) )
 
 	# Enable default join notifications on the server
 	primaryServer = bot.get_guild( PRIMARY_SERVER_ID ) # Fetch again in-case we never got to the ready event
@@ -872,18 +850,16 @@ except KeyboardInterrupt:
 		system_channel_flags = systemChannelFlags,
 		reason = "Enable default join messages."
 	) )
-	consoleLog( "Enabled default join messages for '{serverName}' ({serverID}).".format(
+	logs.write( "Enabled default join messages for '{serverName}' ({serverID}).".format(
 		serverName = emoji.demojize( primaryServer.name ),
 		serverID = primaryServer.id
 	) )
 
 	bot.loop.run_until_complete( bot.change_presence( status = discord.Status.offline ) )
-	consoleLog( "Cleared current activity and set status to offline." )
+	logs.write( "Cleared current activity and set status to offline." )
 
-	consoleLog( "Closing log file '{logPath}'...".format(
-		logPath = logFile.name
-	) )
-	logFile.close()
+	# Stop logging
+	logs.stop()
 
 	bot.loop.run_until_complete( bot.close() )
 finally:
