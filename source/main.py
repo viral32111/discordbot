@@ -6,6 +6,7 @@
 # TO-DO: /minecraft slash command to fetch Minecraft server info & status.
 # TO-DO: Store member information and statistics in SQLite database.
 # TO-DO: Repost detection.
+# TO-DO: Seperate files for logging functions.
 
 # Import dependencies
 import os, re, datetime
@@ -191,11 +192,11 @@ async def on_message( message ):
 	if message.type == discord.MessageType.pins_add or message.type == discord.MessageType.new_member: return
 
 	# Log this event to the console
-	consoleLog( "{memberName} ({memberNick}, {memberTag}, {memberID}) sent {messageType} message {messageContent} [{attachments}] [{stickers}] [{embeds}] {application} ({messageLength}, {messageID}) {messageReference}in {location}.".format(
-		memberName = ( "'{0}'".format( emoji.demojize( message.author.name ) ) if message.guild else "-HIDDEN-" ),
-		memberNick = ( "'{0}'".format( emoji.demojize( message.author.nick ) ) if not message.author.bot and message.guild and message.author.nick else "-" ),
-		memberTag = ( "-" if message.webhook_id else ( "#{0}".format( message.author.discriminator ) if message.guild else "-HIDDEN-" ) ),
-		memberID = ( message.author.id if message.guild else "-HIDDEN-" ),
+	consoleLog( "{authorName} ({authorNick}, {authorTag}, {authorID}) sent {messageType} message {messageContent} [{attachments}] [{stickers}] [{embeds}] {application} ({messageLength}, {messageID}) {messageReference}in {location}.".format(
+		authorName = ( "'{0}'".format( emoji.demojize( message.author.name ) ) if message.guild else "-HIDDEN-" ),
+		authorNick = ( "'{0}'".format( emoji.demojize( message.author.nick ) ) if not message.author.bot and message.guild and message.author.nick else "-" ),
+		authorTag = ( "-" if message.webhook_id else ( "#{0}".format( message.author.discriminator ) if message.guild else "-HIDDEN-" ) ),
+		authorID = ( message.author.id if message.guild else "-HIDDEN-" ),
 
 		messageType = ( "system" if message.is_system() and not message.type == discord.MessageType.reply else ( "spoken" if message.tts else "regular" ) ),
 
@@ -292,7 +293,7 @@ async def on_raw_message_delete( rawMessage ):
 		deleterID = ( ( deleter.id if deleter else "-" ) if rawMessage.cached_message.guild else "-HIDDEN-" ),
 
 		messageType = ( "system" if rawMessage.cached_message.is_system() and not rawMessage.cached_message.type == discord.MessageType.reply else ( "spoken" if rawMessage.cached_message.tts else "regular" ) ),
-		messageID = rawMessage.message_id,
+		messageID = rawMessage.cached_message.id,
 
 		authorName = ( "'{0}'".format( emoji.demojize( rawMessage.cached_message.author.name ) ) if rawMessage.cached_message.guild else "-HIDDEN-" ),
 		authorNick = ( "'{0}'".format( emoji.demojize( rawMessage.cached_message.author.nick ) ) if not rawMessage.cached_message.author.bot and rawMessage.cached_message.guild and rawMessage.cached_message.author.nick else "-" ),
@@ -322,7 +323,7 @@ async def on_raw_message_delete( rawMessage ):
 	# Ignore Direct Messages
 	if not rawMessage.cached_message.guild: return
 
-	# Ignore the logs channel
+	# Ignore the history channel
 	if rawMessage.cached_message.channel.id == HISTORY_CHANNEL_ID: return
 
 	# Ignore private channels
@@ -364,8 +365,75 @@ async def on_raw_message_delete( rawMessage ):
 	#logContents.append( [ "Message", "Unknown!", False ] )
 
 # Runs when a message is edited...
-async def on_message_edit( oldMessage, newMessage ):
-	pass
+async def on_raw_message_edit( rawMessage ):
+	# TO-DO: Make it work for non-cached messages!
+	if not rawMessage.cached_message: return
+
+	# TO-DO: Make this work for embed updates and other edits!
+	if not "content" in rawMessage.data: return
+
+	# Log this to the console
+	consoleLog( "{authorName} ({authorNick}, {authorTag}, {authorID}) edited {messageType} message {{{messageID}}} to {messageContent} ({messageLength}) in {location}.".format(
+		authorName = ( "'{0}'".format( emoji.demojize( rawMessage.cached_message.author.name ) ) if rawMessage.cached_message.guild else "-HIDDEN-" ),
+		authorNick = ( "'{0}'".format( emoji.demojize( rawMessage.cached_message.author.nick ) ) if not rawMessage.cached_message.author.bot and rawMessage.cached_message.guild and rawMessage.cached_message.author.nick else "-" ),
+		authorTag = ( "-" if rawMessage.cached_message.webhook_id else ( "#{0}".format( rawMessage.cached_message.author.discriminator ) if rawMessage.cached_message.guild else "-HIDDEN-" ) ),
+		authorID = ( rawMessage.cached_message.author.id if rawMessage.cached_message.guild else "-HIDDEN-" ),
+
+		messageType = ( "spoken" if rawMessage.cached_message.tts else "regular" ),
+		messageID = rawMessage.cached_message.id,
+		messageContent = ( ", ".join( [ ( "'{0}'".format( emoji.demojize( line ) ) if line != "" else "-" ) for line in rawMessage.data[ "content" ].split( "\n" ) ] ) if rawMessage.data[ "content" ] else "-" ),
+		messageLength = len( rawMessage.data[ "content" ] ),
+
+		location = (
+			( "'{serverName}' ({serverID}) -> '{categoryName}' ({categoryID}) -> '#{channelName}' ({channelID})".format(
+				serverName = emoji.demojize( rawMessage.cached_message.guild.name ),
+				serverID = rawMessage.cached_message.guild.id,
+				
+				categoryName = emoji.demojize( rawMessage.cached_message.channel.category.name ),
+				categoryID = rawMessage.cached_message.channel.category.id,
+
+				channelName = emoji.demojize( rawMessage.cached_message.channel.name ),
+				channelID = rawMessage.cached_message.channel.id
+			) if rawMessage.cached_message.channel.category else "'{serverName}' ({serverID}) -> '#{channelName}' ({channelID})".format(
+				serverName = emoji.demojize( rawMessage.cached_message.guild.name ),
+				serverID = rawMessage.cached_message.guild.id,
+				
+				channelName = emoji.demojize( rawMessage.cached_message.channel.name ),
+				channelID = rawMessage.cached_message.channel.id
+			) ) if rawMessage.cached_message.guild else "direct messages"
+		)
+	) )
+
+	# Ignore Direct Messages
+	if not rawMessage.cached_message.guild: return
+
+	# Ignore the history channel
+	if rawMessage.cached_message.channel.id == HISTORY_CHANNEL_ID: return
+
+	# Ignore private channels
+	if rawMessage.cached_message.channel.overwrites_for( rawMessage.cached_message.guild.default_role ).pair()[ 1 ].view_channel == True: return
+
+	# Create a list for the embed fields
+	logFields = [
+		[ "Author", rawMessage.cached_message.author.mention, True ],
+		[ "Channel", rawMessage.cached_message.channel.mention, True ]
+	]
+
+	# Add the embed field for the old content, if applicable
+	if len( rawMessage.cached_message.clean_content ) > 0:
+		logFields.append( [ "Old Message", cleanMessageForLogs( rawMessage.cached_message.clean_content ), False ] )
+	else:
+		logFields.append( [ "Old Message", "Content not displayable.", False ] )
+
+	# Add the embed field for the new content, if applicable
+	# TO-DO: This needs to be human friendly/clean content too!
+	if len( rawMessage.data[ "content" ] ) > 0:
+		logFields.append( [ "New Message", cleanMessageForLogs( rawMessage.data[ "content" ] ), False ] )
+	else:
+		logFields.append( [ "New Message", "Content not displayable.", False ] )
+
+	# Log this event in the history channel
+	await discordLog( "Message Edited", logFields )
 
 async def on_member_join( member ):
 	# TO-DO: h0nde has been banned from twitter, so remove this if no bots join for a few weeks?
@@ -681,6 +749,7 @@ async def on_ready():
 	# Register post-ready event handlers
 	bot.event( on_message )
 	bot.event( on_raw_message_delete )
+	bot.event( on_raw_message_edit )
 	bot.event( on_member_join )
 	bot.event( on_member_remove )
 	bot.event( on_guild_update )
@@ -776,6 +845,7 @@ except KeyboardInterrupt:
 	del bot.on_ready
 	del bot.on_message
 	del bot.on_raw_message_delete
+	del bot.on_raw_message_edit
 	del bot.on_member_join
 	del bot.on_member_remove
 	del bot.on_guild_update
