@@ -15,17 +15,21 @@ class type( enum.Enum ):
 	message = 2
 	command = 3
 
+def cleanup():
+	if os.path.exists( _myPath ):
+		os.remove( _myPath )
+
 def setup( myName ):
+	global _myPath
+
 	_myPath = _SOCKET_PATH_FORMAT.format( myName )
+
+	cleanup()
 
 	_relaySocket.bind( _myPath )
 	_relaySocket.settimeout( 1.0 )
 
 	os.chmod( _myPath, 0o777 )
-
-def cleanup():
-	if os.path.exists( _myPath ):
-		os.remove( _myPath )
 
 async def send( typeOfPayload, payloadData, destinationName ):
 	dataToSend = json.dumps( {

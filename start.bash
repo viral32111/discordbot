@@ -5,7 +5,8 @@ set -e
 docker run \
 	--name discordbot \
 	--hostname discordbot \
-	--mount type=bind,source=/srv/discordbot/source,target=/srv/discordbot,readonly \
+	--mount type=bind,source=/srv/discordbot/source,target=/srv/discordbot/source,readonly \
+	--mount type=bind,source=/srv/discordbot/logs,target=/srv/discordbot/logs \
 	--mount type=volume,source=relay,target=/var/run/relay \
 	--workdir /srv/discordbot \
 	--env-file secrets.env \
@@ -13,4 +14,4 @@ docker run \
 	--interactive \
 	--tty \
 	--rm \
-	discordbot:local main.py
+	discordbot:local source/main.py
