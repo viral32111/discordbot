@@ -155,7 +155,7 @@ async def on_disconnect():
 	logs.write( "Disconnected." )
 
 # Runs when the session is reopened
-async def on_resume():
+async def on_resumed():
 	# Log a message to the console
 	logs.write( "Resumed!" )
 
@@ -389,7 +389,8 @@ async def on_raw_message_edit( rawMessage ):
 	# Create a list for the embed fields
 	logFields = [
 		[ "Author", rawMessage.cached_message.author.mention, True ],
-		[ "Channel", rawMessage.cached_message.channel.mention, True ]
+		[ "Channel", rawMessage.cached_message.channel.mention, True ],
+		[ "Jump", "[[Click]]({0})".format( rawMessage.cached_message.jump_url ), True ]
 	]
 
 	# Add the embed field for the old content, if applicable
@@ -494,22 +495,23 @@ async def on_guild_role_update( oldRole, newRole ):
 	) )
 
 async def on_application_command( data ):
+	# TO-DO: Make this work in direct messages!
 	if "guild_id" not in data:
-		logs.write( "{userName}#{userTag} attempted to use my commands in Direct Messages".format(
-			userName = data[ "user" ][ "username" ],
-			userTag = data[ "user" ][ "discriminator" ],
-		) )
-
 		return await helpers.respondToInteraction( data, 4, {
 			"content": "Sorry, I do not work in Direct Messages yet! Please stick to using my commands in the server for now.",
 			"flags": 64
 		} )
 
+	# Fetch common properties and store them
 	server = bot.get_guild( int( data[ "guild_id" ] ) )
 	channel = server.get_channel( int( data[ "channel_id" ] ) )
 	member = server.get_member( int( data[ "member" ][ "user" ][ "id" ] ) )
+	command = data[ "data" ][ "name" ]
 
-	if data[ "data" ][ "name" ] == "activity":
+	# Log this event
+	#logs.write( "{memberName} ({memberNick}, {memberTag}, {memberID}) used application command '{commandName}' ({commandID}, {interactionID}) with options [{commandOptions}] in {location}.".format( ) )
+
+	if command == "activity":
 		if not member.voice:
 			logs.write( "{memberName}#{memberTag} attempted to start a voice activity without being in a voice channel.".format(
 				memberName = member.name,
@@ -557,7 +559,7 @@ async def on_application_command( data ):
 			inviteCode = inviteResponse.json()[ "code" ]
 		) )
 
-	elif data[ "data" ][ "name" ] == "minecraft":
+	elif command == "minecraft":
 		if data[ "data" ][ "options" ][ 0 ][ "name" ] == "status":
 			await helpers.respondToInteraction( data, 4, {
 				"content": ":no_entry_sign: no, not yet :no_entry_sign:",
@@ -688,6 +690,31 @@ async def on_application_command( data ):
 					"content": ":no_entry_sign: no, not yet :no_entry_sign:",
 					"flags": 64
 				} )
+	
+	elif command == "anonymous":
+		if data[ "data" ][ "options" ][ 0 ][ "name" ] == "send":
+			await helpers.respondToInteraction( data, 4, {
+				"content": ":no_entry_sign: no, not yet :no_entry_sign:",
+				"flags": 64
+			} )
+
+		elif data[ "data" ][ "options" ][ 0 ][ "name" ] == "delete":
+			await helpers.respondToInteraction( data, 4, {
+				"content": ":no_entry_sign: no, not yet :no_entry_sign:",
+				"flags": 64
+			} )
+
+		elif data[ "data" ][ "options" ][ 0 ][ "name" ] == "subscribe":
+			await helpers.respondToInteraction( data, 4, {
+				"content": ":no_entry_sign: no, not yet :no_entry_sign:",
+				"flags": 64
+			} )
+
+		elif data[ "data" ][ "options" ][ 0 ][ "name" ] == "unsubscribe":
+			await helpers.respondToInteraction( data, 4, {
+				"content": ":no_entry_sign: no, not yet :no_entry_sign:",
+				"flags": 64
+			} )
 
 async def on_message_component( data ):
 	callingMemberID = int( data[ "member" ][ "user" ][ "id" ] )
@@ -749,24 +776,47 @@ async def on_ready():
 		) for server in bot.guilds ] ) )
 	) )
 
-	# Store the primary server instance for later use
-	primaryServer = bot.get_guild( PRIMARY_SERVER_ID )
-	logs.write( "The primary server is '{serverName}' ({serverID}).".format(
-		serverName = emoji.demojize( primaryServer.name ),
-		serverID = primaryServer.id
-	) )
+	# If this is the first time running
+	if not primaryServer:
 
-	# Disable default join notifications on the server
-	systemChannelFlags = primaryServer.system_channel_flags
-	systemChannelFlags.join_notifications = False
-	await primaryServer.edit(
-		system_channel_flags = systemChannelFlags,
-		reason = "Disable default join messages in favour of custom join messages."
-	)
-	logs.write( "Disabled default join messages for '{serverName}' ({serverID}).".format(
-		serverName = emoji.demojize( primaryServer.name ),
-		serverID = primaryServer.id
-	) )
+		# Store the primary server instance for later use
+		primaryServer = bot.get_guild( PRIMARY_SERVER_ID )
+		logs.write( "The primary server is '{serverName}' ({serverID}).".format(
+			serverName = emoji.demojize( primaryServer.name ),
+			serverID = primaryServer.id
+		) )
+
+		# Disable default join notifications on the server
+		systemChannelFlags = primaryServer.system_channel_flags
+		systemChannelFlags.join_notifications = False
+		await primaryServer.edit(
+			system_channel_flags = systemChannelFlags,
+			reason = "Disable default join messages in favour of custom join messages."
+		)
+		logs.write( "Disabled default join messages for '{serverName}' ({serverID}).".format(
+			serverName = emoji.demojize( primaryServer.name ),
+			serverID = primaryServer.id
+		) )
+
+		# Cache the current state of the Audit Log
+		auditLogResponse = requests.request( "GET", "https://discord.com/api/v9/guilds/{guildID}/audit-logs".format(
+			guildID = primaryServer.id
+		), params = {
+			"limit": 100,
+			"action_type": 72 # MESSAGE_DELETE
+		}, headers = {
+			"Accept": "application/json",
+			"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
+			"User-Agent": "viral32111's discord bot (https://viral32111.com/contact; contact@viral32111.com)",
+			"From": "contact@viral32111.com"
+		} )
+		auditLogResponse.raise_for_status()
+		auditLogResults = auditLogResponse.json()
+		auditLogCache = { entry[ "id" ]: entry[ "options" ][ "count" ] for entry in auditLogResults[ "audit_log_entries" ] }
+		logs.write( "Cached the last 100 message deletion Audit Log events for '{serverName}' ({serverID}).".format(
+			serverName = emoji.demojize( primaryServer.name ),
+			serverID = primaryServer.id
+		) )
 
 	# Set the bot's current activity
 	await bot.change_presence( activity = discord.Activity(
@@ -778,33 +828,13 @@ async def on_ready():
 		activityName = primaryServer.me.activity.name
 	) )
 
-	# Cache the current state of the Audit Log
-	auditLogResponse = requests.request( "GET", "https://discord.com/api/v9/guilds/{guildID}/audit-logs".format(
-		guildID = primaryServer.id
-	), params = {
-		"limit": 100,
-		"action_type": 72 # MESSAGE_DELETE
-	}, headers = {
-		"Accept": "application/json",
-		"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
-		"User-Agent": "viral32111's discord bot (https://viral32111.com/contact; contact@viral32111.com)",
-		"From": "contact@viral32111.com"
-	} )
-	auditLogResponse.raise_for_status()
-	auditLogResults = auditLogResponse.json()
-	auditLogCache = { entry[ "id" ]: entry[ "options" ][ "count" ] for entry in auditLogResults[ "audit_log_entries" ] }
-	logs.write( "Cached the last 100 message deletion Audit Log events for '{serverName}' ({serverID}).".format(
-		serverName = emoji.demojize( primaryServer.name ),
-		serverID = primaryServer.id
-	) )
-
 	# Log a message to the console
 	logs.write( "Ready!" )
 
 # Register pre-ready event handlers
 bot.event( on_connect )
 bot.event( on_disconnect )
-bot.event( on_resume )
+bot.event( on_resumed )
 bot.event( on_ready )
 logs.write( "Registered pre-ready event handlers." )
 
@@ -814,11 +844,14 @@ try:
 except KeyboardInterrupt:
 	logs.write( "Stopping..." )
 
-	# Remove all event handlers
+	# Remove pre-ready event handlers
 	del bot.on_connect
 	del bot.on_disconnect
-	del bot.on_resume
+	del bot.on_resumed
 	del bot.on_ready
+	logs.write( "Removed post-ready event handlers." )
+
+	# Remove post-ready event handlers
 	del bot.on_message
 	del bot.on_raw_message_delete
 	del bot.on_raw_message_edit
@@ -834,7 +867,7 @@ except KeyboardInterrupt:
 	del bot.on_application_command
 	del bot.on_message_component
 	del bot.on_socket_response
-	logs.write( "Removed all event handlers." )
+	logs.write( "Removed post-ready event handlers." )
 
 	# Close the relay
 	relay.close()

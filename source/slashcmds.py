@@ -114,6 +114,53 @@ bulkCreateResponse = requests.request( "PUT", "https://discord.com/api/v9/applic
 				]
 			}
 		]
+	},
+	{
+		"name": "anonymous",
+		"description": "Interact with the #anonymous channel.",
+		"options": [
+			{
+				"type": 1,
+				"name": "send",
+				"description": "Quickly send a message to #anonymous. Direct message me for more functionality.",
+				"options": [
+					{
+						"type": 3,
+						"name": "message",
+						"description": "The message to send. Markdown is supported.",
+						"required": True
+					},
+					{
+						"type": 3,
+						"name": "attachment",
+						"description": "A URL to an image, video or file to upload as an attachment alongside the message.",
+					}
+				]
+			},
+			{
+				"type": 1,
+				"name": "delete",
+				"description": "Delete a message you sent in #anonymous. Sender authenticity is checked using one-way hashes.",
+				"options": [
+					{
+						"type": 3,
+						"name": "id",
+						"description": "The ID of the message to delete.",
+						"required": True
+					}
+				]
+			},
+			{
+				"type": 1,
+				"name": "subscribe",
+				"description": "Start receiving #anonymous messages in this channel that only you can see. Lasts for 15 minutes."
+			},
+			{
+				"type": 1,
+				"name": "unsubscribe",
+				"description": "Stop receiving #anonymous messages in this channel."
+			}
+		]
 	}
 ] )
 
