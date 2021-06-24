@@ -7,14 +7,15 @@
 # TO-DO: Store member information and statistics in SQLite database.
 # TO-DO: Repost detection.
 # TO-DO: Seperate files for history log functions.
-
+# TO-DO: Update /minecraft market create command to use 'embeds' array field instead of 'embed'
 # Import dependencies
 import os, re, datetime
 import discord, requests, emoji, colorthief
-import relay, helpers, logs
+import relay, helpers, logs, history
 
 # Set global constant configuration variables
 LOG_PATH_TEMPLATE = "logs/{0}.log"
+SOCKET_PATH_TEMPLATE = "/var/run/relay/{0}.sock"
 PRIMARY_SERVER_ID = 240167618575728644
 MARKET_CHANNEL_ID = 852114085750636584
 RELAY_CHANNEL_ID = 851437359237169183
@@ -25,7 +26,6 @@ YEAR_2021_ROLE_ID = 804869340225863691
 
 # Define global variables
 primaryServer = None
-auditLogCache = {}
 bot = discord.Client(
 	max_messages = 1000000, # Cache way more messages 
 	intents = discord.Intents.all(), # Receive all events
@@ -36,113 +36,10 @@ bot = discord.Client(
 logs.start( LOG_PATH_TEMPLATE )
 
 # Setup the relay
-relay.setup( "discordbot" )
+relay.setup( SOCKET_PATH_TEMPLATE.format( "discordbot" ) )
 logs.write( "Setup the relay socket in '{socketPath}'.".format(
-	socketPath = relay._myPath
+	socketPath = relay.path
 ) )
-
-def cleanMessageForLogs( content ):
-	# Escape codeblocks
-	content = re.sub( r"`{3}", r"\`\`\`", content )
-
-	# Clean custom emojis
-	content = re.sub( r"<a?:(\w+):(\d+)>", r":\1:", content )
-
-	# Clean unicode emojis
-	content = emoji.demojize( content )
-
-	# Shorten it with an elipsis if needed
-	content = ( content if len( content ) <= 1024 else content[ :( 1024 - 6 - 3 ) ] + "..." ) # -6 for code block, -3 for elipsis dots
-
-	# Return the final result in a codeblock
-	return "```{0}```".format( content )
-
-def formatAttachmentsForLogs( attachments ):
-	return ( "\n".join( [ "[{attachmentName} {attachmentDimensions}({attachmentSize} KiB)]({attachmentURL}) [[Cache]]({attachmentProxyURL})".format(
-		attachmentName = attachment.filename,
-		attachmentSize = round( attachment.size / 1024, 2 ),
-		attachmentDimensions = ( "({attachmentWidth}x{attachmentHeight}) ".format(
-			attachmentWidth = attachment.width,
-			attachmentHeight = attachment.height
-		) if attachment.width else "" ),
-		attachmentURL = attachment.url,
-		attachmentProxyURL = attachment.proxy_url
-	) for attachment in message.attachments ] ) )
-
-async def discordLog( title, fields ):
-	logsChannel = primaryServer.get_channel( HISTORY_CHANNEL_ID )
-	rightNow = datetime.datetime.now( datetime.timezone.utc )
-
-	logEmbed = discord.Embed(
-		title = title,
-		color = primaryServer.me.color
-	)
-
-	for field in fields:
-		logEmbed.add_field(
-			name = field[ 0 ],
-			value = field[ 1 ],
-			inline = field[ 2 ]
-		)
-
-	logEmbed.set_footer(
-		text = "{datetime:%A} {datetime:%-d}{daySuffix} {datetime:%B} {datetime:%Y} at {datetime:%-H}:{datetime:%M}:{datetime:%S} {datetime:%Z}".format(
-			datetime = rightNow,
-			daySuffix = helpers.daySuffix( rightNow.day )
-		)
-	)
-
-	await logsChannel.send( embed = logEmbed )
-
-async def fetchMessageDeleter( guildID, channelID, authorID ):
-	rightNow = datetime.datetime.now( datetime.timezone.utc )
-	fiveSecondsAgo = rightNow - datetime.timedelta( seconds = 5 )
-
-	response = await helpers.httpRequest( "GET", "https://discord.com/api/v9/guilds/{guildID}/audit-logs".format(
-		guildID = guildID
-	), params = {
-		"limit": 100,
-		"action_type": 72 # MESSAGE_DELETE
-	}, headers = {
-		"Accept": "application/json",
-		"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
-		"User-Agent": "viral32111's discord bot (https://viral32111.com/contact; contact@viral32111.com)",
-		"From": "contact@viral32111.com"
-	} )
-
-	response.raise_for_status()
-	results = response.json()
-
-	for entry in results[ "audit_log_entries" ]:
-		if int( entry[ "options" ][ "channel_id" ] ) != channelID: continue
-		
-		if authorID:
-			if int( entry[ "target_id" ] ) != authorID: continue
-
-		when = datetime.datetime.fromtimestamp( ( ( int( entry[ "id" ] ) >> 22 ) + 1420070400000 ) / 1000, tz = datetime.timezone.utc )
-
-		if when > fiveSecondsAgo:
-			auditLogCache[ entry[ "id" ] ] = entry[ "options" ][ "count" ]
-
-			if authorID:
-				return int( entry[ "user_id" ] )
-			else:
-				return int( entry[ "user_id" ] ), int( entry[ "target_id" ] )
-		else:
-			if entry[ "options" ][ "count" ] > auditLogCache[ entry[ "id" ] ]:
-				auditLogCache[ entry[ "id" ] ] = entry[ "options" ][ "count" ]
-
-				if authorID:
-					return int( entry[ "user_id" ] )
-				else:
-					return int( entry[ "user_id" ] ), int( entry[ "target_id" ] )
-
-			auditLogCache[ entry[ "id" ] ] = entry[ "options" ][ "count" ]
-
-	if authorID:
-		return authorID
-	else:
-		return authorID, authorID
 
 # Runs when the session is opened
 async def on_connect():
@@ -253,7 +150,7 @@ async def on_raw_message_delete( rawMessage ):
 	# Fetch the member/user that deleted this message
 	if rawMessage.guild_id:
 		server = bot.get_guild( rawMessage.cached_message.guild.id )
-		deleterID = await fetchMessageDeleter( rawMessage.cached_message.guild.id, rawMessage.cached_message.channel.id, rawMessage.cached_message.author.id )
+		deleterID = await history.fetchMessageDeleter( rawMessage.cached_message.guild.id, rawMessage.cached_message.channel.id, rawMessage.cached_message.author.id )
 		deleter = ( server.get_member( deleterID ) if deleterID else None )
 	else:
 		deleter = rawMessage.cached_message.author
@@ -311,19 +208,19 @@ async def on_raw_message_delete( rawMessage ):
 
 	# Add the embed field for the message, if applicable
 	if len( rawMessage.cached_message.clean_content ) > 0:
-		logFields.append( [ "Message", cleanMessageForLogs( rawMessage.cached_message.clean_content ), False ] )
+		logFields.append( [ "Message", history.cleanMessage( rawMessage.cached_message ), False ] )
 	else:
 		logFields.append( [ "Message", "Content not displayable.", False ] )
 
 	# Add the embed field for the attachments, if applicable
 	if len( rawMessage.cached_message.attachments ) > 0:
-		logFields.append( [ "Attachments", formatAttachmentsForLogs( rawMessage.cached_message.attachments ), False ] )
+		logFields.append( [ "Attachments", history.formatAttachments( rawMessage.cached_message.attachments ), False ] )
 
 	# Log this event in the logging channel
-	await discordLog( "Message Deleted", logFields )
+	await history.send( rawMessage.cached_message.guild, HISTORY_CHANNEL_ID, "Message Deleted", logFields )
 
 	# For uncached messages:
-	#deletedByID, sentByID = await fetchMessageDeleter( rawMessage.guild_id, rawMessage.channel_id, None )
+	#deletedByID, sentByID = await history.fetchMessageDeleter( rawMessage.guild_id, rawMessage.channel_id, None )
 	#if sentByID:
 	#	sentBy = bot.get_user( sentByID )
 	#	logContents.append( [ "Sent By", sentBy.mention, True ] )
@@ -395,19 +292,19 @@ async def on_raw_message_edit( rawMessage ):
 
 	# Add the embed field for the old content, if applicable
 	if len( rawMessage.cached_message.clean_content ) > 0:
-		logFields.append( [ "Old Message", cleanMessageForLogs( rawMessage.cached_message.clean_content ), False ] )
+		logFields.append( [ "Old Message", history.cleanMessage( rawMessage.cached_message ), False ] )
 	else:
 		logFields.append( [ "Old Message", "Content not displayable.", False ] )
 
 	# Add the embed field for the new content, if applicable
 	# TO-DO: This needs to be human friendly/clean content too!
 	if len( rawMessage.data[ "content" ] ) > 0:
-		logFields.append( [ "New Message", cleanMessageForLogs( rawMessage.data[ "content" ] ), False ] )
+		logFields.append( [ "New Message", history.cleanMessage( rawMessage.data[ "content" ] ), False ] )
 	else:
 		logFields.append( [ "New Message", "Content not displayable.", False ] )
 
 	# Log this event in the history channel
-	await discordLog( "Message Edited", logFields )
+	await history.send( rawMessage.cached_message.guild, HISTORY_CHANNEL_ID, "Message Edited", logFields )
 
 async def on_member_join( member ):
 	# TO-DO: h0nde has been banned from twitter, so remove this if no bots join for a few weeks?
@@ -419,7 +316,7 @@ async def on_member_join( member ):
 
 	await member.add_roles( primaryServer.get_role( YEAR_2021_ROLE_ID ), reason = "Member joined in 2021." )
 
-	await primaryServer.system_channel.send( ":wave_tone1: {memberMention} joined the community!\nPlease read through the guidelines and information in {channelMention} before you start chatting..".format(
+	await primaryServer.system_channel.send( ":wave_tone1: {memberMention} joined the community!\nPlease read through the guidelines and information in {channelMention} before you start chatting.".format(
 		channelMention = primaryServer.rules_channel.mention,
 		memberMention = member.mention
 	), allowed_mentions = discord.AllowedMentions( users = True ) )
@@ -744,7 +641,7 @@ async def on_socket_response( payload ):
 # Runs when the bot is ready...
 async def on_ready():
 	# Apply changes to global variables
-	global primaryServer, auditLogCache
+	global primaryServer
 
 	# Register post-ready event handlers
 	bot.event( on_message )
@@ -799,20 +696,7 @@ async def on_ready():
 		) )
 
 		# Cache the current state of the Audit Log
-		auditLogResponse = requests.request( "GET", "https://discord.com/api/v9/guilds/{guildID}/audit-logs".format(
-			guildID = primaryServer.id
-		), params = {
-			"limit": 100,
-			"action_type": 72 # MESSAGE_DELETE
-		}, headers = {
-			"Accept": "application/json",
-			"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
-			"User-Agent": "viral32111's discord bot (https://viral32111.com/contact; contact@viral32111.com)",
-			"From": "contact@viral32111.com"
-		} )
-		auditLogResponse.raise_for_status()
-		auditLogResults = auditLogResponse.json()
-		auditLogCache = { entry[ "id" ]: entry[ "options" ][ "count" ] for entry in auditLogResults[ "audit_log_entries" ] }
+		await history.cacheAuditLog( primaryServer.id, 100, 72 )
 		logs.write( "Cached the last 100 message deletion Audit Log events for '{serverName}' ({serverID}).".format(
 			serverName = emoji.demojize( primaryServer.name ),
 			serverID = primaryServer.id
@@ -849,7 +733,7 @@ except KeyboardInterrupt:
 	del bot.on_disconnect
 	del bot.on_resumed
 	del bot.on_ready
-	logs.write( "Removed post-ready event handlers." )
+	logs.write( "Removed pre-ready event handlers." )
 
 	# Remove post-ready event handlers
 	del bot.on_message
@@ -872,7 +756,7 @@ except KeyboardInterrupt:
 	# Close the relay
 	relay.close()
 	logs.write( "Closed the relay socket in '{socketPath}'.".format(
-		socketPath = relay._myPath
+		socketPath = relay.path
 	) )
 
 	# Enable default join notifications on the server

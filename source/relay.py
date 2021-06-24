@@ -1,47 +1,56 @@
+# Import dependencies
 import os, socket, enum, functools, json, asyncio
 
-_SOCKET_PATH_FORMAT = "/var/run/relay/{0}.sock"
+# Create global variable to hold the path to the socket file
+path = None
 
-_relaySocket = socket.socket( socket.AF_UNIX, socket.SOCK_DGRAM )
-_myPath = None
+# Create a TCP unix domain socket
+_relayClient = socket.socket( socket.AF_UNIX, socket.SOCK_STREAM )
 
+# Enumerations for status codes
 class status( enum.Enum ):
 	success = 0
 	error = 1
 
+# Enumerations for message types
 class type( enum.Enum ):
 	response = 0
 	status = 1
 	message = 2
 	command = 3
 
+# Removes the socket file after it has been used
 def close():
-	if os.path.exists( _myPath ):
-		os.remove( _myPath )
+	if os.path.exists( path ):
+		os.remove( path )
 
-def setup( myName ):
-	global _myPath
+# Sets up the unix domain socket
+def setup( myPath ):
+	# Apply changes to global variables
+	global path
 
-	_myPath = _SOCKET_PATH_FORMAT.format( myName )
+	# Update the global path variable
+	path = myPath
 
+	# Remove potential lingering socket file from previous use
 	close()
 
-	_relaySocket.bind( _myPath )
-	_relaySocket.settimeout( 1.0 )
+	# Bind the unix domain socket and set the default timeout
+	_relayClient.bind( path )
+	_relayClient.settimeout( 1.0 )
 
-	os.chmod( _myPath, 0o777 )
+	# Set full permissions on the new socket file
+	os.chmod( path, 0o777 )
 
-async def send( typeOfPayload, payloadData, destinationName ):
-	dataToSend = json.dumps( {
-		"type": typeOfPayload.value,
-		"data": payloadData
-	} ).encode()
-
+# Sends a message to another unix domain socket file
+async def send( messageType, data, destinationPath ):
 	eventLoop = asyncio.get_event_loop()
+	await eventLoop.run_in_executor( None, functools.partial( _relayClient.sendto, json.dumps( {
+		"type": messageType.value,
+		"data": data
+	} ).encode( "utf-8" ), destinationPath ) )
 
-	await eventLoop.run_in_executor( None, functools.partial( _relaySocket.sendto, dataToSend, _SOCKET_PATH_FORMAT.format( destinationName ) ) )
-
-	receivedData, sourcePath = await eventLoop.run_in_executor( None, functools.partial( _relaySocket.recvfrom, 1024 ) )
+	receivedData, sourcePath = await eventLoop.run_in_executor( None, functools.partial( _relayClient.recvfrom, 1024 ) )
 	receivedPayload = json.loads( receivedData.decode() )
 
 	if receivedPayload[ "type" ] != Type.Response.value:
