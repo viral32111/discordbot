@@ -14,10 +14,9 @@ class status( enum.Enum ):
 
 # Enumerations for message types
 class type( enum.Enum ):
-	response = 0
-	status = 1
-	message = 2
-	command = 3
+	fetchStatus = 0
+	chatMessage = 1
+	remoteCommand = 2
 
 # Removes the socket file after it has been used
 def close():
@@ -37,26 +36,25 @@ def setup( myPath ):
 
 	# Bind the unix domain socket and set the default timeout
 	_relayClient.bind( path )
-	_relayClient.settimeout( 1.0 )
+	#_relayClient.settimeout( 1.0 )
 
 	# Set full permissions on the new socket file
 	os.chmod( path, 0o777 )
 
 # Sends a message to another unix domain socket file
-async def send( messageType, data, destinationPath ):
-	eventLoop = asyncio.get_event_loop()
-	await eventLoop.run_in_executor( None, functools.partial( _relayClient.sendto, json.dumps( {
+def send( messageType, data, destinationPath ):
+	_relayClient.connect( destinationPath )
+
+	_relayClient.send( json.dumps( {
 		"type": messageType.value,
 		"data": data
-	} ).encode( "utf-8" ), destinationPath ) )
+	} ).encode( "utf-8" ) )
 
-	receivedData, sourcePath = await eventLoop.run_in_executor( None, functools.partial( _relayClient.recvfrom, 1024 ) )
-	receivedPayload = json.loads( receivedData.decode() )
+	response = json.loads( _relayClient.recv( 1024 ).decode() )
 
-	if receivedPayload[ "type" ] != Type.Response.value:
-		raise Exception( "Received non-response ({0}) data from: {1}".format( receivedPayload[ "type" ], sourcePath ) )
+	_relayClient.close()
 
-	if receivedPayload[ "status" ] != Status.Success.value:
-		raise Exception( "Received non-success ({0}) response from: {1}".format( receivedPayload[ "status" ], sourcePath ) )
+	if response[ "status" ] != status.success.value:
+		raise Exception( "Received bad response from '{0}': {1}".format( destinationPath, response[ "data" ][ "reason" ] ) )
 
-	return receivedPayload[ "data" ]
+	return response[ "data" ]

@@ -20,7 +20,7 @@ LOG_PATH_TEMPLATE = "logs/{0}.log"
 SOCKET_PATH_TEMPLATE = "/var/run/relay/{0}.sock"
 PRIMARY_SERVER_ID = 240167618575728644
 MARKET_CHANNEL_ID = 852114085750636584
-RELAY_CHANNEL_ID = 851437359237169183
+RELAY_CHANNEL_ID = 856631516762079253
 STAGE_CHANNEL_ID = 826908363392680026
 HISTORY_CHANNEL_ID = 576904701304635405
 LURKER_ROLE_ID = 807559722127458304
@@ -133,11 +133,11 @@ async def on_message( message ):
 
 		# Attempt to relay the message to the Minecraft server
 		try:
-			await relay.send( relay.type.message, {
+			relay.send( relay.type.chatMessage, {
 				"username": emoji.demojize( message.author.display_name ),
 				"content": emoji.demojize( message.clean_content.replace( "\n", " " ) ),
 				"color": message.author.color.value
-			}, "minecraft" )
+			}, SOCKET_PATH_TEMPLATE.format( "minecraft" ) )
 
 		# Notify the user of an error if one happens
 		except Exception as exception:
