@@ -8,6 +8,8 @@
 # TO-DO: Repost detection.
 # TO-DO: Seperate files for history log functions.
 # TO-DO: Update /minecraft market create command to use 'embeds' array field instead of 'embed'
+# TO-DO: Move external images into repository.
+
 # Import dependencies
 import os, re, datetime
 import discord, requests, emoji, colorthief
