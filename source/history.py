@@ -75,7 +75,7 @@ def formatAttachments( attachments ):
 		) if attachment.width else "" ),
 		attachmentURL = attachment.url,
 		attachmentProxyURL = attachment.proxy_url
-	) for attachment in message.attachments ] ) )
+	) for attachment in attachments ] ) )
 
 async def fetchMessageDeleter( guildID, channelID, authorID ):
 	rightNow = datetime.datetime.now( datetime.timezone.utc )
