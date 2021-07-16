@@ -6,13 +6,11 @@
 # TO-DO: /minecraft slash command to fetch Minecraft server info & status.
 # TO-DO: Store member information and statistics in SQLite database.
 # TO-DO: Repost detection.
-# TO-DO: Seperate files for history log functions.
-# TO-DO: Update /minecraft market create command to use 'embeds' array field instead of 'embed'
 # TO-DO: Move external images into repository.
 
 # Import dependencies
-import os, re, datetime
-import discord, requests, emoji, colorthief
+import os, re, datetime, sqlite3, hashlib, random
+import discord, emoji, colorthief
 import relay, helpers, logs, history
 
 # Set global constant configuration variables
@@ -23,11 +21,14 @@ MARKET_CHANNEL_ID = 852114085750636584
 RELAY_CHANNEL_ID = 856631516762079253
 STAGE_CHANNEL_ID = 826908363392680026
 HISTORY_CHANNEL_ID = 576904701304635405
+ANONYMOUS_CHANNEL_ID = 661694045600612352
 LURKER_ROLE_ID = 807559722127458304
+MUTED_ROLE_ID = 539160858341933056
 YEAR_2021_ROLE_ID = 804869340225863691
 
 # Define global variables
 primaryServer = None
+anonymousCooldowns = {}
 bot = discord.Client(
 	max_messages = 1000000, # Cache way more messages 
 	intents = discord.Intents.all(), # Receive all events
@@ -42,6 +43,12 @@ relay.setup( SOCKET_PATH_TEMPLATE.format( "discordbot" ) )
 logs.write( "Setup the relay socket in '{socketPath}'.".format(
 	socketPath = relay.path
 ) )
+
+# Setup the local database
+anonymousDatabaseConnection = sqlite3.connect( "data/anonymous.db" )
+anonymousDatabaseCursor = anonymousDatabaseConnection.cursor()
+anonymousDatabaseCursor.execute( "CREATE TABLE IF NOT EXISTS Messages ( Identifier INTEGER, Sender TEXT )" )
+anonymousDatabaseConnection.commit()
 
 # Runs when the session is opened
 async def on_connect():
@@ -60,6 +67,9 @@ async def on_resumed():
 
 # Runs when a message is received...
 async def on_message( message ):
+	# Apply changes to global variables
+	global anonymousCooldowns
+
 	# Ignore message pinned and member joined messages since we have events for those
 	if message.type == discord.MessageType.pins_add or message.type == discord.MessageType.new_member: return
 
@@ -125,11 +135,8 @@ async def on_message( message ):
 	# Ignore bot messages
 	if message.author.bot: return
 
-	# Ignore messages without any content
-	if len( message.content ) == 0: return
-
 	# Is this the Minecraft relay channel?
-	if message.channel.id == RELAY_CHANNEL_ID:
+	if message.channel.id == RELAY_CHANNEL_ID and len( message.content ) != 0:
 
 		# Attempt to relay the message to the Minecraft server
 		try:
@@ -143,6 +150,51 @@ async def on_message( message ):
 		except Exception as exception:
 			await message.reply( ":interrobang: Your message could not be sent due to an internal error!" )
 			raise exception
+
+	# Is this in Direct Messages?
+	if not message.guild:
+
+		if message.author.id != 480764191465144331:
+			return await message.reply( ":interrobang: The <#{0}> channel is not open to the public yet!".format( anonymousChannel.id ) )
+
+		server = bot.get_guild( PRIMARY_SERVER_ID )
+		member = server.get_member( message.author.id )
+		anonymousChannel = server.get_channel( ANONYMOUS_CHANNEL_ID )
+		lurkerRole = server.get_role( LURKER_ROLE_ID )
+		mutedRole = server.get_role( MUTED_ROLE_ID )
+		rightNow = datetime.datetime.now( datetime.timezone.utc ).timestamp()
+
+		if lurkerRole in member.roles:
+			return await message.reply( ":interrobang: Lurkers cannot use the <#{0}> channel.".format( anonymousChannel.id ) )
+
+		if mutedRole in member.roles:
+			return await message.reply( ":interrobang: Muted members cannot use the <#{0}> channel.".format( anonymousChannel.id ) )
+
+		if str( member.id ) in anonymousCooldowns and rightNow < anonymousCooldowns[ str( member.id ) ]:
+			return await message.reply( ":interrobang: Wait a few seconds before sending another <#{0}> message.".format( anonymousChannel.id ) )
+
+		anonymousCooldowns[ str( member.id ) ] = rightNow + 3
+
+		totalMessageCount = anonymousDatabaseCursor.execute( "SELECT COUNT( Identifier ) FROM Messages" ).fetchone()[ 0 ]
+
+		anonymousWebhook = ( await anonymousChannel.webhooks() )[ 0 ]
+
+		newMessage = await anonymousWebhook.send(
+			content = message.content,
+			username = "#{0:,}".format( totalMessageCount + 1 ),
+			avatar_url = "https://discord.com/assets/{0}.png".format( random.choice( [
+				"1f0bfc0865d324c2587920a7d80c609b", # Blurple
+				"3c6ccb83716d1e4fb91d3082f6b21d77", # Red
+				"7c8f476123d28d103efe381543274c25", # Green
+				"6f26ddd1bf59740c536d2274bb834a05", # Orange
+				"c09a43a372ba81e3018c3151d4ed4773" # Grey
+			] ) ),
+			wait = True
+		)
+
+		hashedSender = hashlib.sha512( "{0}{1}".format( os.environ[ "ANONYMOUS_SALT" ], member.id ).encode() ).hexdigest()
+		anonymousDatabaseCursor.execute( "INSERT INTO Messages VALUES ( ?, ? )", ( newMessage.id, hashedSender ) )
+		anonymousDatabaseConnection.commit()
 
 # Runs when a message is deleted...
 async def on_raw_message_delete( rawMessage ):
@@ -194,6 +246,9 @@ async def on_raw_message_delete( rawMessage ):
 
 	# Ignore Direct Messages
 	if not rawMessage.cached_message.guild: return
+
+	# Ignore bots and webhooks
+	if rawMessage.cached_message.author.bot or rawMessage.cached_message.webhook_id: return
 
 	# Ignore the history channel
 	if rawMessage.cached_message.channel.id == HISTORY_CHANNEL_ID: return
@@ -279,6 +334,9 @@ async def on_raw_message_edit( rawMessage ):
 	# Ignore Direct Messages
 	if not rawMessage.cached_message.guild: return
 
+	# Ignore bots and webhooks
+	if rawMessage.cached_message.author.bot or rawMessage.cached_message.webhook_id: return
+
 	# Ignore the history channel
 	if rawMessage.cached_message.channel.id == HISTORY_CHANNEL_ID: return
 
@@ -309,13 +367,6 @@ async def on_raw_message_edit( rawMessage ):
 	await history.send( rawMessage.cached_message.guild, HISTORY_CHANNEL_ID, "Message Edited", logFields )
 
 async def on_member_join( member ):
-	# TO-DO: h0nde has been banned from twitter, so remove this if no bots join for a few weeks?
-	if re.search( r"twitter\.com\/h0nde", member.name, flags = re.IGNORECASE ):
-		await member.add_roles( primaryServer.get_role( LURKER_ROLE_ID ), reason = "Dumb spam bot >:(" )
-		return await primaryServer.system_channel.send( ":anger: {memberMention} is a dumb spam bot.".format(
-			memberMention = member.mention
-		) )
-
 	await member.add_roles( primaryServer.get_role( YEAR_2021_ROLE_ID ), reason = "Member joined in 2021." )
 
 	await primaryServer.system_channel.send( ":wave_tone1: {memberMention} joined the community!\nPlease read through the guidelines and information in {channelMention} before you start chatting.".format(
@@ -323,11 +374,44 @@ async def on_member_join( member ):
 		memberMention = member.mention
 	), allowed_mentions = discord.AllowedMentions( users = True ) )
 
+	await history.send( member.guild, HISTORY_CHANNEL_ID, "Member Joined", [
+		[ "Member", member.mention, True ],
+		[ "Account Created", "{time:%A} {time:%-d}{daySuffix} {time:%B} {time:%Y} at {time:%-H}:{time:%M} {time:%Z}".format(
+			time = member.created_at,
+			daySuffix = helpers.daySuffix( member.created_at.day )
+		), True ],
+		[ "First Joined", "¯\_(ツ)_/¯", True ]
+	], member.avatar_url )
+
 async def on_member_remove( member ):
 	await primaryServer.system_channel.send( "{memberName}#{memberTag} left the community.".format(
 		memberName = member.name,
 		memberTag = member.discriminator
 	) )
+ 
+	totalSeconds = ( datetime.datetime.now( datetime.timezone.utc ) - member.joined_at ).total_seconds()
+
+	minutes, seconds = divmod( totalSeconds, 60 )
+	hours, minutes = divmod( minutes, 60 )
+	days, hours = divmod( hours, 24 )
+	years, days = divmod( days, 365 )
+
+	values = [
+		( "years", years ),
+		( "days", days ),
+		( "hours", hours ),
+		( "minutes", minutes ),
+		( "seconds", seconds )
+	]
+
+	await history.send( member.guild, HISTORY_CHANNEL_ID, "Member Left", [
+		[ "Member", member.mention, True ],
+		[ "Account Created", "{time:%A} {time:%-d}{daySuffix} {time:%B} {time:%Y} at {time:%-H}:{time:%M} {time:%Z}".format(
+			time = member.created_at,
+			daySuffix = helpers.daySuffix( member.created_at.day )
+		), True ],
+		[ "Stayed For", ", ".join( "{0} {1}".format( value, suffix ) for suffix, value in values if value ) + ".", True ]
+	], member.avatar_url )
 
 async def on_guild_update( oldServer, newServer ):
 	if oldServer.system_channel_flags.join_notifications != newServer.system_channel_flags.join_notifications: return
@@ -492,7 +576,7 @@ async def on_application_command( data ):
 				rightNowUTC = datetime.datetime.now( datetime.timezone.utc )
 
 				offerMessagePayload = {
-					"embed": {
+					"embeds": [ {
 						"title": options[ "title" ],
 						"description": options[ "description" ],
 						"color": color,
@@ -513,7 +597,7 @@ async def on_application_command( data ):
 							),
 							"icon_url": "https://i.imgur.com/WyrN3ml.png"
 						}
-					},
+					} ],
 					"components": [
 						{
 							"type": 1,
@@ -706,8 +790,8 @@ async def on_ready():
 
 	# Set the bot's current activity
 	await bot.change_presence( activity = discord.Activity(
-		name = "all of you.",
-		type = discord.ActivityType.watching
+		name = "to chillhop & lofi.",
+		type = discord.ActivityType.listening
 	) )
 	logs.write( "Current activity set to '{activityType}' '{activityName}'.".format(
 		activityType = primaryServer.me.activity.type.name.capitalize(),
@@ -760,6 +844,8 @@ except KeyboardInterrupt:
 	logs.write( "Closed the relay socket in '{socketPath}'.".format(
 		socketPath = relay.path
 	) )
+
+	anonymousDatabaseConnection.close()
 
 	# Enable default join notifications on the server
 	primaryServer = bot.get_guild( PRIMARY_SERVER_ID ) # Fetch again in-case we never got to the ready event

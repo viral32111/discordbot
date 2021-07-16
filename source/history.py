@@ -50,8 +50,9 @@ def cleanMessage( message ):
 		for role in message.role_mentions:
 			content = content.replace( "<@&{0}>".format( role.id ), "@{0}".format( role.name ) )
 
-	# Escape codeblocks
-	content = re.sub( r"`{3}", r"\`\`\`", content )
+	# Escape code blocks
+	content = re.sub( r"^```", r"\`\`\`", content )
+	content = re.sub( r"```$", r"\`\`\`", content )
 
 	# Clean custom emojis
 	content = re.sub( r"<a?:(\w+):(\d+)>", r":\1:", content )
@@ -62,7 +63,7 @@ def cleanMessage( message ):
 	# Shorten it with an elipsis if needed
 	content = ( content if len( content ) <= 1024 else content[ :( 1024 - 6 - 3 ) ] + "..." ) # -6 for code block, -3 for elipsis dots
 
-	# Return the final result in a codeblock
+	# Return the final result in a code block
 	return "```{0}```".format( content )
 
 def formatAttachments( attachments ):
@@ -128,7 +129,7 @@ async def fetchMessageDeleter( guildID, channelID, authorID ):
 		return authorID, authorID
 
 # Send an event to the #history channel
-async def send( server, channelID, title, fields ):
+async def send( server, channelID, title, fields, thumbnail = None ):
 	logsChannel = server.get_channel( channelID )
 	rightNow = datetime.datetime.now( datetime.timezone.utc )
 
@@ -143,6 +144,8 @@ async def send( server, channelID, title, fields ):
 			value = field[ 1 ],
 			inline = field[ 2 ]
 		)
+
+	if thumbnail: logEmbed.set_thumbnail( thumbnail )
 
 	logEmbed.set_footer(
 		text = "{datetime:%A} {datetime:%-d}{daySuffix} {datetime:%B} {datetime:%Y} at {datetime:%-H}:{datetime:%M}:{datetime:%S} {datetime:%Z}".format(

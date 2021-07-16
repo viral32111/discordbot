@@ -121,7 +121,7 @@ bulkCreateResponse = requests.request( "PUT", "https://discord.com/api/v9/applic
 		"options": [
 			{
 				"type": 1,
-				"name": "send",
+				"name": "say",
 				"description": "Quickly send a message to #anonymous. Direct message me for more functionality.",
 				"options": [
 					{
@@ -132,8 +132,8 @@ bulkCreateResponse = requests.request( "PUT", "https://discord.com/api/v9/applic
 					},
 					{
 						"type": 3,
-						"name": "attachment",
-						"description": "A URL to an image, video or file to upload as an attachment alongside the message.",
+						"name": "reply",
+						"description": "The ID of a message to reply to.",
 					}
 				]
 			},
