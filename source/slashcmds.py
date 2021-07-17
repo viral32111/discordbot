@@ -129,11 +129,6 @@ bulkCreateResponse = requests.request( "PUT", "https://discord.com/api/v9/applic
 						"name": "message",
 						"description": "The message to send. Markdown is supported.",
 						"required": True
-					},
-					{
-						"type": 3,
-						"name": "reply",
-						"description": "The ID of a message to reply to.",
 					}
 				]
 			},
@@ -149,16 +144,6 @@ bulkCreateResponse = requests.request( "PUT", "https://discord.com/api/v9/applic
 						"required": True
 					}
 				]
-			},
-			{
-				"type": 1,
-				"name": "subscribe",
-				"description": "Start receiving #anonymous messages in this channel that only you can see. Lasts for 15 minutes."
-			},
-			{
-				"type": 1,
-				"name": "unsubscribe",
-				"description": "Stop receiving #anonymous messages in this channel."
 			}
 		]
 	}

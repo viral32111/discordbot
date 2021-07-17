@@ -153,10 +153,6 @@ async def on_message( message ):
 
 	# Is this in Direct Messages?
 	if not message.guild:
-
-		if message.author.id != 480764191465144331:
-			return await message.reply( ":interrobang: The <#{0}> channel is not open to the public yet!".format( anonymousChannel.id ) )
-
 		server = bot.get_guild( PRIMARY_SERVER_ID )
 		member = server.get_member( message.author.id )
 		anonymousChannel = server.get_channel( ANONYMOUS_CHANNEL_ID )
@@ -164,37 +160,49 @@ async def on_message( message ):
 		mutedRole = server.get_role( MUTED_ROLE_ID )
 		rightNow = datetime.datetime.now( datetime.timezone.utc ).timestamp()
 
+		if message.author.id != 480764191465144331:
+			return await message.reply( ":interrobang: The <#{0}> channel is not open to the public yet!".format( anonymousChannel.id ) )
+
+		if not member:
+			return await message.reply( ":interrobang: The <#{0}> channel can only be used by members in the server!".format( anonymousChannel.id ) )
+
 		if lurkerRole in member.roles:
-			return await message.reply( ":interrobang: Lurkers cannot use the <#{0}> channel.".format( anonymousChannel.id ) )
+			return await message.reply( ":interrobang: The <#{0}> channel cannot be used by lurkers!".format( anonymousChannel.id ) )
 
 		if mutedRole in member.roles:
-			return await message.reply( ":interrobang: Muted members cannot use the <#{0}> channel.".format( anonymousChannel.id ) )
+			return await message.reply( ":interrobang: The <#{0}> channel cannot be used by muted members!.".format( anonymousChannel.id ) )
 
 		if str( member.id ) in anonymousCooldowns and rightNow < anonymousCooldowns[ str( member.id ) ]:
 			return await message.reply( ":interrobang: Wait a few seconds before sending another <#{0}> message.".format( anonymousChannel.id ) )
 
+		if len( message.embeds ) > 0:
+			return await message.reply( ":interrobang: Embeds cannot be forwarded to the <#{0}> channel.".format( anonymousChannel.id ) )
+
 		anonymousCooldowns[ str( member.id ) ] = rightNow + 3
-
 		totalMessageCount = anonymousDatabaseCursor.execute( "SELECT COUNT( Identifier ) FROM Messages" ).fetchone()[ 0 ]
-
 		anonymousWebhook = ( await anonymousChannel.webhooks() )[ 0 ]
 
-		newMessage = await anonymousWebhook.send(
-			content = message.content,
-			username = "#{0:,}".format( totalMessageCount + 1 ),
-			avatar_url = "https://discord.com/assets/{0}.png".format( random.choice( [
-				"1f0bfc0865d324c2587920a7d80c609b", # Blurple
-				"3c6ccb83716d1e4fb91d3082f6b21d77", # Red
-				"7c8f476123d28d103efe381543274c25", # Green
-				"6f26ddd1bf59740c536d2274bb834a05", # Orange
-				"c09a43a372ba81e3018c3151d4ed4773" # Grey
-			] ) ),
-			wait = True
-		)
+		filesToUpload = []
+		for attachment in message.attachments:
+			downloadedPath = await helpers.downloadFile( attachment.url )
+			_, fileExtension = os.path.splitext( downloadedPath )
+			filesToUpload.append( discord.File( downloadedPath, filename = "unknown{0}".format( fileExtension ), spoiler = attachment.is_spoiler() ) )
 
-		hashedSender = hashlib.sha512( "{0}{1}".format( os.environ[ "ANONYMOUS_SALT" ], member.id ).encode() ).hexdigest()
-		anonymousDatabaseCursor.execute( "INSERT INTO Messages VALUES ( ?, ? )", ( newMessage.id, hashedSender ) )
-		anonymousDatabaseConnection.commit()
+		try:
+			newMessage = await anonymousWebhook.send(
+				content = message.content,
+				files = filesToUpload,
+				username = "#{0:,}".format( totalMessageCount + 1 ),
+				avatar_url = "https://discord.com/embed/avatars/{0}.png".format( random.randint( 0, 5 ) ),
+				wait = True
+			)
+
+			hashedSender = hashlib.sha512( "{0}{1}".format( os.environ[ "ANONYMOUS_SALT" ], member.id ).encode() ).hexdigest()
+			anonymousDatabaseCursor.execute( "INSERT INTO Messages VALUES ( ?, ? )", ( newMessage.id, hashedSender ) )
+			anonymousDatabaseConnection.commit()
+		except discord.errors.HTTPException as exception:
+			if exception.code == 40005:
+				await message.reply( "Unable to forward message because it is too large.\nIf you uploaded multiple files in a single message, try uploading them in seperate messages." )
 
 # Runs when a message is deleted...
 async def on_raw_message_delete( rawMessage ):
@@ -266,7 +274,7 @@ async def on_raw_message_delete( rawMessage ):
 	# Add the embed field for the message, if applicable
 	if len( rawMessage.cached_message.clean_content ) > 0:
 		logFields.append( [ "Message", history.cleanMessage( rawMessage.cached_message ), False ] )
-	else:
+	elif len( rawMessage.cached_message.embeds ) > 0:
 		logFields.append( [ "Message", "Content not displayable.", False ] )
 
 	# Add the embed field for the attachments, if applicable
@@ -485,6 +493,8 @@ async def on_guild_role_update( oldRole, newRole ):
 	) )
 
 async def on_application_command( data ):
+	global anonymousCooldowns
+
 	# TO-DO: Make this work in direct messages!
 	if "guild_id" not in data:
 		return await helpers.respondToInteraction( data, 4, {
@@ -576,7 +586,7 @@ async def on_application_command( data ):
 				color = server.me.color
 
 				if "image" in options:
-					thumbnailDownloadPath = await helpers.downloadImage( options[ "image" ] )
+					thumbnailDownloadPath = await helpers.downloadFile( options[ "image" ] )
 					dominantColorRed, dominantColorGreen, dominantColorBlue = colorthief.ColorThief( thumbnailDownloadPath ).get_color( quality = 3 )
 					color = ( dominantColorRed * 65536 ) + ( dominantColorGreen * 256 ) + dominantColorBlue
 
@@ -682,9 +692,49 @@ async def on_application_command( data ):
 				} )
 	
 	elif command == "anonymous":
-		if data[ "data" ][ "options" ][ 0 ][ "name" ] == "send":
+		anonymousChannel = server.get_channel( ANONYMOUS_CHANNEL_ID )
+		options = { option[ "name" ]: option[ "value" ] for option in data[ "data" ][ "options" ][ 0 ][ "options" ][ 0 ][ "options" ] }
+
+		if data[ "data" ][ "options" ][ 0 ][ "name" ] == "say":
+			lurkerRole = server.get_role( LURKER_ROLE_ID )
+			mutedRole = server.get_role( MUTED_ROLE_ID )
+			rightNow = datetime.datetime.now( datetime.timezone.utc ).timestamp()
+
+			if lurkerRole in member.roles:
+				return await helpers.respondToInteraction( data, 4, {
+					"content": ":interrobang: The <#{0}> channel cannot be used by lurkers!".format( anonymousChannel.id ),
+					"flags": 64
+				} )
+
+			if mutedRole in member.roles:
+				return await helpers.respondToInteraction( data, 4, {
+					"content": ":interrobang: The <#{0}> channel cannot be used by muted members!".format( anonymousChannel.id ),
+					"flags": 64
+				} )
+
+			if str( member.id ) in anonymousCooldowns and rightNow < anonymousCooldowns[ str( member.id ) ]:
+				return await helpers.respondToInteraction( data, 4, {
+					"content": ":interrobang: Wait a few seconds before sending another <#{0}> message.".format( anonymousChannel.id ),
+					"flags": 64
+				} )
+
+			anonymousCooldowns[ str( member.id ) ] = rightNow + 3
+			totalMessageCount = anonymousDatabaseCursor.execute( "SELECT COUNT( Identifier ) FROM Messages" ).fetchone()[ 0 ]
+			anonymousWebhook = ( await anonymousChannel.webhooks() )[ 0 ]
+
+			newMessage = await anonymousWebhook.send(
+				content = options[ "message" ],
+				username = "#{0:,}".format( totalMessageCount + 1 ),
+				avatar_url = "https://discord.com/embed/avatars/{0}.png".format( random.randint( 0, 5 ) ),
+				wait = True
+			)
+
+			hashedSender = hashlib.sha512( "{0}{1}".format( os.environ[ "ANONYMOUS_SALT" ], member.id ).encode() ).hexdigest()
+			anonymousDatabaseCursor.execute( "INSERT INTO Messages VALUES ( ?, ? )", ( newMessage.id, hashedSender ) )
+			anonymousDatabaseConnection.commit()
+
 			await helpers.respondToInteraction( data, 4, {
-				"content": ":no_entry_sign: no, not yet :no_entry_sign:",
+				"content": "Your message has been sent!",
 				"flags": 64
 			} )
 

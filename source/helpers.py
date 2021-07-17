@@ -27,16 +27,15 @@ async def respondToInteraction( interactionData, responseType, responseData ):
 		"data": responseData
 	} )
 
-async def downloadImage( imageURL ):
-	response = await httpRequest( "GET", imageURL, headers = {
-		"Accept": "image/*"
+async def downloadFile( fileURL ):
+	response = await httpRequest( "GET", fileURL, headers = {
+		"Accept": "*/*"
 	}, stream = True )
 
 	fileExtension = mimetypes.guess_extension( response.headers[ "content-type" ] )
 
-	# TO-DO: Make this async???
-	with tempfile.NamedTemporaryFile( dir = "/tmp", prefix = "discordbot-download-", suffix = fileExtension, delete = False ) as imageFile:
+	with tempfile.NamedTemporaryFile( dir = "/tmp", prefix = "discordbot-download-", suffix = fileExtension, delete = False ) as downloadedFile:
 		for binaryChunk in response.iter_content( 1024 ):
-			imageFile.write( binaryChunk )
+			downloadedFile.write( binaryChunk )
 
-		return imageFile.name
+		return downloadedFile.name
