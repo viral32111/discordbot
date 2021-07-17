@@ -367,10 +367,7 @@ async def on_raw_message_edit( rawMessage ):
 	await history.send( rawMessage.cached_message.guild, HISTORY_CHANNEL_ID, "Message Edited", logFields )
 
 async def on_member_join( member ):
-	await member.add_roles( primaryServer.get_role( YEAR_2021_ROLE_ID ), reason = "Member joined in 2021." )
-
-	await primaryServer.system_channel.send( ":wave_tone1: {memberMention} joined the community!\nPlease read through the guidelines and information in {channelMention} before you start chatting.".format(
-		channelMention = primaryServer.rules_channel.mention,
+	await primaryServer.system_channel.send( ":wave_tone1: {memberMention} joined the community!".format(
 		memberMention = member.mention
 	), allowed_mentions = discord.AllowedMentions( users = True ) )
 
@@ -382,6 +379,16 @@ async def on_member_join( member ):
 		), True ],
 		[ "First Joined", "¯\_(ツ)_/¯", True ]
 	], member.avatar_url )
+
+async def on_member_update( oldMember, newMember ):
+
+	# member has completed verification
+	if not oldMember.pending and newMember.pending:
+		await newMember.add_roles( primaryServer.get_role( YEAR_2021_ROLE_ID ), reason = "Member joined in 2021." )
+
+		await history.send( newMember.guild, HISTORY_CHANNEL_ID, "Member Accepted Screening", [
+			[ "Member", newMember.mention, True ]
+		], newMember.avatar_url )
 
 async def on_member_remove( member ):
 	await primaryServer.system_channel.send( "{memberName}#{memberTag} left the community.".format(
@@ -734,6 +741,7 @@ async def on_ready():
 	bot.event( on_raw_message_delete )
 	bot.event( on_raw_message_edit )
 	bot.event( on_member_join )
+	bot.event( on_member_update )
 	bot.event( on_member_remove )
 	bot.event( on_guild_update )
 	bot.event( on_guild_channel_create )
@@ -790,7 +798,7 @@ async def on_ready():
 
 	# Set the bot's current activity
 	await bot.change_presence( activity = discord.Activity(
-		name = "to chillhop & lofi.",
+		name = "chillhop & lofi.",
 		type = discord.ActivityType.listening
 	) )
 	logs.write( "Current activity set to '{activityType}' '{activityName}'.".format(
@@ -826,6 +834,7 @@ except KeyboardInterrupt:
 	del bot.on_raw_message_delete
 	del bot.on_raw_message_edit
 	del bot.on_member_join
+	del bot.on_member_update
 	del bot.on_member_remove
 	del bot.on_guild_update
 	del bot.on_guild_channel_create
