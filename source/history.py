@@ -145,7 +145,7 @@ async def send( server, channelID, title, fields, thumbnail = None ):
 			inline = field[ 2 ]
 		)
 
-	if thumbnail: logEmbed.set_thumbnail( thumbnail )
+	if thumbnail: logEmbed.set_thumbnail( url = thumbnail )
 
 	logEmbed.set_footer(
 		text = "{datetime:%A} {datetime:%-d}{daySuffix} {datetime:%B} {datetime:%Y} at {datetime:%-H}:{datetime:%M}:{datetime:%S} {datetime:%Z}".format(

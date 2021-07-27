@@ -82,7 +82,8 @@ async def on_message( message ):
 
 		messageType = ( "system" if message.is_system() and not message.type == discord.MessageType.reply else ( "spoken" if message.tts else "regular" ) ),
 
-		messageContent = ( "'{0}'".format( emoji.demojize( message.system_content ) ) if message.is_system() and not message.type == discord.MessageType.reply else ( ", ".join( [ ( "'{0}'".format( emoji.demojize( line ) ) if line != "" else "-" ) for line in message.content.split( "\n" ) ] ) if message.content else "-" ) ),
+		messageContent = ( "'{0}'".format( emoji.demojize( message.system_content ) ) if message.is_system() and not message.type == discord.MessageType.reply and not message.type == discord.MessageType.application_command else ( ", ".join( [ ( "'{0}'".format( emoji.demojize( line ) ) if line != "" else "-" ) for line in message.content.split( "\n" ) ] ) if message.content else "-" ) ),
+
 		attachments = (
 			( ", ".join( [ "'{attachmentName}' ({attachmentType}, {attachmentSize}B, {attachmentWidth}, {attachmentHeight}, {attachmentID})".format(
 				attachmentName = attachment.filename,
@@ -375,30 +376,31 @@ async def on_raw_message_edit( rawMessage ):
 	await history.send( rawMessage.cached_message.guild, HISTORY_CHANNEL_ID, "Message Edited", logFields )
 
 async def on_member_join( member ):
+	# TO-DO: logs.write() event for this!
+
 	await primaryServer.system_channel.send( ":wave_tone1: {memberMention} joined the community!".format(
 		memberMention = member.mention
 	), allowed_mentions = discord.AllowedMentions( users = True ) )
+
+	print( member.avatar )
 
 	await history.send( member.guild, HISTORY_CHANNEL_ID, "Member Joined", [
 		[ "Member", member.mention, True ],
 		[ "Account Created", "{time:%A} {time:%-d}{daySuffix} {time:%B} {time:%Y} at {time:%-H}:{time:%M} {time:%Z}".format(
 			time = member.created_at,
 			daySuffix = helpers.daySuffix( member.created_at.day )
-		), True ],
-		[ "First Joined", "¯\_(ツ)_/¯", True ]
-	], member.avatar_url )
+		), True ]
+	], str( member.avatar ) )
 
 async def on_member_update( oldMember, newMember ):
-
-	# member has completed verification
-	if not oldMember.pending and newMember.pending:
+	if oldMember.pending == True and newMember.pending == False:
+		# TO-DO: logs.write() event for this!
 		await newMember.add_roles( primaryServer.get_role( YEAR_2021_ROLE_ID ), reason = "Member joined in 2021." )
-
-		await history.send( newMember.guild, HISTORY_CHANNEL_ID, "Member Accepted Screening", [
-			[ "Member", newMember.mention, True ]
-		], newMember.avatar_url )
+		# TO-DO: Grant previous roles the user had (if any)!
 
 async def on_member_remove( member ):
+	# TO-DO: logs.write() event for this!
+
 	await primaryServer.system_channel.send( "{memberName}#{memberTag} left the community.".format(
 		memberName = member.name,
 		memberTag = member.discriminator
@@ -425,8 +427,8 @@ async def on_member_remove( member ):
 			time = member.created_at,
 			daySuffix = helpers.daySuffix( member.created_at.day )
 		), True ],
-		[ "Stayed For", ", ".join( "{0} {1}".format( value, suffix ) for suffix, value in values if value ) + ".", True ]
-	], member.avatar_url )
+		[ "Stayed For", ", ".join( "{0} {1}".format( round( value ), suffix ) for suffix, value in values if value ) + ".", True ]
+	], str( member.avatar ) )
 
 async def on_guild_update( oldServer, newServer ):
 	if oldServer.system_channel_flags.join_notifications != newServer.system_channel_flags.join_notifications: return
