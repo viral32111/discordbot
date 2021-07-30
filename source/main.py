@@ -161,9 +161,6 @@ async def on_message( message ):
 		mutedRole = server.get_role( MUTED_ROLE_ID )
 		rightNow = datetime.datetime.now( datetime.timezone.utc ).timestamp()
 
-		if message.author.id != 480764191465144331:
-			return await message.reply( ":interrobang: The <#{0}> channel is not open to the public yet!".format( anonymousChannel.id ) )
-
 		if not member:
 			return await message.reply( ":interrobang: The <#{0}> channel can only be used by members in the server!".format( anonymousChannel.id ) )
 
@@ -183,6 +180,10 @@ async def on_message( message ):
 		totalMessageCount = anonymousDatabaseCursor.execute( "SELECT COUNT( Identifier ) FROM Messages" ).fetchone()[ 0 ]
 		anonymousWebhook = ( await anonymousChannel.webhooks() )[ 0 ]
 
+		# the code exists for multiple messages below but it just doesn't work that well, sometimes it misses attachments
+		if len( message.attachments ) > 1:
+			return await message.reply( ":interrobang: Messages with more than 1 attachment cannot be forwarded to the <#{0}> channel.".format( anonymousChannel.id ) )
+
 		filesToUpload = []
 		for attachment in message.attachments:
 			downloadedPath = await helpers.downloadFile( attachment.url )
@@ -198,7 +199,7 @@ async def on_message( message ):
 				wait = True
 			)
 
-			hashedSender = hashlib.sha512( "{0}{1}".format( os.environ[ "ANONYMOUS_SALT" ], member.id ).encode() ).hexdigest()
+			hashedSender = hashlib.sha512( "{0}{1}{2}".format( os.environ[ "ANONYMOUS_SALT" ], member.id, newMessage.id ).encode() ).hexdigest()
 			anonymousDatabaseCursor.execute( "INSERT INTO Messages VALUES ( ?, ? )", ( newMessage.id, hashedSender ) )
 			anonymousDatabaseConnection.commit()
 		except discord.errors.HTTPException as exception:
@@ -692,10 +693,10 @@ async def on_application_command( data ):
 					"content": ":no_entry_sign: no, not yet :no_entry_sign:",
 					"flags": 64
 				} )
-	
+
 	elif command == "anonymous":
 		anonymousChannel = server.get_channel( ANONYMOUS_CHANNEL_ID )
-		options = { option[ "name" ]: option[ "value" ] for option in data[ "data" ][ "options" ][ 0 ][ "options" ][ 0 ][ "options" ] }
+		options = { option[ "name" ]: option[ "value" ] for option in data[ "data" ][ "options" ][ 0 ][ "options" ] }
 
 		if data[ "data" ][ "options" ][ 0 ][ "name" ] == "say":
 			lurkerRole = server.get_role( LURKER_ROLE_ID )
@@ -720,6 +721,11 @@ async def on_application_command( data ):
 					"flags": 64
 				} )
 
+			await helpers.respondToInteraction( data, 5, {
+				"content": "",
+				"flags": 64
+			} )
+
 			anonymousCooldowns[ str( member.id ) ] = rightNow + 3
 			totalMessageCount = anonymousDatabaseCursor.execute( "SELECT COUNT( Identifier ) FROM Messages" ).fetchone()[ 0 ]
 			anonymousWebhook = ( await anonymousChannel.webhooks() )[ 0 ]
@@ -727,36 +733,65 @@ async def on_application_command( data ):
 			newMessage = await anonymousWebhook.send(
 				content = options[ "message" ],
 				username = "#{0:,}".format( totalMessageCount + 1 ),
-				avatar_url = "https://discord.com/embed/avatars/{0}.png".format( random.randint( 0, 5 ) ),
+				avatar_url = "https://cdn.discordapp.com/embed/avatars/{0}.png".format( random.randint( 0, 5 ) ),
 				wait = True
 			)
 
-			hashedSender = hashlib.sha512( "{0}{1}".format( os.environ[ "ANONYMOUS_SALT" ], member.id ).encode() ).hexdigest()
+			hashedSender = hashlib.sha512( "{0}{1}{2}".format( os.environ[ "ANONYMOUS_SALT" ], member.id, newMessage.id ).encode() ).hexdigest()
 			anonymousDatabaseCursor.execute( "INSERT INTO Messages VALUES ( ?, ? )", ( newMessage.id, hashedSender ) )
 			anonymousDatabaseConnection.commit()
 
-			await helpers.respondToInteraction( data, 4, {
-				"content": "Your message has been sent!",
+			return await helpers.httpRequest( "PATCH", "https://discord.com/api/v9/webhooks/{applicationID}/{interactionToken}/messages/@original".format(
+				applicationID = data[ "application_id" ],
+				interactionToken = data[ "token" ]
+			), headers = {
+				"Accept": "application/json",
+				"Authorization": "Bot {0}".format( os.environ[ "BOT_TOKEN" ] ),
+				"X-Audit-Log-Reason": "Updating an interaction response."
+			}, json = {
+				"content": "<:Tick:851511077942460427> Your message has been sent!",
 				"flags": 64
 			} )
 
 		elif data[ "data" ][ "options" ][ 0 ][ "name" ] == "delete":
-			await helpers.respondToInteraction( data, 4, {
-				"content": ":no_entry_sign: no, not yet :no_entry_sign:",
-				"flags": 64
-			} )
+			if not options[ "id" ].isdigit():
+				return await helpers.respondToInteraction( data, 4, {
+					"content": ":interrobang: That is not a valid message ID!",
+					"flags": 64
+				} )
 
-		elif data[ "data" ][ "options" ][ 0 ][ "name" ] == "subscribe":
-			await helpers.respondToInteraction( data, 4, {
-				"content": ":no_entry_sign: no, not yet :no_entry_sign:",
-				"flags": 64
-			} )
+			try:
+				theMessage = await channel.fetch_message( int( options[ "id" ] ) )
+			except discord.NotFound:
+				return await helpers.respondToInteraction( data, 4, {
+					"content": ":interrobang: No message with that ID exists!",
+					"flags": 64
+				} )
+			else:
+				attemptedHashedSender = hashlib.sha512( "{0}{1}{2}".format( os.environ[ "ANONYMOUS_SALT" ], member.id, theMessage.id ).encode() ).hexdigest()
+				realHashedSender = anonymousDatabaseCursor.execute( "SELECT Sender FROM Messages WHERE Identifier = ?", ( theMessage.id, ) ).fetchone()[ 0 ]
 
-		elif data[ "data" ][ "options" ][ 0 ][ "name" ] == "unsubscribe":
-			await helpers.respondToInteraction( data, 4, {
-				"content": ":no_entry_sign: no, not yet :no_entry_sign:",
-				"flags": 64
-			} )
+				if attemptedHashedSender != realHashedSender:
+					return await helpers.respondToInteraction( data, 4, {
+						"content": ":interrobang: You cannot delete messages that you did not send!",
+						"flags": 64
+					} )
+
+				try:
+					await theMessage.delete()
+
+					anonymousDatabaseCursor.execute( "UPDATE Messages SET Sender = NULL WHERE Identifier = ?", ( theMessage.id, ) )
+					anonymousDatabaseConnection.commit()
+				except Exception as exception:
+					await helpers.respondToInteraction( data, 4, {
+						"content": ":interrobang: Something went wrong while attempting to delete the message!",
+						"flags": 64
+					} )
+				else:
+					return await helpers.respondToInteraction( data, 4, {
+						"content": "<:Tick:851511077942460427> Your message has been deleted!",
+						"flags": 64
+					} )
 
 async def on_message_component( data ):
 	callingMemberID = int( data[ "member" ][ "user" ][ "id" ] )
