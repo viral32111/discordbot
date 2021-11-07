@@ -498,6 +498,8 @@ async def on_guild_role_update( oldRole, newRole ):
 async def on_application_command( data ):
 	global anonymousCooldowns
 
+	print( "on_application_command", data )
+
 	# TO-DO: Make this work in direct messages!
 	if "guild_id" not in data:
 		return await helpers.respondToInteraction( data, 4, {
@@ -812,6 +814,8 @@ async def on_message_component( data ):
 			} )
 
 async def on_socket_response( payload ):
+	print( payload[ "t" ] )
+
 	if payload[ "t" ] == "INTERACTION_CREATE":
 		if payload[ "d" ][ "type" ] == 2:
 			bot.dispatch( "application_command", payload[ "d" ] )

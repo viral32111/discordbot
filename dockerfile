@@ -1,4 +1,4 @@
-# docker build --no-cache --force-rm --pull --tag discordbot:local --file "$1" $(mktemp --directory)
+# docker build --no-cache --force-rm --pull --tag discordbot:local --file dockerfile $(mktemp --directory)
 
 FROM python:latest
 
