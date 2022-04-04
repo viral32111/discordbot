@@ -11,20 +11,21 @@
 # Import dependencies
 import os, re, datetime, sqlite3, hashlib, random
 import discord, emoji, colorthief
-import relay, helpers, logs, history
+import helpers, logs, history # relay
 
 # Set global constant configuration variables
 LOG_PATH_TEMPLATE = "logs/{0}.log"
 SOCKET_PATH_TEMPLATE = "/var/run/relay/{0}.sock"
 PRIMARY_SERVER_ID = 240167618575728644
 MARKET_CHANNEL_ID = 852114085750636584
-RELAY_CHANNEL_ID = 856631516762079253
+#RELAY_CHANNEL_ID = 856631516762079253
 STAGE_CHANNEL_ID = 826908363392680026
 HISTORY_CHANNEL_ID = 576904701304635405
 ANONYMOUS_CHANNEL_ID = 661694045600612352
 LURKER_ROLE_ID = 807559722127458304
 MUTED_ROLE_ID = 539160858341933056
 YEAR_2021_ROLE_ID = 804869340225863691
+YEAR_2022_ROLE_ID = 929497402149322752
 
 # Define global variables
 primaryServer = None
@@ -39,10 +40,10 @@ bot = discord.Client(
 logs.start( LOG_PATH_TEMPLATE )
 
 # Setup the relay
-relay.setup( SOCKET_PATH_TEMPLATE.format( "discordbot" ) )
-logs.write( "Setup the relay socket in '{socketPath}'.".format(
-	socketPath = relay.path
-) )
+#relay.setup( SOCKET_PATH_TEMPLATE.format( "discordbot" ) )
+#logs.write( "Setup the relay socket in '{socketPath}'.".format(
+#	socketPath = relay.path
+#) )
 
 # Setup the local database
 anonymousDatabaseConnection = sqlite3.connect( "data/anonymous.db" )
@@ -137,20 +138,20 @@ async def on_message( message ):
 	if message.author.bot: return
 
 	# Is this the Minecraft relay channel?
-	if message.channel.id == RELAY_CHANNEL_ID and len( message.content ) != 0:
+	#if message.channel.id == RELAY_CHANNEL_ID and len( message.content ) != 0:
 
 		# Attempt to relay the message to the Minecraft server
-		try:
-			relay.send( relay.type.chatMessage, {
-				"username": emoji.demojize( message.author.display_name ),
-				"content": emoji.demojize( message.clean_content.replace( "\n", " " ) ),
-				"color": message.author.color.value
-			}, SOCKET_PATH_TEMPLATE.format( "minecraft" ) )
+		#try:
+		#	relay.send( relay.type.chatMessage, {
+		#		"username": emoji.demojize( message.author.display_name ),
+		#		"content": emoji.demojize( message.clean_content.replace( "\n", " " ) ),
+		#		"color": message.author.color.value
+		#	}, SOCKET_PATH_TEMPLATE.format( "minecraft" ) )
 
 		# Notify the user of an error if one happens
-		except Exception as exception:
-			await message.reply( ":interrobang: Your message could not be sent due to an internal error!" )
-			raise exception
+		#except Exception as exception:
+		#	await message.reply( ":interrobang: Your message could not be sent due to an internal error!" )
+		#	raise exception
 
 	# Is this in Direct Messages?
 	if not message.guild:
@@ -396,7 +397,7 @@ async def on_member_join( member ):
 async def on_member_update( oldMember, newMember ):
 	if oldMember.pending == True and newMember.pending == False:
 		# TO-DO: logs.write() event for this!
-		await newMember.add_roles( primaryServer.get_role( YEAR_2021_ROLE_ID ), reason = "Member joined in 2021." )
+		await newMember.add_roles( primaryServer.get_role( YEAR_2022_ROLE_ID ), reason = "Member joined in 2022." )
 		# TO-DO: Grant previous roles the user had (if any)!
 
 async def on_member_remove( member ):
@@ -940,10 +941,10 @@ except KeyboardInterrupt:
 	logs.write( "Removed post-ready event handlers." )
 
 	# Close the relay
-	relay.close()
-	logs.write( "Closed the relay socket in '{socketPath}'.".format(
-		socketPath = relay.path
-	) )
+	#relay.close()
+	#logs.write( "Closed the relay socket in '{socketPath}'.".format(
+	#	socketPath = relay.path
+	#) )
 
 	anonymousDatabaseConnection.close()
 
