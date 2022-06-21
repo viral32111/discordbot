@@ -1,0 +1,28 @@
+{
+	"name": "discordbot",
+	"version": "0.5.0",
+	"description": "A bot for Discord written in Node.js without any third-party libraries.",
+	"main": "emit/main.js",
+	"type": "module",
+	"scripts": {
+		"start": "tsc && node ."
+	},
+	"author": {
+		"name": "viral32111",
+		"email": "contact@viral32111.com",
+		"url": "https://viral32111.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/viral32111/discordbot"
+	},
+	"keywords": [
+		"discord",
+		"bot"
+	],
+	"license": "AGPL-3.0-only",
+	"devDependencies": {
+		"@types/node": "^18.0.0",
+		"typescript": "^4.7.4"
+	}
+}
