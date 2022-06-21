@@ -1,0 +1,39 @@
+name: Analyze
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'source/**'
+    - 'package.json'
+    - 'package-lock.json'
+  pull_request:
+    branches: [ main ]
+    paths:
+    - 'source/**'
+    - 'package.json'
+    - 'package-lock.json'
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: javascript
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2

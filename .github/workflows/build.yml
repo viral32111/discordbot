@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'source/**'
+    - 'package.json'
+    - 'package-lock.json'
+  pull_request:
+    branches: [ main ]
+    paths:
+    - 'source/**'
+    - 'package.json'
+    - 'package-lock.json'
+
+jobs:
+  build-ubuntu:
+    name: Build on Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup Repository
+    - uses: actions/checkout@v3
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install Dependencies
+    - run: npm clean-install
+
+    - name: Compile TypeScript
+    - run: npx tsc --pretty --sourceMap false --alwaysStrict --noImplicitAny --noUnusedLocals --noUnusedParameters
+
+    - name: Upload JavaScript
+      uses: actions/upload-artifact@v3
+      with:
+        name: DiscordBot
+        path: emit/
