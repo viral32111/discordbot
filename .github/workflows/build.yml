@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - name: Setup Repository
-    - uses: actions/checkout@v3
+      uses: actions/checkout@v3
 
     - name: Setup Node
       uses: actions/setup-node@v3
@@ -29,10 +29,10 @@ jobs:
         node-version: 18
 
     - name: Install Dependencies
-    - run: npm clean-install
+      run: npm clean-install
 
     - name: Compile TypeScript
-    - run: npx tsc --pretty --sourceMap false --alwaysStrict --noImplicitAny --noUnusedLocals --noUnusedParameters
+      run: npx tsc --pretty --sourceMap false --alwaysStrict --noImplicitAny --noUnusedLocals --noUnusedParameters
 
     - name: Upload JavaScript
       uses: actions/upload-artifact@v3
