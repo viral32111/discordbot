@@ -3,6 +3,3 @@ node_modules/
 
 # TypeScript
 emit/
-
-# Visual Studio Code
-.vscode/
