@@ -13,16 +13,12 @@ export function request( endpoint: string, method: string = "GET" ): Promise<any
 		}
 	} )
 
-	console.debug( request.method, request.protocol, request.host, request.path )
-
 	return new Promise( ( resolve, reject ) => {
 		request.once( "response", ( response ) => {
 			response.setEncoding( "utf8" )
 
-			console.debug( response.statusCode, response.statusMessage, response.headers )
-	
 			const chunks: string[] = []
-			response.on( "data", chunk => chunks.push( chunk ) )
+			response.on( "data", ( chunk ) => chunks.push( chunk ) )
 
 			response.once( "end", () => {
 				if ( !response.headers[ "content-type" ]?.startsWith( "application/json" ) ) reject( Error( "Did not receive a JSON response" ) )
