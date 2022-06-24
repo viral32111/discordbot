@@ -1,26 +1,28 @@
-import { setTimeout } from "timers/promises"
-
+// Import from my scripts
 import { request } from "./discord/api.js"
 import { WebSocket } from "./websocket/client.js"
-import { OperationCode } from "./websocket/codes.js"
 
+// Try to import environment variables from the .env file
 try {
 	await import( "dotenv/config" )
 } catch ( error ) {
 	console.log( "Failed to import environment variables for development." )
 }
 
+// Do not continue if no bot token is present
 if ( !process.env[ "BOT_TOKEN" ] ) throw Error( "No bot token present in environment variables" )
+
+// v v v DEBUGGING v v v
 
 const gatewayConnectionData = await request( "gateway/bot" )
 console.log( gatewayConnectionData[ "url" ] )
 
-const wsClient = new WebSocket( "wss://echo.websocket.events" ) // gatewayConnectionData[ "url" ]
+const wsClient = new WebSocket( gatewayConnectionData[ "url" ] )
 
 wsClient.once( "open", async () => {
 	console.log( "Connection opened" )
 
-	await wsClient.sendFrame( OperationCode.Text, Buffer.from( "Hello World :)" ) )
+	//wsClient.sendFrame( OperationCode.Text, Buffer.from( "Hello World :)" ) )
 } )
 
 wsClient.once( "close", () => {
@@ -28,13 +30,13 @@ wsClient.once( "close", () => {
 } )
 
 wsClient.once( "error", ( error: Error ) => {
-	console.error( "Error: ", error.message )
+	console.error( "Error:", error.message )
 } )
 
 wsClient.on( "text", async ( message: string ) => {
-	console.log( "Received: ", message )
+	console.log( "Received:", message )
 
-	await setTimeout( 1000 )
+	//await setTimeout( 1000 )
 
-	await wsClient.sendFrame( OperationCode.Text, Buffer.from( "Thank you" ) )
+	//wsClient.sendFrame( OperationCode.Text, Buffer.from( "Thank you" ) )
 } )
