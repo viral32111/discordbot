@@ -6,7 +6,7 @@ import { URL } from "url"
 import { randomBytes, createHash } from "crypto"
 
 // Import from my scripts
-import { OperationCode, CloseCode } from "./codes.js"
+import { OperationCode, CloseCode } from "./types.js"
 import { APPLICATION_NAME, APPLICATION_VERSION, CONTACT_WEBSITE, CONTACT_EMAIL } from "../config.js"
 
 // This is a limited implementation of the WebSocket protocol.
@@ -88,6 +88,11 @@ export class WebSocket extends EventEmitter {
 			this.socket.end()
 		}
 
+	}
+
+	// Checks if the underlying socket is connected and we are upgraded to websocket
+	public isConnected(): boolean {
+		return ( this.socket.readyState === "open" && this.isUpgraded )
 	}
 
 	// Sends a specified type of websocket frame with a payload

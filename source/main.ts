@@ -1,5 +1,5 @@
 // Import from my scripts
-import { Gateway } from "./discord/gateway.js"
+import { Gateway } from "./discord/gateway/gateway.js"
 
 // Try to import environment variables from the .env file
 try {
@@ -12,9 +12,9 @@ try {
 if ( !process.env[ "BOT_TOKEN" ] ) throw Error( "No bot token present in environment variables" )
 
 // DEBUGGING
-
 const bot = await Gateway.create()
 
-bot.once( "ready", () => {
-	console.log( "I am ready!" )
+bot.once( "error", ( error: Error ) => {
+	console.error( "oh no", error.message )
+	process.exit( 1 )
 } )
