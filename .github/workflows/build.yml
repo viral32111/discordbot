@@ -15,8 +15,8 @@ on:
     - 'package-lock.json'
 
 jobs:
-  build-ubuntu:
-    name: Build on Ubuntu
+  build:
+    name: Ubuntu
     runs-on: ubuntu-latest
 
     steps:
