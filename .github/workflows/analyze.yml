@@ -9,10 +9,6 @@ on:
     - 'package-lock.json'
   pull_request:
     branches: [ main ]
-    paths:
-    - 'source/**'
-    - 'package.json'
-    - 'package-lock.json'
   schedule:
     - cron: '0 0 * * 0'
 
