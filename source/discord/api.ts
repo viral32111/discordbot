@@ -3,13 +3,13 @@ import { format } from "util";
 import { request as createHttpsRequest } from "https";
 
 // Import from my scripts
-import { APPLICATION_NAME, APPLICATION_VERSION, CONTACT_WEBSITE, CONTACT_EMAIL, DISCORD_API_URL } from "../config.js";
+import { APPLICATION_NAME, APPLICATION_VERSION, CONTACT_WEBSITE, CONTACT_EMAIL, DISCORD_API_URL, DISCORD_API_VERSION } from "../config.js";
 
 // Sends a request to the Discord API and returns a JSON object
 export function request( endpoint: string, method: string = "GET" ): Promise<any> {
 
 	// Create a HTTP request to the specified endpoint using the specified method
-	const request = createHttpsRequest( format( "https://%s/%s", DISCORD_API_URL, endpoint ), {
+	const request = createHttpsRequest( format( "https://%s/v%s/%s", DISCORD_API_URL, DISCORD_API_VERSION, endpoint ), {
 		method: method,
 		headers: {
 			"Accept": "application/json", // Expect a JSON response

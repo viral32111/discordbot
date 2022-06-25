@@ -19,7 +19,7 @@ const KEY_SUFFIX = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 // Class to encapsulate everything
 export class WebSocket extends EventEmitter {
 
-	// Full URL of the server
+	// Full URL to the remote server
 	private connectionUrl: URL
 
 	// The underlying secure connection
@@ -35,17 +35,17 @@ export class WebSocket extends EventEmitter {
 	private closeCode?: CloseCode
 	private closeReason?: string
 
-	// Instansiate to connect to a specified websocket URL
-	constructor( url: string ) {
+	// Instansiate to connect to a WebSocket server
+	constructor( url: URL ) {
 
-		// Initalise the base class
+		// Initialise the base class
 		super()
 
-		// Parse the server URL
-		this.connectionUrl = new URL( url )
+		// Do not continue if this is not a secure server (as we are only using TLS)
+		if ( url.protocol !== "wss:" ) throw Error( "Only compatible with wss:// URLs" )
 
-		// Do not continue if this is not a secure server (as we are only using TLS below)
-		if ( this.connectionUrl.protocol !== "wss:" ) throw Error( "Only compatible with wss:// URLs" )
+		// Update the class property
+		this.connectionUrl = url
 
 		// Connect to the server on the standard HTTPS port
 		this.socket = connect( {
@@ -54,10 +54,10 @@ export class WebSocket extends EventEmitter {
 			servername: this.connectionUrl.hostname // Use SNI
 		} )
 
-		// Register event handlers to methods on this class
-		this.socket.once( "secureConnect", this.onSecureConnect.bind( this ) )
-		this.socket.on( "data", this.onData.bind( this ) )
-		this.socket.on( "close", this.onClose.bind( this ) )
+		// Register event handlers for the underlying TLS socket to methods on this class
+		this.socket.once( "secureConnect", this.onSocketSecureConnect.bind( this ) )
+		this.socket.once( "close", this.onSocketClose.bind( this ) )
+		this.socket.on( "data", this.onSocketData.bind( this ) )
 
 		// Register event handlers to forward errors
 		this.socket.on( "timeout", () => this.emit( "error", Error( "Timed out attempting to connect" ) ) )
@@ -92,7 +92,7 @@ export class WebSocket extends EventEmitter {
 
 	// Sends a specified type of websocket frame with a payload
 	public sendFrame( operationCode: OperationCode, payload: Buffer ) {
-		
+
 		// Do not continue if the HTTP upgrade has not happened yet
 		if ( this.isUpgraded !== true ) return this.emit( "error", Error( "Connection must be open to send a frame" ) )
 
@@ -183,7 +183,7 @@ export class WebSocket extends EventEmitter {
 	}
 
 	// Event that runs when the underlying socket establishes a TLS connection to the remote server
-	private async onSecureConnect() {
+	private async onSocketSecureConnect() {
 
 		// Generate a random key, and hash it with the key suffix
 		const key = randomBytes( 16 ).toString( "base64" )
@@ -250,8 +250,16 @@ export class WebSocket extends EventEmitter {
 
 	}
 
+	// Event that runs when the underlying socket disconnects
+	private onSocketClose() {
+
+		// Run our close event using the close code and reason we requested or received
+		this.emit( "close", this.closeCode, this.closeReason )
+
+	}
+
 	// Event that runs when the underlying socket receives raw data
-	private onData( data: Buffer ) {
+	private onSocketData( data: Buffer ) {
 
 		// Run our upgrade event if the data starts with a HTTP message identifier and the upgrade has not happened yet
 		if ( data.includes( "HTTP/1.1" ) === true && this.isUpgraded === false ) return this.emit( "upgrade", data.toString() )
@@ -308,14 +316,6 @@ export class WebSocket extends EventEmitter {
 			data = data.subarray( byteOffset, data.length )
 
 		} while ( data.length > 0 )
-
-	}
-
-	// Event that runs when the underlying socket disconnects
-	private onClose() {
-
-		// Run our close event using the close code and reason we requested or received
-		this.emit( "close", this.closeCode, this.closeReason )
 
 	}
 

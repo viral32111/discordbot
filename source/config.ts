@@ -6,6 +6,7 @@ export const APPLICATION_VERSION = "0.5.0" // Should match package.json
 export const CONTACT_WEBSITE = "https://viral32111.com/contact"
 export const CONTACT_EMAIL = "contact@viral32111.com"
 
-// The base URL to the Discord API
+// The base URL to, and the version the Discord API (and Gateway) to use
 // https://discord.com/developers/docs/reference#api-versioning
-export const DISCORD_API_URL = "discord.com/api/v10"
+export const DISCORD_API_URL = "discord.com/api"
+export const DISCORD_API_VERSION = "10" // This is a string so the URLSearchParams constructor does not complain
