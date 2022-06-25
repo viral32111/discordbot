@@ -5,7 +5,10 @@
 	"main": "emit/main.js",
 	"type": "module",
 	"scripts": {
-		"start": "tsc && node ."
+		"start": "npx tsc && node .",
+		"clean": "rm -r emit",
+		"build": "rm -r emit && npx tsc --sourceMap false && docker build --pull --tag bot:latest .",
+		"docker": "docker run --name bot --interactive --tty --env-file .env --rm bot:latest"
 	},
 	"author": {
 		"name": "viral32111",

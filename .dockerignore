@@ -1,0 +1,25 @@
+# Node.js
+node_modules/
+package-lock.json
+
+# TypeScript
+tsconfig.json
+
+# Code
+source/
+
+# Git
+.git/
+.github/
+.gitignore
+
+# Visual Studio Code
+.vscode/
+
+# Secrets
+.env
+
+# Meta
+README.md
+LICENSE.txt
+SECURITY.md
