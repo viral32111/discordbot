@@ -9,7 +9,7 @@ import { APPLICATION_NAME, APPLICATION_VERSION, CONTACT_WEBSITE, CONTACT_EMAIL, 
 export function request( endpoint: string, method: string = "GET" ): Promise<any> {
 
 	// Create a HTTP request to the specified endpoint using the specified method
-	const request = createHttpsRequest( format( "https://%s/v%s/%s", DISCORD_API_URL, DISCORD_API_VERSION, endpoint ), {
+	const request = createHttpsRequest( format( "https://%s/v%d/%s", DISCORD_API_URL, DISCORD_API_VERSION, endpoint ), {
 		method: method,
 		headers: {
 			"Accept": "application/json", // Expect a JSON response

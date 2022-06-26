@@ -9,4 +9,4 @@ export const CONTACT_EMAIL = "contact@viral32111.com"
 // The base URL to, and the version the Discord API (and Gateway) to use
 // https://discord.com/developers/docs/reference#api-versioning
 export const DISCORD_API_URL = "discord.com/api"
-export const DISCORD_API_VERSION = "10" // This is a string so the URLSearchParams constructor does not complain
+export const DISCORD_API_VERSION = 10
