@@ -206,7 +206,7 @@ export class Gateway extends WebSocket {
 		} else if ( payload.op == OperationCode.HeartbeatAcknowledgement ) {
 			console.log( "Received heartbeat acknowledgement!" )
 			this.emit( "heartbeatAcknowledge", true )
-		
+
 		} else if ( payload.op == OperationCode.Heartbeat ) {
 			console.log( "Gateway requested a heartbeat" )
 			await this.sendHeartbeat()

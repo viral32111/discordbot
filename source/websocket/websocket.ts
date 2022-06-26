@@ -75,10 +75,8 @@ export class WebSocket extends EventEmitter {
 	// Disconnects the websocket with an optional code and reason
 	public close( code: CloseCode = CloseCode.Normal, reason?: string ) {
 
-		// TODO: Errors that happen outside of async loops and shit should just throw Error() instead of calling the error event
-
 		// Do not continue if the underlying socket has not established a connection yet
-		if ( !this.socket || this.socket.readyState !== "open" ) return this.emit( "error", Error( "Cannot close a connection that is not open" ) )
+		if ( !this.socket || this.socket.readyState !== "open" ) throw Error( "Cannot close a connection that is not open" )
 
 		// Has the HTTP upgrade happened?
 		if ( this.isUpgraded === true ) {
@@ -111,10 +109,10 @@ export class WebSocket extends EventEmitter {
 	public sendFrame( operationCode: OperationCode, payload: Buffer ) {
 
 		// Do not continue if the underlying socket has not established a connection yet
-		if ( !this.socket || this.socket.readyState !== "open" ) return this.emit( "error", Error( "Cannot send a frame on a connection that is not open" ) )
+		if ( !this.socket || this.socket.readyState !== "open" ) throw Error( "Cannot send a frame on a connection that is not open" )
 
 		// Do not continue if the HTTP upgrade has not happened yet
-		if ( this.isUpgraded !== true ) return this.emit( "error", Error( "Connection must be open to send a frame" ) )
+		if ( this.isUpgraded !== true ) throw Error( "Connection must be open to send a frame" )
 
 		// Holds the current byte position within the payload
 		let byteOffset = 0
