@@ -1,6 +1,6 @@
 {
 	"name": "discordbot",
-	"version": "0.5.0",
+	"version": "5.0.0",
 	"description": "A bot for Discord written in Node.js without any third-party libraries.",
 	"main": "emit/main.js",
 	"type": "module",
