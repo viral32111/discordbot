@@ -23,7 +23,7 @@ export class WebSocket extends EventEmitter {
 	private connectionUrl: URL
 
 	// The underlying secure connection
-	private socket: TLSSocket
+	private socket?: TLSSocket
 
 	// Becomes true once the HTTP upgrade has completed
 	private isUpgraded = false
@@ -32,7 +32,7 @@ export class WebSocket extends EventEmitter {
 	private incompleteData?: Buffer
 
 	// Properties to be used in, or from, the closing handshake
-	private closeCode?: CloseCode
+	private closeCode?: CloseCode | number
 	private closeReason?: string
 
 	// Instansiate to connect to a WebSocket server
@@ -46,6 +46,13 @@ export class WebSocket extends EventEmitter {
 
 		// Update the class property
 		this.connectionUrl = url
+
+		// Start the connection
+		this.open()
+
+	}
+
+	public open() {
 
 		// Connect to the server on the standard HTTPS port
 		this.socket = connect( {
@@ -67,6 +74,11 @@ export class WebSocket extends EventEmitter {
 
 	// Disconnects the websocket with an optional code and reason
 	public close( code: CloseCode = CloseCode.Normal, reason?: string ) {
+
+		// TODO: Errors that happen outside of async loops and shit should just throw Error() instead of calling the error event
+
+		// Do not continue if the underlying socket has not established a connection yet
+		if ( !this.socket || this.socket.readyState !== "open" ) return this.emit( "error", Error( "Cannot close a connection that is not open" ) )
 
 		// Has the HTTP upgrade happened?
 		if ( this.isUpgraded === true ) {
@@ -92,11 +104,14 @@ export class WebSocket extends EventEmitter {
 
 	// Checks if the underlying socket is connected and we are upgraded to websocket
 	public isConnected(): boolean {
-		return ( this.socket.readyState === "open" && this.isUpgraded )
+		return ( this.socket !== undefined && this.socket.readyState === "open" && this.isUpgraded )
 	}
 
 	// Sends a specified type of websocket frame with a payload
 	public sendFrame( operationCode: OperationCode, payload: Buffer ) {
+
+		// Do not continue if the underlying socket has not established a connection yet
+		if ( !this.socket || this.socket.readyState !== "open" ) return this.emit( "error", Error( "Cannot send a frame on a connection that is not open" ) )
 
 		// Do not continue if the HTTP upgrade has not happened yet
 		if ( this.isUpgraded !== true ) return this.emit( "error", Error( "Connection must be open to send a frame" ) )
@@ -139,6 +154,10 @@ export class WebSocket extends EventEmitter {
 
 	// Runs our events based on type of frame received
 	private handleFrame( operationCode: OperationCode, payload: Buffer ) {
+
+		// Do not continue if the underlying socket has not established a connection yet
+		// NOTE: This is just to stop TypeScript complaining, obviously by the time this event is called the socket would be open!
+		if ( !this.socket || this.socket.readyState !== "open" ) return this.emit( "error", Error( "Cannot handle a frame on a connection that is not open" ) )
 
 		// Run the text event for plaintext messages
 		if ( operationCode === OperationCode.Text ) {
@@ -187,8 +206,12 @@ export class WebSocket extends EventEmitter {
 
 	}
 
-	// Event that runs when the underlying socket establishes a TLS connection to the remote server
+	// Event that runs when the underlying socket has established a TLS connection to the remote server
 	private async onSocketSecureConnect() {
+
+		// Do not continue if the underlying socket has not established a connection yet
+		// NOTE: This is just to stop TypeScript complaining, obviously by the time this event is called the socket would be open!
+		if ( !this.socket || this.socket.readyState !== "open" ) return this.emit( "error", Error( "Cannot continue on a connection that is not open" ) )
 
 		// Generate a random key, and hash it with the key suffix
 		const key = randomBytes( 16 ).toString( "base64" )
@@ -255,7 +278,7 @@ export class WebSocket extends EventEmitter {
 
 	}
 
-	// Event that runs when the underlying socket disconnects
+	// Event that runs when the underlying socket has disconnected
 	private onSocketClose() {
 
 		// Run our close event using the close code and reason we requested or received
@@ -263,7 +286,7 @@ export class WebSocket extends EventEmitter {
 
 	}
 
-	// Event that runs when the underlying socket receives raw data
+	// Event that runs when the underlying socket has received a packet
 	private onSocketData( data: Buffer ) {
 
 		// Run our upgrade event if the data starts with a HTTP message identifier and the upgrade has not happened yet

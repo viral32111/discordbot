@@ -16,14 +16,39 @@ export interface Payload {
 // https://discord.com/developers/docs/topics/opcodes-and-status-codes#gateway-gateway-opcodes
 export enum OperationCode {
 	Dispatch = 0,
-	Heartbeat = 1,
-	Identify = 2,
-	PresenceUpdate = 3,
-	VoiceStateUpdate = 4,
-	Resume = 6,
+	Heartbeat = 1, // Command (sent by client)
+	Identify = 2, // Command (sent by client)
+	PresenceUpdate = 3, // Command (sent by client)
+	VoiceStateUpdate = 4, // Command (sent by client)
+	Resume = 6, // Command (sent by client)
 	Reconnect = 7,
-	RequestGuildMembers = 8,
+	RequestGuildMembers = 8, // Command (sent by client)
 	InvalidSession = 9,
 	Hello = 10,
 	HeartbeatAcknowledgement = 11
+}
+
+// https://discord.com/developers/docs/topics/gateway#update-presence-status-types
+export enum StatusType {
+	Online = "online",
+	Idle = "idle",
+	DoNotDisturb = "dnd",
+	Invisible = "invisible",
+	Offline = "offline"
+}
+
+// https://discord.com/developers/docs/topics/gateway#activity-object-activity-types
+export enum ActivityType {
+	Playing = 0, // Game
+	Streaming = 1,
+	Listening = 2,
+	Watching = 3,
+	Custom = 4, // Cannot be used by bots
+	Competing = 5
+}
+
+// https://discord.com/developers/docs/topics/gateway#commands-and-events-gateway-events
+// This is ONLY dispatched events, it does NOT include server-to-client events already defined in OperationCode
+export enum DispatchEvent {
+	Ready = "READY"
 }

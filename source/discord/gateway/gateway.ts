@@ -6,17 +6,29 @@ import { once } from "events"
 // Import from my scripts
 import { request } from "../api.js"
 import { WebSocket } from "../../websocket/websocket.js"
-import { DISCORD_API_VERSION } from "../../config.js"
+import { APPLICATION_NAME, DISCORD_API_VERSION } from "../../config.js"
 import { OperationCode as WSOperationCode, CloseCode } from "../../websocket/types.js"
-import { Get, Payload, OperationCode } from "./types.js"
+import { Get, Payload, OperationCode, ActivityType, StatusType, DispatchEvent } from "./types.js"
 
 // An implementation of the Discord Gateway.
 // https://discord.com/developers/docs/topics/gateway
+
+// The non-1000 WebSocket close code to use for resuming after not receiving a heartbeat acknowledgement
+const RECONNECT_CLOSE_CODE = 4000
+
+// Should compression be used? No it should not
+const USE_COMPRESSION = false
 
 export class Gateway extends WebSocket {
 
 	// Holds the current payload sequence number, used when sending heartbeats
 	private sequenceNumber: number | null = null
+
+	// Background periodic heartbeating
+	private heartbeatTask?: Promise<void>
+
+	// Session identifier from the Ready event
+	private sessionIdentifier?: string
 
 	// Instansiate to connect to a provided gateway server
 	constructor( baseUrl: string ) {
@@ -26,8 +38,11 @@ export class Gateway extends WebSocket {
 		const connectionUrl = new URL( baseUrl )
 		connectionUrl.search = new URLSearchParams( {
 			"encoding": "json",
-			"v": DISCORD_API_VERSION
+			"compress": USE_COMPRESSION.toString(),
+			"v": DISCORD_API_VERSION.toString()
 		} ).toString()
+
+		console.log( connectionUrl.toString() )
 
 		// Initialise the base class with the URL above
 		super( connectionUrl )
@@ -69,8 +84,16 @@ export class Gateway extends WebSocket {
 
 		console.log( "Heartbeat acknowledgement:", isAcknowledged )
 
-		// TODO: Disconnect and retry after a short time
-		if ( !isAcknowledged ) this.emit( "error", Error( "Never received heartbeat acknowledgement" ) )
+		// If we never receive an acknowledgement, then the connection may be zombied.
+		// We should disconnect with a non-1000 close code, reconnect and attempt to send Resume (Opcode 6)
+
+		if ( !isAcknowledged ) {
+
+			this.close( RECONNECT_CLOSE_CODE )
+
+
+
+		}
 	}
 
 	private async startHeartbeating( interval: number ) {
@@ -93,7 +116,7 @@ export class Gateway extends WebSocket {
 		}
 	}
 
-	// Event that runs when the underlying websocket connection opens
+	// Event that runs when the underlying websocket connection has opened
 	private onWebSocketOpen() {
 		
 		// DEBUGGING
@@ -101,15 +124,42 @@ export class Gateway extends WebSocket {
 
 	}
 
-	// Event that runs when the underlying websocket connection closes
-	private onWebSocketClose( code: CloseCode, reason?: string ) {
+	// Event that runs when the underlying websocket connection has closed
+	private onWebSocketClose( code: CloseCode | number, reason?: string ) {
 	
 		// DEBUGGING
 		console.log( "Closed:", code, reason )
 
+		// TODO: Stop heartbeating
+		// this.heartbeatTask...
+
+		if ( code == RECONNECT_CLOSE_CODE ) {
+
+			// Wait a bit...
+			// await setTimeout( 1000 to 5000 )...
+
+			// TODO: Reconnect
+			console.log( "Reconnecting" )
+			// this.open()
+
+			// TODO: Wait for connection to open...
+			// Maybe do this in onWebSocketText() ???
+
+			if ( this.sessionIdentifier ) {
+
+				// TODO: Send Resume
+
+			} else {
+
+				console.log( "Reconnected, but cannot Resume as I do not have a session identifier" )
+
+			}
+
+		}
+
 	}
 
-	// Event that runs when the underlying websocket receives a plaintext message
+	// Event that runs when the underlying websocket has received a plaintext message
 	private async onWebSocketText( message: string ) {
 
 		// Parse the message as a standard gateway payload
@@ -125,7 +175,33 @@ export class Gateway extends WebSocket {
 		console.log( "Event Name:", payload.t )
 
 		if ( payload.op === OperationCode.Hello ) {
-			this.startHeartbeating( payload.d[ "heartbeat_interval" ] ) // const heartbeatPromise =
+			if ( this.heartbeatTask ) return this.emit( "error", Error( "Already heartbeating?" ) )
+
+			// Start heartbeating in the background with the interval given to us
+			this.heartbeatTask = this.startHeartbeating( payload.d[ "heartbeat_interval" ] )
+
+			// Identify
+			console.log( "identifying..." )
+			this.send( OperationCode.Identify, {
+				"token": process.env[ "BOT_TOKEN" ],
+				"intents": 32767, // Everything
+				"compress": USE_COMPRESSION,
+				"large_threshold": 250, // This is the max
+				"presence": {
+					"afk": false,
+					"since": null,
+					"status": StatusType.Online,
+					"activities": [ {
+						"name": "Hello World!",
+						"type": ActivityType.Playing
+					} ]
+				},
+				"properties": {
+					"os": process.platform,
+					"browser": APPLICATION_NAME,
+					"device": APPLICATION_NAME,
+				}
+			} )
 
 		} else if ( payload.op == OperationCode.HeartbeatAcknowledgement ) {
 			console.log( "Received heartbeat acknowledgement!" )
@@ -134,6 +210,22 @@ export class Gateway extends WebSocket {
 		} else if ( payload.op == OperationCode.Heartbeat ) {
 			console.log( "Gateway requested a heartbeat" )
 			await this.sendHeartbeat()
+
+		} else if ( payload.op == OperationCode.Dispatch ) {
+
+			if ( payload.t === DispatchEvent.Ready ) {
+
+				console.log( "we're ready!!" )
+
+				this.sessionIdentifier = payload.d[ "session_id" ]
+
+				// .v is ALWAYS 6????
+
+				// .user
+				// .guilds
+				// .application
+
+			}
 
 		} else {
 			this.emit( "error", Error( "Unknown gateway operation code" ) )
