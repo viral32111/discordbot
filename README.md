@@ -4,6 +4,35 @@ This is the official bot for my community Discord server.
 
 **NOTE**: This repository is very barebones at present as I am in the process of slowly rewriting my *"Discord Bot from Scratch"* (a bot made in Node.js without any third-party libraries) from my personal Git server and publishing that here.
 
+## Running
+
+The official bot used in my Discord server is **not** public, so you need to create your own [Discord Bot Application](https://discord.com/developers/docs/getting-started#creating-an-app).
+
+Also do note that since this bot is tailored towards my community, running your own instance of it may prove troublesome.
+
+### Development
+
+Clone this repository, open the directory in [Visual Studio Code](https://code.visualstudio.com/), populate the environment variables in [the .env file](.env) with appropriate values, then either **Run & Debug** using the provided [launch configuration](.vscode/launch.json), or open the **Integrated Terminal** and run [`npm start`](package.json#L8).
+
+### Production
+
+Docker images are built and published to this repository's [container registry](https://github.com/viral32111/discordbot/pkgs/container/discordbot) every time a commit is pushed.
+
+To download and start a container in a single command, run the following.
+
+```
+docker run \
+	--name discordbot \
+	--volume discordbot:/var/lib/bot \
+	--env-file ./my-environment-variables \
+	--interactive --tty \
+	ghcr.io/viral32111/discordbot:latest
+```
+
+Persistent data is stored in `/var/lib/bot`, so this directory will need to be mounted in a volume, or as a bind mount.
+
+See the [environment variables file](.env) for a list of environment variables that are required. These can be passed through either the `--env NAME=VALUE` or `--env-file FILE` flags.
+
 ## History
 
 Over the years, this bot has gone through countless language changes, complete rewrites, and branding changes. I have done my best to collate a small list of them below, but do note that the dates are rough estimates.
