@@ -10,19 +10,33 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  REGISTRY_NAME: ghcr.io
+
 jobs:
   build:
     name: Ubuntu
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-    - name: Setup Repository
+    - name: Clone Repository
       uses: actions/checkout@v3
 
     - name: Setup Node
       uses: actions/setup-node@v3
       with:
         node-version: 18
+
+    - name: Login to Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY_NAME }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install Dependencies
       run: npm clean-install
@@ -35,3 +49,12 @@ jobs:
       with:
         name: DiscordBot
         path: emit/
+
+    - name: Build & Push Docker Image
+      uses: docker/build-push-action@v3
+      with:
+        file: ./Dockerfile
+        context: ./emit/
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ env.REGISTRY_NAME }}/${{ github.repository }}:latest
+        

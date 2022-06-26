@@ -6,9 +6,9 @@
 	"type": "module",
 	"scripts": {
 		"start": "npx tsc && node .",
-		"clean": "rm -r emit",
-		"build": "rm -r emit && npx tsc --sourceMap false && docker build --pull --tag bot:latest .",
-		"docker": "docker run --name bot --interactive --tty --env-file .env --rm bot:latest"
+		"clean": "rm -r ./emit",
+		"build": "rm -r ./emit && npx tsc --sourceMap false && docker build --pull --file Dockerfile --tag ghcr.io/viral32111/discordbot:latest ./emit",
+		"docker": "docker run --name bot --interactive --tty --env-file .env --rm ghcr.io/viral32111/discordbot:latest"
 	},
 	"author": {
 		"name": "viral32111",
