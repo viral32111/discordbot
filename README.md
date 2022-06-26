@@ -48,18 +48,19 @@ This was the original bot back when the community was branded as *Conspiracy Ser
 
 * **2016**: [RedBot](https://github.com/Cog-Creators/Red-DiscordBot) with custom configurations (a temporary bot until I started coding my own).
 * **2016/2017**: Started with C# on the .NET Framework using [Discord.NET](https://github.com/discord-net/Discord.Net).
-* **2017**: Moved to Python using [discord.py](https://github.com/Rapptz/discord.py), as I did not like [Discord.NET](https://github.com/discord-net/Discord.Net)'s command-oriented approach to everything.
-* **2017-2019**: Stayed on Python for a while, but went through about half a dozen major rewrites.
+* **2017** (*`2.0.0`?*): Moved to Python using [discord.py](https://github.com/Rapptz/discord.py), as I did not like [Discord.NET](https://github.com/discord-net/Discord.Net)'s command-oriented approach to everything.
+* **2017-2019** (*`2.0.0`?*): Stayed on Python for a while, but went through about half a dozen major rewrites.
 * **2019/2020**: Tried out Node.js using [discord.js](https://discord.js.org), but I did not like it so this was quickly abandoned.
+* **2021** (`3.0.0`): Continued to use Python, also [published a release](https://github.com/viral32111/conspiracy-ai/releases/tag/3.0.0).
 
 ### Suimin
 
 This is the current bot for the community, which started when the community was rebranded to *viral32111's community*.
 
-* **2020**: Continued to use the latest version of Conspiracy AI's code in Python with [discord.py](https://github.com/Rapptz/discord.py), with a few minor changes.
-* **2021**: [discord.py got deprecated](https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1), so I tried out Node.js again, but this time without [discord.js](https://discord.js.org) or any third-party libraries, this went great but was never finished and thus never published.
+* **June 2021**: Continued to use the latest version of Conspiracy AI's code in Python with [discord.py](https://github.com/Rapptz/discord.py), with a few minor changes.
+* **2021** (*`4.0.0`?*): [discord.py got deprecated](https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1), so I tried out Node.js again, but this time without [discord.js](https://discord.js.org) or any third-party libraries, this went great but was never finished and thus never published.
 * **2021**: Tried making a low-level bot in C, but I ended up abandoning it when it came to coding a JSON parser.
-* **2022**: Went back to the no libraries bot using Node.js as it was the most successful, moved it over to TypeScript, and continued to use it.
+* **2022** (`5.0.0`): Went back to the no libraries bot using Node.js as it was the most successful, moved it over to TypeScript, and continued to use it.
 
 ## License
 
