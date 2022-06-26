@@ -12,13 +12,16 @@ Also do note that since this bot is tailored towards my community, running your 
 
 ### Development
 
-Clone this repository, open the directory in [Visual Studio Code](https://code.visualstudio.com/), populate the environment variables in [the .env file](.env) with appropriate values, then either **Run & Debug** using the provided [launch configuration](.vscode/launch.json), or open the **Integrated Terminal** and run [`npm start`](package.json#L8).
+1. Clone this repository (`git clone https://github.com/viral32111/discordbot.git`).
+2. Open the directory in [Visual Studio Code](https://code.visualstudio.com/).
+3. Populate the environment variables in [the .env file](.env) with appropriate values.
+4. Either **Run & Debug** using the provided [launch configuration](.vscode/launch.json), or open the **Integrated Terminal** and run [`npm start`](package.json#L8).
 
 ### Production
 
 Docker images are built and published to this repository's [container registry](https://github.com/viral32111/discordbot/pkgs/container/discordbot) every time a commit is pushed.
 
-To download and start a container in a single command, run the following.
+To download and start a container in a single command, run the following:
 
 ```
 docker run \
