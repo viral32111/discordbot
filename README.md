@@ -48,7 +48,7 @@ This was the original bot back when the community was branded as *Conspiracy Ser
 
 * **2016**: [RedBot](https://github.com/Cog-Creators/Red-DiscordBot) with custom configurations (a temporary bot until I started coding my own).
 * **2016/2017**: Started with C# on the .NET Framework using [Discord.NET](https://github.com/discord-net/Discord.Net).
-* **2017** (*`2.0.0`?*): Moved to Python using [discord.py](https://github.com/Rapptz/discord.py), as I did not like [Discord.NET](https://github.com/discord-net/Discord.Net)'s command-oriented approach to everything.
+* **2017** (*`1.0.0`?*): Moved to Python using [discord.py](https://github.com/Rapptz/discord.py), as I did not like [Discord.NET](https://github.com/discord-net/Discord.Net)'s command-oriented approach to everything.
 * **2017-2019** (*`2.0.0`?*): Stayed on Python for a while, but went through about half a dozen major rewrites.
 * **2019/2020**: Tried out Node.js using [discord.js](https://discord.js.org), but I did not like it so this was quickly abandoned.
 * **2021** (`3.0.0`): Continued to use Python, also [published a release](https://github.com/viral32111/conspiracy-ai/releases/tag/3.0.0).
