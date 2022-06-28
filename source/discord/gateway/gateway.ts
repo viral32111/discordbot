@@ -105,17 +105,26 @@ export class Gateway extends WebSocket {
 		while ( this.isConnected() ) {
 			console.log( "Waiting to send heartbeat..." )
 
-			if ( sentInitialBeat === false ) {
-				await setTimeout( interval * Math.random(), undefined, {
-					signal: this.heartbeatController.signal
-				} )
+			try {
+				if ( sentInitialBeat === false ) {
+					await setTimeout( interval * Math.random(), undefined, {
+						signal: this.heartbeatController.signal
+					} )
+	
+					sentInitialBeat = true
+				} else {
+					await setTimeout( interval, undefined, {
+						signal: this.heartbeatController.signal
+					} )
+				}
+			} catch ( exception ) {
+				if ( exception instanceof Error ) {
+					console.error( exception.message )
+				}
 
-				sentInitialBeat = true
-			} else {
-				await setTimeout( interval, undefined, {
-					signal: this.heartbeatController.signal
-				} )
+				break
 			}
+			
 
 			if ( this.heartbeatController.signal.aborted ) break
 
@@ -135,7 +144,7 @@ export class Gateway extends WebSocket {
 
 	// Event that runs when the underlying websocket connection has closed
 	private async onWebSocketClose( code: CloseCode | number, reason?: string ) {
-	
+
 		// DEBUGGING
 		console.log( "Closed:", code, reason )
 
@@ -148,6 +157,10 @@ export class Gateway extends WebSocket {
 		await this.heartbeatTask
 		console.log( "Done~" )
 
+		// Cleanup so we are ready for another run
+		this.heartbeatTask = undefined
+		this.heartbeatController = new AbortController()
+
 		if ( code == RECONNECT_CLOSE_CODE ) {
 			console.log( "We need to reconnect!" )
 
@@ -159,6 +172,13 @@ export class Gateway extends WebSocket {
 			this.open()
 
 			// Continues in onWebSocketText...
+		} else {
+
+			// Cleanup - this should not be needed as the process will just end if there is no automatic reconnect
+			this.sessionIdentifier = undefined
+			this.sessionIdentifier = undefined
+			this.sequenceNumber = null
+
 		}
 
 	}
@@ -219,8 +239,8 @@ export class Gateway extends WebSocket {
 			}
 
 		} else if ( payload.op === OperationCode.HeartbeatAcknowledgement ) {
-			console.log( "Received heartbeat acknowledgement!" )
-			this.emit( "heartbeatAcknowledge", true )
+			//console.log( "Received heartbeat acknowledgement!" )
+			//this.emit( "heartbeatAcknowledge", true )
 
 		} else if ( payload.op === OperationCode.Heartbeat ) {
 			console.log( "Gateway requested a heartbeat" )
@@ -244,8 +264,6 @@ export class Gateway extends WebSocket {
 			if ( payload.d === true ) {
 				this.close( RECONNECT_CLOSE_CODE, "Session reported as invalid (attempt resume on reconnect)" )
 			} else {
-				this.sessionIdentifier = undefined // This should not be needed as the process will just end if there is no automatic reconnect
-				
 				this.close( CloseCode.GoingAway, "Session reported as invalid" )
 			}
 

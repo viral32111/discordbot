@@ -279,8 +279,16 @@ export class WebSocket extends EventEmitter {
 	// Event that runs when the underlying socket has disconnected
 	private onSocketClose() {
 
+		// Store the close code and reason
+		const closeCode = this.closeCode, closeReason = this.closeReason
+
+		// Cleanup after ourselves incase this instance is re-opened
+		this.closeCode = undefined
+		this.closeReason = undefined
+		this.isUpgraded = false
+
 		// Run our close event using the close code and reason we requested or received
-		this.emit( "close", this.closeCode, this.closeReason )
+		this.emit( "close", closeCode, closeReason )
 
 	}
 
