@@ -151,7 +151,7 @@ export class Gateway extends WebSocket {
 		if ( code == RECONNECT_CLOSE_CODE ) {
 			console.log( "We need to reconnect!" )
 
-			const duration = 1000 // Math.floor( Math.random() * 4000 ) + 1000 // Between 1 and 5 seconds
+			const duration = Math.floor( Math.random() * 4000 ) + 1000 // Between 1 and 5 seconds
 			console.log( "Waiting", duration, "ms..." )
 			await setTimeout( duration )
 
@@ -185,7 +185,7 @@ export class Gateway extends WebSocket {
 			this.heartbeatTask = this.startHeartbeating( payload.d[ "heartbeat_interval" ] )
 
 			// If we have a session identifier, then we should try to RESUME instead of IDENTIFY
-			if ( this.sessionIdentifier ) {
+			if ( this.sessionIdentifier !== undefined ) {
 				console.log( "Resuming with session identifier:", this.sessionIdentifier, "and sequence number:", this.sequenceNumber )
 				this.send( OperationCode.Resume, {
 					"token": process.env[ "BOT_TOKEN" ],
@@ -228,12 +228,28 @@ export class Gateway extends WebSocket {
 
 		} else if ( payload.op === OperationCode.Reconnect ) {
 			console.log( "We need to reconnect!" )
-			// TODO: this.close( RECONNECT_CLOSE_CODE, "Client reconnect requested" )
-			// TODO: Let resume happen
+			
+			if ( this.sessionIdentifier !== undefined ) {
+				this.close( RECONNECT_CLOSE_CODE, "Client reconnect requested (attempt resume on reconnect)" )
+			} else {
+				this.close( CloseCode.GoingAway, "Client reconnect requested" )
+			}
+
+			// Continues in onWebSocketClose...
 		
 		} else if ( payload.op === OperationCode.InvalidSession ) {
-			console.log( "our session is invalid? can resume:", payload.d )
-			// TODO: this.close( CloseCode.GoingAway, "Session reported as invalid" )
+			console.log( "Our session is invalid? Can resume:", payload.d )
+
+			// Can we resume?...
+			if ( payload.d === true ) {
+				this.close( RECONNECT_CLOSE_CODE, "Session reported as invalid (attempt resume on reconnect)" )
+			} else {
+				this.sessionIdentifier = undefined // This should not be needed as the process will just end if there is no automatic reconnect
+				
+				this.close( CloseCode.GoingAway, "Session reported as invalid" )
+			}
+
+			// Continues in onWebSocketClose...
 
 		} else if ( payload.op === OperationCode.Dispatch ) {
 
@@ -248,6 +264,9 @@ export class Gateway extends WebSocket {
 				// .user
 				// .guilds
 				// .application
+
+			} else if ( payload.t === DispatchEvent.Resumed ) {
+				console.log( "We have resumed!" )
 
 			}
 

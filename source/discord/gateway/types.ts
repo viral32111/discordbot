@@ -50,5 +50,6 @@ export enum ActivityType {
 // https://discord.com/developers/docs/topics/gateway#commands-and-events-gateway-events
 // This is ONLY dispatched events, it does NOT include server-to-client events already defined in OperationCode
 export enum DispatchEvent {
-	Ready = "READY"
+	Ready = "READY",
+	Resumed = "RESUMED"
 }
