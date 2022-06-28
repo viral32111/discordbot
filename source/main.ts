@@ -46,10 +46,19 @@ bot.once( "error", ( error: Error ) => {
 	console.error( error.message )
 
 	// Gracefully close the connection
-	bot.close( CloseCode.Normal, "Internal error occured" )
+	bot.close( CloseCode.Normal, "Internal error" )
 
-	// This should not be needed as once the bot disconnects the process ends
-	// process.exit( 1 )
 } )
 
-// TODO: Handle keyboard interrupt & signals (SIGTERM, SIGINT, etc...) for clean exit
+// Called whenever a keyboard interrupt/exit signal happens
+function onRequestExit() {
+
+	// Display a message and gracefully close the connection
+	console.log( "Closing..." )
+	bot.close( CloseCode.Normal, "Application exit" )
+
+}
+
+// Call the above function for these exit signals
+process.once( "SIGTERM", onRequestExit ) // Docker
+process.once( "SIGINT", onRequestExit ) // Windows & Linux Terminals
