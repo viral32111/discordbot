@@ -4,6 +4,8 @@ This is the official bot for my community Discord server.
 
 **NOTE**: This repository is very barebones at present as I am in the process of slowly rewriting my *"Discord Bot from Scratch"* (a bot made in Node.js without any third-party libraries) from my personal Git server and publishing that here.
 
+This contains my custom implementation of [RFC 6455: The WebSocket Protocol](https://www.rfc-editor.org/rfc/rfc6455.html) in the [`websocket`](source/websocket/) directory, as Node.js does not have a native client.
+
 ## Running
 
 The official bot used in my Discord server is **not** public, so you need to create your own [Discord Bot Application](https://discord.com/developers/docs/getting-started#creating-an-app).
