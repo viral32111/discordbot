@@ -14,7 +14,9 @@ if ( !process.env[ "BOT_TOKEN" ] ) throw Error( "No bot token present in environ
 // DEBUGGING
 const bot = await Gateway.create()
 
-bot.once( "error", ( error: Error ) => {
+bot.on( "error", ( error: Error ) => {
 	console.error( "oh no", error.message )
+	// TODO: Graceful disconnect
+	// this.close( CloseCode.Normal, "Internal error occured" )
 	process.exit( 1 )
 } )

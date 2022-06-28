@@ -89,7 +89,7 @@ export class Gateway extends WebSocket {
 
 		if ( !isAcknowledged ) {
 
-			this.close( RECONNECT_CLOSE_CODE )
+			this.close( RECONNECT_CLOSE_CODE, "Never received heartbeat acknowledgement" )
 
 
 
@@ -203,15 +203,24 @@ export class Gateway extends WebSocket {
 				}
 			} )
 
-		} else if ( payload.op == OperationCode.HeartbeatAcknowledgement ) {
+		} else if ( payload.op === OperationCode.HeartbeatAcknowledgement ) {
 			console.log( "Received heartbeat acknowledgement!" )
 			this.emit( "heartbeatAcknowledge", true )
 
-		} else if ( payload.op == OperationCode.Heartbeat ) {
+		} else if ( payload.op === OperationCode.Heartbeat ) {
 			console.log( "Gateway requested a heartbeat" )
 			await this.sendHeartbeat()
 
-		} else if ( payload.op == OperationCode.Dispatch ) {
+		} else if ( payload.op === OperationCode.Reconnect ) {
+			console.log( "We need to reconnect!" )
+			// TODO: this.close( RECONNECT_CLOSE_CODE, "Client reconnect requested" )
+			// TODO: Let resume happen
+		
+		} else if ( payload.op === OperationCode.InvalidSession ) {
+			console.log( "our session is invalid? can resume:", payload.d )
+			// TODO: this.close( CloseCode.GoingAway, "Session reported as invalid" )
+
+		} else if ( payload.op === OperationCode.Dispatch ) {
 
 			if ( payload.t === DispatchEvent.Ready ) {
 
