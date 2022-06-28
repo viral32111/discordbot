@@ -20,9 +20,12 @@ export function request( endpoint: string, method: string = "GET" ): Promise<any
 
 	// Return a promise that resolves when a valid response is received
 	return new Promise( ( resolve, reject ) => {
-		
+
 		// When a response is received...
 		request.once( "response", ( response ) => {
+
+			// Do not continue if the request was unsuccessful
+			if ( response.statusCode === undefined || ( response.statusCode < 200 || response.statusCode > 299 ) ) return reject( Error( "Received non-success HTTP status code" ) )
 
 			// Set the encoding so text is provided in the data event
 			response.setEncoding( "utf8" )

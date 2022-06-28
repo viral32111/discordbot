@@ -32,9 +32,15 @@ if ( !process.env[ "BOT_TOKEN" ] ) throw Error( "No bot token present in environ
 
 // Create a new Discord gateway instance
 const bot = await Gateway.create()
+console.log( "Connecting..." )
 
-// Whenever an error occurs...
-bot.on( "error", ( error: Error ) => {
+// When the websocket connection has opened
+bot.once( "open", () => {
+	console.log( "Open!" )
+} )
+
+// When an error occured
+bot.once( "error", ( error: Error ) => {
 
 	// Display the error message
 	console.error( error.message )
@@ -45,3 +51,5 @@ bot.on( "error", ( error: Error ) => {
 	// This should not be needed as once the bot disconnects the process ends
 	// process.exit( 1 )
 } )
+
+// TODO: Handle keyboard interrupt & signals (SIGTERM, SIGINT, etc...) for clean exit
