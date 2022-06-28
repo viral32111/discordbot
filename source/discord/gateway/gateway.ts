@@ -24,8 +24,9 @@ export class Gateway extends WebSocket {
 	// Holds the current payload sequence number, used when sending heartbeats
 	private sequenceNumber: number | null = null
 
-	// Background periodic heartbeating
+	// For periodic heartbeating in the background
 	private heartbeatTask?: Promise<void>
+	private heartbeatController = new AbortController()
 
 	// Session identifier from the Ready event
 	private sessionIdentifier?: string
@@ -79,7 +80,7 @@ export class Gateway extends WebSocket {
 
 		const isAcknowledged = await Promise.race( [
 			once( this, "heartbeatAcknowledge" ),
-			setTimeout( 5000, false )
+			setTimeout( 5000, false ) // { signal: this.heartbeatController.signal }
 		] )
 
 		console.log( "Heartbeat acknowledgement:", isAcknowledged )
@@ -89,10 +90,10 @@ export class Gateway extends WebSocket {
 
 		if ( !isAcknowledged ) {
 
+			console.log( "Never received heartbeat acknowledgement, connection might be zombied!" )
 			this.close( RECONNECT_CLOSE_CODE, "Never received heartbeat acknowledgement" )
 
-
-
+			// Continues in onWebSocketClose...
 		}
 	}
 
@@ -102,18 +103,26 @@ export class Gateway extends WebSocket {
 		let sentInitialBeat = false
 
 		while ( this.isConnected() ) {
+			console.log( "Waiting to send heartbeat..." )
+
 			if ( sentInitialBeat === false ) {
-				const random = interval * Math.random()
-				console.log( "Waiting", random, "ms to send initial heartbeat..." )
-				await setTimeout( random )
+				await setTimeout( interval * Math.random(), undefined, {
+					signal: this.heartbeatController.signal
+				} )
+
 				sentInitialBeat = true
 			} else {
-				console.log( "Waiting", interval, "ms to send heartbeat..." )
-				await setTimeout( interval )
+				await setTimeout( interval, undefined, {
+					signal: this.heartbeatController.signal
+				} )
 			}
+
+			if ( this.heartbeatController.signal.aborted ) break
 
 			await this.sendHeartbeat()
 		}
+
+		console.log( "Finished sending heartbeats" )
 	}
 
 	// Event that runs when the underlying websocket connection has opened
@@ -125,36 +134,31 @@ export class Gateway extends WebSocket {
 	}
 
 	// Event that runs when the underlying websocket connection has closed
-	private onWebSocketClose( code: CloseCode | number, reason?: string ) {
+	private async onWebSocketClose( code: CloseCode | number, reason?: string ) {
 	
 		// DEBUGGING
 		console.log( "Closed:", code, reason )
 
-		// TODO: Stop heartbeating
-		// this.heartbeatTask...
+		// Stop heartbeating in the background
+		console.log( "Stopping heartbeats..." )
+		this.heartbeatController.abort()
+		
+		// Wait for background heartbeats to resolve...
+		console.log( "Waiting for heartbeating to stop..." )
+		await this.heartbeatTask
+		console.log( "Done~" )
 
 		if ( code == RECONNECT_CLOSE_CODE ) {
+			console.log( "We need to reconnect!" )
 
-			// Wait a bit...
-			// await setTimeout( 1000 to 5000 )...
+			const duration = 1000 // Math.floor( Math.random() * 4000 ) + 1000 // Between 1 and 5 seconds
+			console.log( "Waiting", duration, "ms..." )
+			await setTimeout( duration )
 
-			// TODO: Reconnect
-			console.log( "Reconnecting" )
-			// this.open()
+			console.log( "Reopening..." )
+			this.open()
 
-			// TODO: Wait for connection to open...
-			// Maybe do this in onWebSocketText() ???
-
-			if ( this.sessionIdentifier ) {
-
-				// TODO: Send Resume
-
-			} else {
-
-				console.log( "Reconnected, but cannot Resume as I do not have a session identifier" )
-
-			}
-
+			// Continues in onWebSocketText...
 		}
 
 	}
@@ -165,7 +169,7 @@ export class Gateway extends WebSocket {
 		// Parse the message as a standard gateway payload
 		const payload: Payload = JSON.parse( message )
 
-		// Update the sequence number
+		// Update the sequence number if it is valid
 		if ( payload.s ) this.sequenceNumber = payload.s
 
 		// DEBUGGING
@@ -180,28 +184,39 @@ export class Gateway extends WebSocket {
 			// Start heartbeating in the background with the interval given to us
 			this.heartbeatTask = this.startHeartbeating( payload.d[ "heartbeat_interval" ] )
 
+			// If we have a session identifier, then we should try to RESUME instead of IDENTIFY
+			if ( this.sessionIdentifier ) {
+				console.log( "Resuming with session identifier:", this.sessionIdentifier, "and sequence number:", this.sequenceNumber )
+				this.send( OperationCode.Resume, {
+					"token": process.env[ "BOT_TOKEN" ],
+					"session_id": this.sessionIdentifier,
+					"seq": this.sequenceNumber
+				} )
+
 			// Identify
-			console.log( "identifying..." )
-			this.send( OperationCode.Identify, {
-				"token": process.env[ "BOT_TOKEN" ],
-				"intents": 32767, // Everything
-				"compress": USE_COMPRESSION,
-				"large_threshold": 250, // This is the max
-				"presence": {
-					"afk": false,
-					"since": null,
-					"status": StatusType.Online,
-					"activities": [ {
-						"name": "Hello World!",
-						"type": ActivityType.Playing
-					} ]
-				},
-				"properties": {
-					"os": process.platform,
-					"browser": APPLICATION_NAME,
-					"device": APPLICATION_NAME,
-				}
-			} )
+			} else {
+				console.log( "Identifying..." )
+				this.send( OperationCode.Identify, {
+					"token": process.env[ "BOT_TOKEN" ],
+					"intents": 32767, // Everything
+					"compress": USE_COMPRESSION,
+					"large_threshold": 250, // This is the max
+					"presence": {
+						"afk": false,
+						"since": null,
+						"status": StatusType.Online,
+						"activities": [ {
+							"name": "Hello World!",
+							"type": ActivityType.Playing
+						} ]
+					},
+					"properties": {
+						"os": process.platform,
+						"browser": APPLICATION_NAME,
+						"device": APPLICATION_NAME,
+					}
+				} )
+			}
 
 		} else if ( payload.op === OperationCode.HeartbeatAcknowledgement ) {
 			console.log( "Received heartbeat acknowledgement!" )
