@@ -1,11 +1,22 @@
+// Import from native modules
+import { readFile } from "fs/promises"
+
 // Import from my scripts
 import { Gateway } from "./discord/gateway/gateway.js"
 
-// Try to import environment variables from the .env file
+// Attempt to add variables from the .env file to the environment
 try {
-	await import( "dotenv/config" )
+	const fileContent = await readFile( ".env", "utf8" )
+
+	const fileLines = fileContent.split( /\r?\n/ )
+
+	fileLines.forEach( ( line ) => {
+		const [ key, value ] = line.split( "=", 2 )
+
+		if ( key ) process.env[ key ] = value
+	} )
 } catch ( error ) {
-	console.log( "Failed to import environment variables for development." )
+	console.log( "Failed to add development variables into the environment." )
 }
 
 // Do not continue if no bot token is present
