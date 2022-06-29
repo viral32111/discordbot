@@ -8,7 +8,7 @@ import { request } from "../api.js"
 import { WebSocket } from "../../websocket/websocket.js"
 import { APPLICATION_NAME, DISCORD_API_VERSION } from "../../config.js"
 import { OperationCode as WSOperationCode, CloseCode } from "../../websocket/types.js"
-import { Get, Payload, OperationCode, ActivityType, StatusType, DispatchEvent } from "./types.js"
+import { Get, Payload, OperationCode, StatusType, DispatchEvent, Activity } from "./types.js"
 import { updateUser } from "../state.js"
 
 // An implementation of the Discord Gateway.
@@ -32,8 +32,12 @@ export class Gateway extends WebSocket {
 	// Session identifier from the Ready event
 	private sessionIdentifier?: string
 
+	// The initial presence to set in Identify
+	private initialPresence?: any
+
 	// Instansiate to connect to a provided gateway server
-	constructor( baseUrl: string ) {
+	// Can supply an optional status & activity to use when identifying later on
+	constructor( baseUrl: string, status?: StatusType, activity?: Activity ) {
 
 		// Parse the provided URL & add the required querystring to it
 		// https://discord.com/developers/docs/topics/gateway#connecting-to-the-gateway
@@ -47,6 +51,14 @@ export class Gateway extends WebSocket {
 		// Initialise the base class with the URL above
 		super( connectionUrl )
 
+		// Set the initial presence object
+		this.initialPresence = {
+			"afk": false,
+			"since": null,
+			"status": status ?? StatusType.Online,
+			"activities": [ activity ]
+		}
+
 		// Register event handlers for the underlying websocket to methods on this class
 		this.once( "open", this.onWebSocketOpen.bind( this ) )
 		this.once( "close", this.onWebSocketClose.bind( this ) )
@@ -55,13 +67,13 @@ export class Gateway extends WebSocket {
 	}
 
 	// Use this to instansiate, unless you want to provide your own gateway URL
-	public static async create(): Promise<Gateway> {
+	public static async create( status?: StatusType, activity?: Activity ): Promise<Gateway> {
 
 		// Fetch the gateway metadata for bots
 		const metadata: Get = await request( "gateway/bot" )
 
 		// Return a new gateway object using the websocket URL from the metadata
-		return new Gateway( metadata.url )
+		return new Gateway( metadata.url, status, activity )
 
 	}
 
@@ -199,12 +211,6 @@ export class Gateway extends WebSocket {
 		// Update the sequence number if it is valid
 		if ( payload.s ) this.sequenceNumber = payload.s
 
-		// DEBUGGING
-		console.debug( "\nOperation Code:", payload.op )
-		console.debug( "Event Data:", payload.d )
-		console.debug( "Sequence Number:", payload.s )
-		console.debug( "Event Name:", payload.t )
-
 		// If this is the initial message...
 		if ( payload.op === OperationCode.Hello ) {
 
@@ -229,15 +235,7 @@ export class Gateway extends WebSocket {
 					"intents": 32767, // Everything
 					"compress": USE_COMPRESSION,
 					"large_threshold": 250, // This is the max
-					"presence": {
-						"afk": false,
-						"since": null,
-						"status": StatusType.Online,
-						"activities": [ {
-							"name": "Hello World!",
-							"type": ActivityType.Playing
-						} ]
-					},
+					"presence": this.initialPresence,
 					"properties": {
 						"os": process.platform,
 						"browser": APPLICATION_NAME,

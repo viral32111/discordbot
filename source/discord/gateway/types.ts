@@ -47,6 +47,25 @@ export enum ActivityType {
 	Competing = 5
 }
 
+// https://discord.com/developers/docs/topics/gateway#activity-object-activity-structure
+export interface Activity {
+	name: string,
+	type: ActivityType,
+	url?: string,
+	created_at?: number,
+	timestamps?: any, // TODO
+	application_id?: string,
+	details?: string,
+	state?: string,
+	emoji?: any, // TODO
+	party?: any, // TODO
+	assets?: any, // TODO
+	secrets?: any, // TODO
+	instance?: boolean,
+	flags?: number,
+	buttons?: any[] // TODO
+}
+
 // https://discord.com/developers/docs/topics/gateway#commands-and-events-gateway-events
 // This is ONLY dispatched events, it does NOT include server-to-client events already defined in OperationCode
 export enum DispatchEvent {

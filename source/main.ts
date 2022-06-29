@@ -3,6 +3,7 @@ import { readFile } from "fs/promises"
 
 // Import from my scripts
 import { Gateway } from "./discord/gateway/gateway.js"
+import { ActivityType, StatusType } from "./discord/gateway/types.js"
 import { CloseCode } from "./websocket/types.js"
 
 // Attempt to add variables from the .env file to the environment
@@ -31,7 +32,10 @@ try {
 if ( !process.env[ "BOT_TOKEN" ] ) throw Error( "No bot token present in environment variables" )
 
 // Create a new Discord gateway instance
-const bot = await Gateway.create()
+const bot = await Gateway.create( StatusType.Online, {
+	name: "Hello World!",
+	type: ActivityType.Playing
+} )
 console.log( "Connecting..." )
 
 // When the websocket connection has opened
