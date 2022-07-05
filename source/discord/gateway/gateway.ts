@@ -8,8 +8,8 @@ import { request } from "../api.js"
 import { WebSocket } from "../../websocket/websocket.js"
 import { APPLICATION_NAME, DISCORD_API_VERSION } from "../../config.js"
 import { OperationCode as WSOperationCode, CloseCode } from "../../websocket/types.js"
-import { Get, Payload, OperationCode, StatusType, DispatchEvent, Activity } from "./types.js"
-import { updateUser } from "../state.js"
+import { Get, Payload, OperationCode, StatusType, DispatchEvent, Activity, Intents } from "./types.js"
+import { updateApplication, updateGuild, updateUser } from "../state.js"
 
 // An implementation of the Discord Gateway.
 // https://discord.com/developers/docs/topics/gateway
@@ -157,11 +157,19 @@ export class Gateway extends WebSocket {
 			console.debug( data[ "guilds" ] )
 			console.debug( data[ "application" ] )
 
+			const application = updateApplication( data[ "application" ] )
 			const user = updateUser( data[ "user" ] )
-			console.debug( user.id, user.username, user.discriminator )
+
+			//this.emit( "ready", application, user )
 
 		} else if ( name === DispatchEvent.GuildCreate ) {
-			console.debug( data )
+			//console.debug( data )
+
+			const guild = updateGuild( data )
+
+			// TODO: Check if lazy loading, if so then don't emit guildCreate, instead emit ready
+
+			//this.emit( "guildCreate", guild )
 
 		} else {
 			console.debug( "Unhandled dispatch event:", name )
@@ -232,7 +240,7 @@ export class Gateway extends WebSocket {
 			} else {
 				this.send( OperationCode.Identify, {
 					"token": process.env[ "BOT_TOKEN" ],
-					"intents": 32767, // Everything
+					"intents": Intents.All,
 					"compress": USE_COMPRESSION,
 					"large_threshold": 250, // This is the max
 					"presence": this.initialPresence,
@@ -272,11 +280,8 @@ export class Gateway extends WebSocket {
 			// If this is the ready event then store the session identifier
 			if ( payload.t === DispatchEvent.Ready ) this.sessionIdentifier = payload.d[ "session_id" ]
 
-			// TODO: Handle the event internally (e.g. updating state)
+			// Process the event
 			this.handleDispatchEvent( payload.t, payload.d )
-
-			// TODO: Emit the event once internal event handling is done (e.g. state is up-to-date)
-			// this.emit( payload.t, payload.d )
 
 		// Error if the received opcode is not handled above
 		} else {

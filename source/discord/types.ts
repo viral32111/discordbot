@@ -16,3 +16,17 @@ export interface User {
 	premium_type?: number,
 	public_flags?: number
 }
+
+// https://discord.com/developers/docs/resources/application#application-object
+export interface Application {
+	id: string,
+	flags: number
+	// TODO
+}
+
+// https://discord.com/developers/docs/resources/guild#guild-object
+export interface Guild {
+	id: string,
+	name: string,
+	// TODO
+}

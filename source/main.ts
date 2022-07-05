@@ -4,6 +4,7 @@ import { readFile } from "fs/promises"
 // Import from my scripts
 import { Gateway } from "./discord/gateway/gateway.js"
 import { ActivityType, StatusType } from "./discord/gateway/types.js"
+import { User } from "./discord/types.js"
 import { CloseCode } from "./websocket/types.js"
 
 // Attempt to add variables from the .env file to the environment
@@ -41,6 +42,14 @@ console.log( "Connecting..." )
 // When the websocket connection has opened
 bot.once( "open", () => {
 	console.log( "Open!" )
+} )
+
+bot.once( "ready", ( application: Application, user: User ) => {
+
+} )
+
+bot.once( "guildCreate", ( guild: Guild ) => {
+
 } )
 
 // When an error occured
