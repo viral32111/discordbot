@@ -9,7 +9,7 @@ import { WebSocket } from "../../websocket/websocket.js"
 import { APPLICATION_NAME, DISCORD_API_VERSION } from "../../config.js"
 import { OperationCode as WSOperationCode, CloseCode } from "../../websocket/types.js"
 import { Get, Payload, OperationCode, StatusType, DispatchEvent, Activity, Intents } from "./types.js"
-import { updateApplication, updateGuild, updateUser } from "../state.js"
+import { getApplication, getGuilds, getUser, updateApplication, updateGuild, updateUser } from "../state.js"
 
 // An implementation of the Discord Gateway.
 // https://discord.com/developers/docs/topics/gateway
@@ -34,6 +34,12 @@ export class Gateway extends WebSocket {
 
 	// The initial presence to set in Identify
 	private initialPresence?: any
+
+	// Tracks which unavailable guilds have been lazy-loaded so far
+	private lazyLoadedGuilds = new Map<string, boolean>()
+
+	// Are we fully loaded
+	private isReady = false
 
 	// Instansiate to connect to a provided gateway server
 	// Can supply an optional status & activity to use when identifying later on
@@ -153,23 +159,32 @@ export class Gateway extends WebSocket {
 	private handleDispatchEvent( name: string, data: any ) {
 
 		if ( name === DispatchEvent.Ready ) {
-			console.debug( data[ "user" ] )
-			console.debug( data[ "guilds" ] )
-			console.debug( data[ "application" ] )
+			updateApplication( data[ "application" ] )
+			updateUser( data[ "user" ] )
 
-			const application = updateApplication( data[ "application" ] )
-			const user = updateUser( data[ "user" ] )
-
-			//this.emit( "ready", application, user )
+			for ( const guild of data[ "guilds" ] ) this.lazyLoadedGuilds.set( guild[ "id" ], false )
 
 		} else if ( name === DispatchEvent.GuildCreate ) {
-			//console.debug( data )
-
 			const guild = updateGuild( data )
 
-			// TODO: Check if lazy loading, if so then don't emit guildCreate, instead emit ready
+			if ( this.isReady ) {
+				this.emit( "guildCreate", guild )
 
-			//this.emit( "guildCreate", guild )
+			} else {
+				this.lazyLoadedGuilds.set( guild.id, true )
+
+				if ( Array.from( this.lazyLoadedGuilds.values() ).every( ( isLoaded ) => isLoaded === true ) ) {
+					this.isReady = true
+
+					const application = getApplication()
+					if ( !application ) return this.emit( "error", Error( "Application not available in state" ) )
+
+					const user = getUser( application.id )
+					if ( !user ) return this.emit( "error", Error( "Bot user not available in state" ) )
+
+					this.emit( "ready", application, user, getGuilds() )
+				}
+			}
 
 		} else {
 			console.debug( "Unhandled dispatch event:", name )
@@ -206,6 +221,11 @@ export class Gateway extends WebSocket {
 		} else {
 			this.sessionIdentifier = undefined
 			this.sequenceNumber = null
+
+			this.initialPresence = undefined
+
+			this.lazyLoadedGuilds.clear()
+			this.isReady = false
 		}
 
 	}
