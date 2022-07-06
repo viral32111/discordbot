@@ -44,32 +44,26 @@ bot.once( "open", () => {
 	console.log( "Open!" )
 } )
 
+// Runs when the bot finishes loading
 bot.once( "ready", ( application: Application, user: User, guilds: Guild[] ) => {
-	console.log( "Ready as user '%s#%d' (%s / %s) in %d servers.", user.username, user.discriminator, user.id, application.id, guilds.length )
+	console.log( "Ready as user '%s#%d' (%s / %s) in %d server(s).", user.username, user.discriminator, user.id, application.id, guilds.length )
 } )
 
+// Runs when the bot joins a server
 bot.once( "guildCreate", ( guild: Guild ) => {
-	console.log( "Server '%s' (%s) joined or created.", guild.name, guild.id )
+	console.log( "Server '%s' (%s) joined.", guild.name, guild.id )
 } )
 
-// When an error occured
+// Gracefully disconnect when an error occurs
 bot.once( "error", ( error: Error ) => {
-
-	// Display the error message
 	console.error( error.message )
-
-	// Gracefully close the connection
 	bot.close( CloseCode.Normal, "Internal error" )
-
 } )
 
-// Called whenever a keyboard interrupt/exit signal happens
+// Display a message & gracefully close the connection on keyboard interrupt/exit signal
 function onRequestExit() {
-
-	// Display a message and gracefully close the connection
 	console.log( "Closing..." )
 	bot.close( CloseCode.Normal, "Application exit" )
-
 }
 
 // Call the above function for these exit signals

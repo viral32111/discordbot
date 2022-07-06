@@ -158,36 +158,56 @@ export class Gateway extends WebSocket {
 	// Processes dispatch events before they are emitted
 	private handleDispatchEvent( name: string, data: any ) {
 
+		// Contains the initial state information
 		if ( name === DispatchEvent.Ready ) {
+
+			// Update state
 			updateApplication( data[ "application" ] )
 			updateUser( data[ "user" ] )
 
+			// Add each unavailable guild ID to the lazy-load expectations
 			for ( const guild of data[ "guilds" ] ) this.lazyLoadedGuilds.set( guild[ "id" ], false )
 
+		// Lazy-load for unavailable guild, guild became available, or user joined a new guild
 		} else if ( name === DispatchEvent.GuildCreate ) {
+			
+			// Update state
 			const guild = updateGuild( data )
 
+			// If we have finished loading then this is a guild join so call the event
 			if ( this.isReady ) {
 				this.emit( "guildCreate", guild )
 
+			// Otherwise this is lazy-loading of a guild
 			} else {
+
+				// Update the lazy-loading expectations
 				this.lazyLoadedGuilds.set( guild.id, true )
 
+				// If all expectations have been met...
 				if ( Array.from( this.lazyLoadedGuilds.values() ).every( ( isLoaded ) => isLoaded === true ) ) {
+					
+					// We have finished loading
 					this.isReady = true
 
+					// Get this bot's application
 					const application = getApplication()
 					if ( !application ) return this.emit( "error", Error( "Application not available in state" ) )
 
+					// Get this bot's user
 					const user = getUser( application.id )
 					if ( !user ) return this.emit( "error", Error( "Bot user not available in state" ) )
 
+					// Call the event
 					this.emit( "ready", application, user, getGuilds() )
+
 				}
+
 			}
 
+		// We don't know what this event is, perhaps it is new
 		} else {
-			console.debug( "Unhandled dispatch event:", name )
+			console.warn( "Unhandled dispatch event:", name )
 		}
 
 	}
