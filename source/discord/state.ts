@@ -16,7 +16,17 @@ export const updateApplication = ( application: Application ) => {
 export const getApplication = () => cache.application
 
 // Users
-export const updateUser = ( user: User ) => cache.user.set( user.id, { ...cache.user.get( user.id ), ...user } ).get( user.id )!
+export const updateUser = ( data: any ) => {
+	const identifier = data[ "id" ]
+
+	if ( cache.user.has( identifier ) ) {
+		cache.user.get( identifier )!.Update( data )
+	} else {
+		cache.user.set( identifier, new User( data ) )
+	}
+
+	return cache.user.get( identifier )!
+}
 export const getUser = ( identifier: string ) => cache.user.get( identifier )
 export const getUsers = () => Array.from( cache.user.values() )
 

@@ -8,7 +8,7 @@ import { request } from "../api.js"
 import { WebSocket } from "../../websocket/websocket.js"
 import { APPLICATION_NAME, DISCORD_API_VERSION } from "../../config.js"
 import { OperationCode as WSOperationCode, CloseCode } from "../../websocket/types.js"
-import { Get, Payload, OperationCode, StatusType, DispatchEvent, Activity, Intents } from "./types.js"
+import { Get, Payload, StatusType, OperationCode, Command, Event, Activity, Intents } from "./types.js"
 import { getApplication, getGuilds, getUser, updateApplication, updateGuild, updateUser } from "../state.js"
 
 // An implementation of the Discord Gateway.
@@ -84,16 +84,16 @@ export class Gateway extends WebSocket {
 	}
 
 	// Sends a payload to the gateway as JSON
-	private send( code: OperationCode, data: any ) {
+	private send( command: Command, data: any ) {
 		this.sendFrame( WSOperationCode.Text, Buffer.from( JSON.stringify( {
-			"op": code,
+			"op": command,
 			"d": data
 		} ) ) )
 	}
 
 	// Sends a heartbeat and checks for acknowledgement
 	private async sendHeartbeat() {
-		this.send( OperationCode.Heartbeat, this.sequenceNumber )
+		this.send( Command.Heartbeat, this.sequenceNumber )
 
 		const isAcknowledged = await Promise.race( [
 			once( this, "heartbeatAcknowledge" ),
@@ -159,7 +159,7 @@ export class Gateway extends WebSocket {
 	private handleDispatchEvent( name: string, data: any ) {
 
 		// Contains the initial state information
-		if ( name === DispatchEvent.Ready ) {
+		if ( name === Event.Ready ) {
 
 			// Update state
 			updateApplication( data[ "application" ] )
@@ -169,7 +169,7 @@ export class Gateway extends WebSocket {
 			for ( const guild of data[ "guilds" ] ) this.lazyLoadedGuilds.set( guild[ "id" ], false )
 
 		// Lazy-load for unavailable guild, guild became available, or user joined a new guild
-		} else if ( name === DispatchEvent.GuildCreate ) {
+		} else if ( name === Event.GuildCreate ) {
 			
 			// Update state
 			const guild = updateGuild( data )
@@ -199,7 +199,7 @@ export class Gateway extends WebSocket {
 					if ( !user ) return this.emit( "error", Error( "Bot user not available in state" ) )
 
 					// Call the event
-					this.emit( "ready", application, user, getGuilds() )
+					this.emit( "ready", user, getGuilds(), application )
 
 				}
 
@@ -270,7 +270,7 @@ export class Gateway extends WebSocket {
 
 			// If we have a session identifier, then we should try to resume
 			if ( this.sessionIdentifier !== undefined ) {
-				this.send( OperationCode.Resume, {
+				this.send( Command.Resume, {
 					"token": process.env[ "BOT_TOKEN" ],
 					"session_id": this.sessionIdentifier,
 					"seq": this.sequenceNumber
@@ -278,7 +278,7 @@ export class Gateway extends WebSocket {
 
 			// Otherwise, send a fresh identify
 			} else {
-				this.send( OperationCode.Identify, {
+				this.send( Command.Identify, {
 					"token": process.env[ "BOT_TOKEN" ],
 					"intents": Intents.All,
 					"compress": USE_COMPRESSION,
@@ -318,7 +318,7 @@ export class Gateway extends WebSocket {
 		} else if ( payload.op === OperationCode.Dispatch && payload.t !== undefined ) {
 
 			// If this is the ready event then store the session identifier
-			if ( payload.t === DispatchEvent.Ready ) this.sessionIdentifier = payload.d[ "session_id" ]
+			if ( payload.t === Event.Ready ) this.sessionIdentifier = payload.d[ "session_id" ]
 
 			// Process the event
 			this.handleDispatchEvent( payload.t, payload.d )

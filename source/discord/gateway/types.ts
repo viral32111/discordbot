@@ -13,21 +13,6 @@ export interface Payload {
 	t?: string,
 }
 
-// https://discord.com/developers/docs/topics/opcodes-and-status-codes#gateway-gateway-opcodes
-export enum OperationCode {
-	Dispatch = 0,
-	Heartbeat = 1, // Command (sent by client)
-	Identify = 2, // Command (sent by client)
-	PresenceUpdate = 3, // Command (sent by client)
-	VoiceStateUpdate = 4, // Command (sent by client)
-	Resume = 6, // Command (sent by client)
-	Reconnect = 7,
-	RequestGuildMembers = 8, // Command (sent by client)
-	InvalidSession = 9,
-	Hello = 10,
-	HeartbeatAcknowledgement = 11
-}
-
 // https://discord.com/developers/docs/topics/gateway#update-presence-status-types
 export enum StatusType {
 	Online = "online",
@@ -66,12 +51,88 @@ export interface Activity {
 	buttons?: any[] // TODO
 }
 
+// https://discord.com/developers/docs/topics/opcodes-and-status-codes#gateway-gateway-opcodes
+export enum OperationCode {
+	Dispatch = 0,
+	Heartbeat = 1,
+	Reconnect = 7,
+	InvalidSession = 9,
+	Hello = 10,
+	HeartbeatAcknowledgement = 11
+}
+
+// https://discord.com/developers/docs/topics/gateway#commands-and-events-gateway-commands
+export enum Command {
+	Heartbeat = 1,
+	Identify = 2,
+	PresenceUpdate = 3,
+	VoiceStateUpdate = 4,
+	Resume = 6,
+	RequestGuildMembers = 8,
+}
+
 // https://discord.com/developers/docs/topics/gateway#commands-and-events-gateway-events
-// This is ONLY dispatched events, it does NOT include server-to-client events already defined in OperationCode
-export enum DispatchEvent {
+export enum Event {
 	Ready = "READY", // Contains the initial state information
-	Resumed = "RESUMED", // Response to Resume (Opcode 6)
-	GuildCreate = "GUILD_CREATE" // Lazy-load for unavailable guild, guild became available, or user joined a new guild
+	Resumed = "RESUMED", // Response to Opcode 6 Resume
+	ApplicationCommandPermissionsUpdate = "APPLICATION_COMMAND_PERMISSIONS_UPDATE",
+	AutoModerationRuleCreate = "AUTO_MODERATION_RULE_CREATE",
+	AutoModerationRuleUpdate = "AUTO_MODERATION_RULE_UPDATE",
+	AutoModerationRuleDelete = "AUTO_MODERATION_RULE_DELETE",
+	AutoModerationActionExecution = "AUTO_MODERATION_ACTION_EXECUTION",
+	ChannelCreate = "CHANNEL_CREATE",
+	ChannelUpdate = "CHANNEL_UPDATE",
+	ChannelDelete = "CHANNEL_DELETE",
+	ChannelPinsUpdate = "CHANNEL_PINS_UPDATE",
+	ThreadCreate = "THREAD_CREATE",
+	ThreadUpdate = "THREAD_UPDATE",
+	ThreadDelete = "THREAD_DELETE",
+	ThreadListSync = "THREAD_LIST_SYNC",
+	ThreadMemberUpdate = "THREAD_MEMBER_UPDATE",
+	ThreadMembersUpdate = "THREAD_MEMBERS_UPDATE",
+	GuildCreate = "GUILD_CREATE",
+	GuildUpdate = "GUILD_UPDATE",
+	GuildDelete = "GUILD_DELETE",
+	GuildBanAdd = "GUILD_BAN_ADD",
+	GuildBanRemove = "GUILD_BAN_REMOVE",
+	GuildEmojisUpdate = "GUILD_EMOJIS_UPDATE",
+	GuildStickersUpdate = "GUILD_STICKERS_UPDATE",
+	GuildIntegrationsUpdate = "GUILD_INTEGRATIONS_UPDATE",
+	GuildMemberAdd = "GUILD_MEMBER_ADD",
+	GuildMemberRemove = "GUILD_MEMBER_REMOVE",
+	GuildMemberUpdate = "GUILD_MEMBER_UPDATE",
+	GuildMembersChunk = "GUILD_MEMBERS_CHUNK",
+	GuildRoleCreate = "GUILD_ROLE_CREATE",
+	GuildRoleUpdate = "GUILD_ROLE_UPDATE",
+	GuildRoleDelete = "GUILD_ROLE_DELETE",
+	GuildScheduledEventCreate = "GUILD_SCHEDULED_EVENT_CREATE",
+	GuildScheduledEventUpdate = "GUILD_SCHEDULED_EVENT_UPDATE",
+	GuildScheduledEventDelete = "GUILD_SCHEDULED_EVENT_DELETE",
+	GuildScheduledEventUserAdd = "GUILD_SCHEDULED_EVENT_USER_ADD",
+	GuildScheduledEventUserRemove = "GUILD_SCHEDULED_EVENT_USER_REMOVE",
+	IntegrationCreate = "INTEGRATION_CREATE",
+	IntegrationUpdate = "INTEGRATION_UPDATE",
+	IntegrationDelete = "INTEGRATION_DELETE",
+	InteractionCreate = "INTERACTION_CREATE",
+	InviteCreate = "INVITE_CREATE",
+	InviteDelete = "INVITE_DELETE",
+	MessageCreate = "MESSAGE_CREATE",
+	MessageUpdate = "MESSAGE_UPDATE",
+	MessageDelete = "MESSAGE_DELETE",
+	MessageDeleteBulk = "MESSAGE_DELETE_BULK",
+	MessageReactionAdd = "MESSAGE_REACTION_ADD",
+	MessageReactionRemove = "MESSAGE_REACTION_REMOVE",
+	MessageReactionRemoveAll = "MESSAGE_REACTION_REMOVE_ALL",
+	MessageReactionRemoveEmoji = "MESSAGE_REACTION_REMOVE_EMOJI",
+	PresenceUpdate = "PRESENCE_UPDATE",
+	StageInstanceCreate = "STAGE_INSTANCE_CREATE",
+	StageInstanceDelete = "STAGE_INSTANCE_DELETE",
+	StageInstanceUpdate = "STAGE_INSTANCE_UPDATE",
+	TypingStart = "TYPING_START",
+	UserUpdate = "USER_UPDATE",
+	VoiceStateUpdate = "VOICE_STATE_UPDATE",
+	VoiceServerUpdate = "VOICE_SERVER_UPDATE",
+	WebhooksUpdate = "WEBHOOKS_UPDATE"
 }
 
 // https://discord.com/developers/docs/topics/gateway#list-of-intents
