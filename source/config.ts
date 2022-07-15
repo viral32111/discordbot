@@ -10,3 +10,7 @@ export const CONTACT_EMAIL = "contact@viral32111.com"
 // https://discord.com/developers/docs/reference#api-versioning
 export const DISCORD_API_URL = "discord.com/api"
 export const DISCORD_API_VERSION = 10
+
+// The base URL to the Discord CDN
+// https://discord.com/developers/docs/reference#image-formatting
+export const DISCORD_CDN_URL = "cdn.discordapp.com"

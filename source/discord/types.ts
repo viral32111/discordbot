@@ -1,5 +1,9 @@
 import { format } from "util"
 
+import { DISCORD_CDN_URL } from "../config.js"
+import { request } from "./api.js"
+import { Gateway } from "./gateway/gateway.js"
+
 // https://discord.com/developers/docs/resources/user#user-object-user-structure
 /*export interface User {
 	id: string,
@@ -18,6 +22,20 @@ import { format } from "util"
 	premium_type?: number,
 	public_flags?: number
 }*/
+
+// https://discord.com/developers/docs/resources/application#application-object
+export interface Application {
+	id: string,
+	flags: number
+	// TODO
+}
+
+// https://discord.com/developers/docs/resources/guild#guild-object
+export interface Guild {
+	id: string,
+	name: string,
+	// TODO
+}
 
 // https://discord.com/developers/docs/reference#snowflakes
 export class Snowflake {
@@ -44,6 +62,9 @@ export class Snowflake {
 
 // https://discord.com/developers/docs/resources/user#user-object-user-structure
 export class User {
+	// @ts-ignore
+	private client: Gateway
+
 	public Identifier!: Snowflake
 
 	public Name!: string
@@ -51,7 +72,17 @@ export class User {
 
 	public Avatar?: string
 
-	constructor( data: any ) {
+	public IsBot?: boolean
+	public IsSystem?: boolean
+	
+	public PrivateFlags?: number
+	public PublicFlags?: number
+
+	public PremiumType?: number
+
+	constructor( data: any, client: Gateway ) {
+		this.client = client
+
 		this.Update( data )
 	}
 
@@ -62,26 +93,60 @@ export class User {
 		this.Discriminator = Number( data[ "discriminator" ] )
 
 		this.Avatar = data[ "avatar" ]
+
+		this.IsBot = ( data[ "bot" ] === true )
+		this.IsSystem = ( data[ "system" ] === true )
+
+		if ( data[ "flags" ] ) this.PrivateFlags = Number( data[ "flags" ] )
+		if ( data[ "public_flags" ] ) this.PublicFlags = Number( data[ "public_flags" ] )
+
+		if ( data[ "premium_type" ] ) this.PremiumType = Number( data[ "premium_type" ] )
 	}
 
 	// https://discord.com/developers/docs/reference#image-formatting
-	public AvatarUrl( size: number, animated: boolean ) {
-		if ( !size ) size = 512
-
-		return format( "https://cdn.discordapp.com/avatars/%d/%s.%s?size=", this.Identifier, this.Avatar, ( animated === true ? "gif" : "png" ), size )
+	public AvatarUrl( size = 512, animated = true, extension = "png" ) {
+		if ( this.Avatar ) {
+			return format( "https://%s/avatars/%d/%s.%s?size=%d", DISCORD_CDN_URL, this.Identifier, this.Avatar, ( animated && this.Avatar.startsWith( "a_" ) ? "gif" : extension ), size )
+		} else {
+			return format( "https://%s/embed/avatars/%d.png?size=%d", DISCORD_CDN_URL, this.Discriminator % 5, size )
+		}
 	}
 }
 
-// https://discord.com/developers/docs/resources/application#application-object
-export interface Application {
-	id: string,
-	flags: number
-	// TODO
-}
+// https://discord.com/developers/docs/resources/channel#message-object
+export class Message {
+	// @ts-ignore
+	private client: Gateway
 
-// https://discord.com/developers/docs/resources/guild#guild-object
-export interface Guild {
-	id: string,
-	name: string,
-	// TODO
+	public identifier!: Snowflake
+
+	public content!: string
+
+	//public channel: Channel
+	private channelId!: Snowflake
+
+	constructor( data: any, client: Gateway ) {
+		this.client = client
+
+		this.update( data )
+	}
+
+	public update( data: any ) {
+		this.identifier = new Snowflake( data[ "id" ] )
+
+		this.content = data[ "content" ]
+
+		//this.channel = getChannel( data[ "channel_id" ] )
+		this.channelId = new Snowflake( data[ "channel_id" ] )
+	}
+
+	public async reply( content: string ) {
+		await request( format( "channels/%s/messages", this.channelId ), "POST", {
+			"content": content,
+			"message_reference": {
+				"message_id": this.identifier.toString(),
+				"fail_if_not_exists": true
+			}
+		} )
+	}
 }

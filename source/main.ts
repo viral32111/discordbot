@@ -4,7 +4,7 @@ import { readFile } from "fs/promises"
 // Import from my scripts
 import { Gateway } from "./discord/gateway/gateway.js"
 import { ActivityType, StatusType } from "./discord/gateway/types.js"
-import { Guild, User } from "./discord/types.js"
+import { Guild, Message, User } from "./discord/types.js"
 import { CloseCode } from "./websocket/types.js"
 
 // Attempt to add variables from the .env file to the environment
@@ -47,11 +47,19 @@ bot.once( "open", () => {
 // Runs when the bot finishes loading
 bot.once( "ready", ( user: User, guilds: Guild[] ) => {
 	console.log( "Ready as user '%s#%d' (%s) in %d server(s).", user.Name, user.Discriminator, user.Identifier, guilds.length )
+
+	console.log( user.Avatar, user.AvatarUrl() )
 } )
 
 // Runs when the bot joins a server
-bot.once( "guildCreate", ( guild: Guild ) => {
+bot.on( "guildCreate", ( guild: Guild ) => {
 	console.log( "Joined server '%s' (%s).", guild.name, guild.id )
+} )
+
+bot.on( "messageCreate", async ( message: Message ) => {
+	console.log( "Message '%s' (%s).", message.content, message.identifier )
+
+	await message.reply( "hi!" )
 } )
 
 // Gracefully disconnect when an error occurs

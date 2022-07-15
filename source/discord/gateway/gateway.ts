@@ -9,7 +9,7 @@ import { WebSocket } from "../../websocket/websocket.js"
 import { APPLICATION_NAME, DISCORD_API_VERSION } from "../../config.js"
 import { OperationCode as WSOperationCode, CloseCode } from "../../websocket/types.js"
 import { Get, Payload, StatusType, OperationCode, Command, Event, Activity, Intents } from "./types.js"
-import { getApplication, getGuilds, getUser, updateApplication, updateGuild, updateUser } from "../state.js"
+import { getApplication, getGuilds, getUser, updateApplication, updateGuild, updateMessage, updateUser } from "../state.js"
 
 // An implementation of the Discord Gateway.
 // https://discord.com/developers/docs/topics/gateway
@@ -163,7 +163,7 @@ export class Gateway extends WebSocket {
 
 			// Update state
 			updateApplication( data[ "application" ] )
-			updateUser( data[ "user" ] )
+			updateUser( data[ "user" ], this )
 
 			// Add each unavailable guild ID to the lazy-load expectations
 			for ( const guild of data[ "guilds" ] ) this.lazyLoadedGuilds.set( guild[ "id" ], false )
@@ -204,6 +204,17 @@ export class Gateway extends WebSocket {
 				}
 
 			}
+
+		} else if ( name === Event.MessageCreate ) {
+
+			//const guildIdentifier = data[ "guild_id" ]
+			//const member = data[ "member" ]
+			//const mentions = data[ "mentions" ]
+
+			const message = updateMessage( data, this )
+			if ( !message ) return this.emit( "error", Error( "Message not available in state" ) )
+
+			this.emit( "messageCreate", message )
 
 		// We don't know what this event is, perhaps it is new
 		} else {

@@ -6,16 +6,25 @@ import { request as createHttpsRequest } from "https";
 import { APPLICATION_NAME, APPLICATION_VERSION, CONTACT_WEBSITE, CONTACT_EMAIL, DISCORD_API_URL, DISCORD_API_VERSION } from "../config.js";
 
 // Sends a request to the Discord API and returns a JSON object
-export function request( endpoint: string, method: string = "GET" ): Promise<any> {
+export function request( endpoint: string, method: string = "GET", data?: any ): Promise<any> {
+
+	const headers = new Map<string, string>( [
+		[ "Accept", "application/json" ], // Expect a JSON response
+		[ "Authorization", format( "Bot %s", process.env[ "BOT_TOKEN" ] ) ], // Authenticate as the bot
+		[ "User-Agent", format( "%s/%s (%s; %s)", APPLICATION_NAME, APPLICATION_VERSION, CONTACT_WEBSITE, CONTACT_EMAIL ) ]
+	] )
+
+	if ( data ) {
+		data = JSON.stringify( data )
+
+		headers.set( "Content-Type", "application/json" )
+		headers.set( "Content-Length", data.length )
+	}
 
 	// Create a HTTP request to the specified endpoint using the specified method
 	const request = createHttpsRequest( format( "https://%s/v%d/%s", DISCORD_API_URL, DISCORD_API_VERSION, endpoint ), {
 		method: method,
-		headers: {
-			"Accept": "application/json", // Expect a JSON response
-			"Authorization": format( "Bot %s", process.env[ "BOT_TOKEN" ] ), // Authenticate as the bot
-			"User-Agent": format( "%s/%s (%s; %s)", APPLICATION_NAME, APPLICATION_VERSION, CONTACT_WEBSITE, CONTACT_EMAIL )
-		}
+		headers: Object.fromEntries( headers.entries() )
 	} )
 
 	// Return a promise that resolves when a valid response is received
@@ -51,7 +60,7 @@ export function request( endpoint: string, method: string = "GET" ): Promise<any
 		request.once( "error", reject )
 	
 		// Send the HTTP request
-		request.end()
+		request.end( data )
 
 	} )
 }
