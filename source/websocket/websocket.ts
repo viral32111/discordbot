@@ -20,7 +20,7 @@ const KEY_SUFFIX = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 export class WebSocket extends EventEmitter {
 
 	// Full URL to the remote server
-	private connectionUrl: URL
+	private connectionUrl!: URL
 
 	// The underlying secure connection
 	private socket?: TLSSocket
@@ -44,14 +44,20 @@ export class WebSocket extends EventEmitter {
 		// Do not continue if this is not a secure server (as we are only using TLS)
 		if ( url.protocol !== "wss:" ) throw Error( "Only compatible with wss:// URLs" )
 
-		// Update the class property
-		this.connectionUrl = url
+		// Update the URL of the server
+		this.updateUrl( url )
 
 		// Start the connection
 		this.open()
 
 	}
 
+	// Updates the URL of the WebSocket server
+	public updateUrl( newUrl: URL ) {
+		this.connectionUrl = newUrl
+	}
+
+	// Connects the websocket to the WebSocket server
 	public open() {
 
 		// Connect to the server on the standard HTTPS port

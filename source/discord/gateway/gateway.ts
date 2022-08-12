@@ -29,7 +29,7 @@ export class Gateway extends WebSocket {
 	private heartbeatTask?: Promise<void>
 	private heartbeatController = new AbortController()
 
-	// Session identifier from the Ready event
+	// Data from the Ready event for resuming
 	private sessionIdentifier?: string
 
 	// The initial presence to set in Identify
@@ -251,6 +251,7 @@ export class Gateway extends WebSocket {
 		// Otherwise, cleanup the rest of the class properties
 		} else {
 			this.sessionIdentifier = undefined
+
 			this.sequenceNumber = null
 
 			this.initialPresence = undefined
@@ -328,8 +329,11 @@ export class Gateway extends WebSocket {
 		// If this is an event dispatch...
 		} else if ( payload.op === OperationCode.Dispatch && payload.t !== undefined ) {
 
-			// If this is the ready event then store the session identifier
-			if ( payload.t === Event.Ready ) this.sessionIdentifier = payload.d[ "session_id" ]
+			// If this is the ready event then store data for resuming
+			if ( payload.t === Event.Ready ) {
+				this.sessionIdentifier = payload.d[ "session_id" ]
+				this.updateUrl( new URL( payload.d[ "resume_gateway_url" ] ) )
+			}
 
 			// Process the event
 			this.handleDispatchEvent( payload.t, payload.d )
