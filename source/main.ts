@@ -4,19 +4,16 @@ import { readFile } from "fs/promises"
 // Import from my scripts
 import { Gateway } from "./discord/gateway/gateway.js"
 import { ActivityType, StatusType } from "./discord/gateway/types.js"
-import { Guild, Message, User } from "./discord/types.js"
 import { CloseCode } from "./websocket/types.js"
 
 // Attempt to add variables from the .env file to the environment
 try {
 
-	// Read the file
+	// Read the file, then split it up by each line
 	const fileContent = await readFile( ".env", "utf8" )
-
-	// Split the file by each line
 	const fileLines = fileContent.split( /\r?\n/ )
 
-	// Loop over each line, split into key-value pairs, then add them to the environment if they are valid
+	// Loop over each line, split it into key-value pairs, then add them to the environment if they are valid
 	fileLines.forEach( ( line ) => {
 		const [ key, value ] = line.split( "=", 2 )
 
@@ -24,7 +21,7 @@ try {
 	} )
 
 // Display a message and continue if we fail to read the file
-// NOTE: This is for when running in a Docker container as the variables should already be in the environment
+// NOTE: This is expected when running in a Docker container as the variables should already be in the environment
 } catch ( error ) {
 	console.log( "Failed to add development variables into the environment." )
 }
@@ -33,34 +30,18 @@ try {
 if ( !process.env[ "BOT_TOKEN" ] ) throw Error( "No bot token present in environment variables" )
 
 // Create a new Discord gateway instance
-const bot = await Gateway.create( StatusType.Online, {
+export const bot = await Gateway.create( StatusType.Online, {
 	name: "Hello World!",
 	type: ActivityType.Playing
 } )
 console.log( "Connecting..." )
 
-// When the websocket connection has opened
-bot.once( "open", () => {
-	console.log( "Open!" )
-} )
+// Display message in the console when the WebSocket connection has opened
+bot.once( "open", () => console.log( "Connected!" ) )
 
-// Runs when the bot finishes loading
-bot.once( "ready", ( user: User, guilds: Guild[] ) => {
-	console.log( "Ready as user '%s#%d' (%s) in %d server(s).", user.Name, user.Discriminator, user.Identifier, guilds.length )
-
-	console.log( user.Avatar, user.AvatarUrl() )
-} )
-
-// Runs when the bot joins a server
-bot.on( "guildCreate", ( guild: Guild ) => {
-	console.log( "Joined server '%s' (%s).", guild.name, guild.id )
-} )
-
-bot.on( "messageCreate", async ( message: Message ) => {
-	console.log( "Message '%s' (%s).", message.content, message.identifier )
-
-	await message.reply( "hi!" )
-} )
+// Asynchronously load each feature
+import( "./features/test.js" )
+import( "./features/joinleave.js" )
 
 // Gracefully disconnect when an error occurs
 bot.once( "error", ( error: Error ) => {
@@ -70,7 +51,7 @@ bot.once( "error", ( error: Error ) => {
 
 // Display a message & gracefully close the connection on keyboard interrupt/exit signal
 function onRequestExit() {
-	console.log( "Closing..." )
+	console.log( "\rClosing..." ) // \r moves cursor to start of line, which writes over the '^C' from the terminal
 	bot.close( CloseCode.Normal, "Application exit" )
 }
 
