@@ -20,7 +20,7 @@ try {
 	fileLines.forEach( ( line ) => {
 		const [ key, value ] = line.split( "=", 2 )
 
-		if ( key ) process.env[ key ] = value
+		if ( key ) process.env[ key.trim() ] = value.trim()
 	} )
 
 // Display a message and continue if we fail to read the file
