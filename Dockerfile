@@ -16,10 +16,10 @@ COPY --chown=${USER_ID}:${USER_ID} ./ ${DISCORDBOT_DIRECTORY}/source
 
 # Switch to the regular user, in the data directory
 USER ${USER_ID}:${USER_ID}
-WORKDIR ${DIRECTORY_DATA}
+WORKDIR ${DISCORDBOT_DATA_DIRECTORY}
 
 # Persist the data directory
-VOLUME ${DIRECTORY_DATA}
+VOLUME ${DISCORDBOT_DATA_DIRECTORY}
 
 # Start the bot on launch
 ENTRYPOINT [ "node", "/usr/local/bot" ]
