@@ -1,17 +1,23 @@
 # Node.js
 node_modules/
 package-lock.json
+package.json
 
 # TypeScript
 tsconfig.json
 
-# Code
-source/
+# ESLint
+.eslintrc.json
 
 # Git
 .git/
-.github/
 .gitignore
+
+# GitHub
+.github/
+README.md
+SECURITY.md
+LICENSE.txt
 
 # Visual Studio Code
 .vscode/
@@ -19,7 +25,5 @@ source/
 # Secrets
 .env
 
-# Meta
-README.md
-LICENSE.txt
-SECURITY.md
+# Code
+source/
