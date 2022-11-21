@@ -2,25 +2,24 @@ name: Analyze
 
 on:
   push:
-    branches: [ main ]
-    paths:
-    - 'source/**'
-    - 'package.json'
-    - 'package-lock.json'
+    branches:
+    - '**'
   pull_request:
-    branches: [ main ]
+    branches:
+    - '**'
   schedule:
     - cron: '0 0 * * 0'
+  workflow_dispatch:
 
 jobs:
   analyze:
-    name: Ubuntu
-    runs-on: ubuntu-latest
+    name: Analyze
+    runs-on: ubuntu-22.04
     permissions:
+      contents: read
       security-events: write
-
     steps:
-    - name: Checkout Repository
+    - name: Clone repository
       uses: actions/checkout@v3
 
     - name: Initialize CodeQL
