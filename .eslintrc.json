@@ -33,5 +33,9 @@
 			"error",
 			"never"
 		]
-	}
+	},
+	"ignorePatterns": [
+		"./node_modules/",
+		"./emit/"
+	]
 }

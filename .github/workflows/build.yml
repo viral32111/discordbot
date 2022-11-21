@@ -6,6 +6,11 @@ on:
     - 'source/**'
     - 'package.json'
     - 'package-lock.json'
+    - '.eslintrc.json'
+    - 'tsconfig.json'
+    - 'Dockerfile'
+    - '.dockerignore'
+    - '.github/workflows/build.yml'
     branches:
     - '**'
     tags:
@@ -39,8 +44,11 @@ jobs:
     - name: Install dependencies
       run: npm clean-install
 
+    - name: Lint using ESLint
+      run: npx eslint
+
     - name: Compile TypeScript
-      run: npx tsc --pretty --sourceMap false --alwaysStrict --noImplicitAny --noUnusedLocals --noUnusedParameters
+      run: npx tsc --sourceMap false
 
     - name: Upload JavaScript
       uses: actions/upload-artifact@v3
