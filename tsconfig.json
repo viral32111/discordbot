@@ -1,7 +1,4 @@
 {
-	"include": [
-		"source/**/*"
-	],
 	"compilerOptions": {
 		"target": "es2022",
 		"module": "es2022",
@@ -10,7 +7,8 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
-		"outDir": "emit",
+		"rootDir": "./source",
+		"outDir": "./emit",
 		"removeComments": true,
 		"noImplicitAny": true,
 		"alwaysStrict": true,

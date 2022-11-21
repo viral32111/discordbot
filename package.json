@@ -2,7 +2,7 @@
 	"name": "discordbot",
 	"version": "5.0.0",
 	"description": "A bot for Discord written in Node.js without any third-party libraries.",
-	"main": "emit/main.js",
+	"main": "./emit/main.js",
 	"type": "module",
 	"scripts": {
 		"start": "npx tsc && node .",
@@ -27,6 +27,9 @@
 	"license": "AGPL-3.0-only",
 	"devDependencies": {
 		"@types/node": "^18.0.0",
+		"@typescript-eslint/eslint-plugin": "^5.44.0",
+		"@typescript-eslint/parser": "^5.44.0",
+		"eslint": "^8.28.0",
 		"typescript": "^4.7.4"
 	}
 }
