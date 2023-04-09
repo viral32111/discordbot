@@ -4,14 +4,14 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "Run",
+			"name": "Launch",
 			"skipFiles": [
 				"<node_internals>/**"
 			],
-			"program": "${workspaceFolder}/emit/main.js",
-			"preLaunchTask": "tsc: build - tsconfig.json",
+			"program": "${workspaceFolder}/dist/main.js",
+			"preLaunchTask": "Build",
 			"outFiles": [
-				"${workspaceFolder}/emit/**/*.js"
+				"${workspaceFolder}/dist/**/*.js"
 			],
 			"internalConsoleOptions": "openOnSessionStart"
 		}
