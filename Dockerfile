@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Start from my Node.js image
-FROM ghcr.io/viral32111/node:19-ubuntu
+FROM ghcr.io/viral32111/nodejs:19-ubuntu
 
 # Configuration
 ARG DISCORD_BOT_DIRECTORY=/usr/local/discord-bot \
