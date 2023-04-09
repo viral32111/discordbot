@@ -79,7 +79,7 @@ export class WebSocket extends EventEmitter {
 	}
 
 	// Disconnects the websocket with an optional code and reason
-	public close( code: CloseCode = CloseCode.Normal, reason?: string ) {
+	public close( code: CloseCode | number = CloseCode.Normal, reason?: string ) {
 
 		// Do not continue if the underlying socket has not established a connection yet
 		if ( !this.socket || this.socket.readyState !== "open" ) throw Error( "Cannot close a connection that is not open" )
@@ -259,18 +259,21 @@ export class WebSocket extends EventEmitter {
 			// Match each header name...
 			switch ( key.toLowerCase() ) {
 
-			// Error if the returned key hash does not match our one
-			case "sec-websocket-accept": {
-				if ( value !== keyHash ) return this.emit( "error", Error( "Invalid websocket key confirmation" ) )
-			}
+				// Error if the returned key hash does not match our one
+				case "sec-websocket-accept": {
+					if ( value !== keyHash ) return this.emit( "error", Error( "Invalid websocket key confirmation" ) )
+					break
+				}
 
-			// Error if the returned upgrade headers do not match those for a websocket upgrade
-			case "connection": {
-				if ( value.toLowerCase() !== "upgrade" ) return this.emit( "error", Error( "Upgrade request denied" ) )
-			}
-			case "upgrade": {
-				if ( value.toLowerCase() !== "websocket" ) return this.emit( "error", Error( "Upgrade request denied" ) )
-			}
+				// Error if the returned upgrade headers do not match those for a websocket upgrade
+				case "connection": {
+					if ( value.toLowerCase() !== "upgrade" ) return this.emit( "error", Error( "Upgrade request denied" ) )
+					break
+				}
+				case "upgrade": {
+					if ( value.toLowerCase() !== "websocket" ) return this.emit( "error", Error( "Upgrade request denied" ) )
+					break
+				}
 
 			}
 
