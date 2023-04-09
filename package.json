@@ -1,14 +1,12 @@
 {
 	"name": "discordbot",
 	"version": "5.0.0",
-	"description": "A bot for Discord written in Node.js without any third-party libraries.",
-	"main": "./emit/main.js",
+	"description": "The official Discord bot for my community.",
+	"main": "./dist/main.js",
 	"type": "module",
 	"scripts": {
 		"start": "npx tsc && node .",
-		"clean": "rm -r ./emit",
-		"build": "rm -r ./emit && npx tsc --sourceMap false && docker build --pull --file Dockerfile --tag ghcr.io/viral32111/discordbot:latest ./emit",
-		"docker": "docker run --name bot --interactive --tty --env-file .env --rm ghcr.io/viral32111/discordbot:latest"
+		"build": "npx tsc --build --clean && npx tsc"
 	},
 	"author": {
 		"name": "viral32111",
@@ -25,6 +23,7 @@
 		"automation"
 	],
 	"license": "AGPL-3.0-only",
+	"private": false,
 	"devDependencies": {
 		"@types/node": "^18.15.11",
 		"@typescript-eslint/eslint-plugin": "^5.57.1",
