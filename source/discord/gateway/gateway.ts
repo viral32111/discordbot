@@ -66,7 +66,7 @@ export class Gateway extends WebSocket {
 		}
 
 		// Register event handlers for the underlying websocket to methods on this class
-		this.once( "open", this.onWebSocketOpen.bind( this ) )
+		//this.once( "open", this.onWebSocketOpen.bind( this ) )
 		this.once( "close", this.onWebSocketClose.bind( this ) )
 		this.on( "text", this.onWebSocketText.bind( this ) )
 
@@ -224,9 +224,7 @@ export class Gateway extends WebSocket {
 	}
 
 	// Event that runs when the underlying websocket connection has opened
-	private onWebSocketOpen() {
-
-	}
+	//private onWebSocketOpen() {}
 
 	// Event that runs when the underlying websocket connection has closed
 	private async onWebSocketClose( code: CloseCode | number ) { // , reason?: string

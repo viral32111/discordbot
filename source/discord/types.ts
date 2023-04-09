@@ -62,7 +62,6 @@ export class Snowflake {
 
 // https://discord.com/developers/docs/resources/user#user-object-user-structure
 export class User {
-	// @ts-ignore
 	private client: Gateway
 
 	public Identifier!: Snowflake
@@ -115,7 +114,6 @@ export class User {
 
 // https://discord.com/developers/docs/resources/channel#message-object
 export class Message {
-	// @ts-ignore
 	private client: Gateway
 
 	public identifier!: Snowflake
