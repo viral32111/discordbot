@@ -39,7 +39,7 @@ export interface Guild {
 
 // https://discord.com/developers/docs/reference#snowflakes
 export class Snowflake {
-	public readonly Value: BigInt
+	public readonly Value: bigint
 
 	public readonly Timestamp: Date
 	public readonly Worker: number

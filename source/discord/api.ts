@@ -1,12 +1,12 @@
 // Import from native modules
-import { format } from "util";
-import { request as createHttpsRequest } from "https";
+import { format } from "util"
+import { request as createHttpsRequest } from "https"
 
 // Import from my scripts
-import { APPLICATION_NAME, APPLICATION_VERSION, CONTACT_WEBSITE, CONTACT_EMAIL, DISCORD_API_URL, DISCORD_API_VERSION } from "../config.js";
+import { APPLICATION_NAME, APPLICATION_VERSION, CONTACT_WEBSITE, CONTACT_EMAIL, DISCORD_API_URL, DISCORD_API_VERSION } from "../config.js"
 
 // Sends a request to the Discord API and returns a JSON object
-export function request( endpoint: string, method: string = "GET", data?: any ): Promise<any> {
+export function request( endpoint: string, method = "GET", data?: any ): Promise<any> {
 
 	const headers = new Map<string, string>( [
 		[ "Accept", "application/json" ], // Expect a JSON response

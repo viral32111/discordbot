@@ -259,18 +259,18 @@ export class WebSocket extends EventEmitter {
 			// Match each header name...
 			switch ( key.toLowerCase() ) {
 
-				// Error if the returned key hash does not match our one
-				case "sec-websocket-accept": {
-					if ( value !== keyHash ) return this.emit( "error", Error( "Invalid websocket key confirmation" ) )
-				}
+			// Error if the returned key hash does not match our one
+			case "sec-websocket-accept": {
+				if ( value !== keyHash ) return this.emit( "error", Error( "Invalid websocket key confirmation" ) )
+			}
 
-				// Error if the returned upgrade headers do not match those for a websocket upgrade
-				case "connection": {
-					if ( value.toLowerCase() !== "upgrade" ) return this.emit( "error", Error( "Upgrade request denied" ) )
-				}
-				case "upgrade": {
-					if ( value.toLowerCase() !== "websocket" ) return this.emit( "error", Error( "Upgrade request denied" ) )
-				}
+			// Error if the returned upgrade headers do not match those for a websocket upgrade
+			case "connection": {
+				if ( value.toLowerCase() !== "upgrade" ) return this.emit( "error", Error( "Upgrade request denied" ) )
+			}
+			case "upgrade": {
+				if ( value.toLowerCase() !== "websocket" ) return this.emit( "error", Error( "Upgrade request denied" ) )
+			}
 
 			}
 
