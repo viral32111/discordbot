@@ -56,9 +56,6 @@ jobs:
     name: Docker
     runs-on: ubuntu-22.04
     needs: build
-    concurrency:
-      group: ${{ github.job }}
-      cancel-in-progress: true
     permissions:
       contents: read
       packages: write
