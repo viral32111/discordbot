@@ -1,12 +1,10 @@
-# Node.js
+# NPM
 node_modules/
 package-lock.json
 package.json
 
-# TypeScript
+# TypeScript & ESLint
 tsconfig.json
-
-# ESLint
 .eslintrc.json
 
 # Git
@@ -22,8 +20,8 @@ LICENSE.txt
 # Visual Studio Code
 .vscode/
 
-# Secrets
-.env
-
 # Code
 source/
+
+# Secrets
+.env

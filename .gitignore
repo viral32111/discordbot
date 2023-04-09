@@ -1,5 +1,5 @@
-# Node.js
+# NPM packages
 node_modules/
 
-# TypeScript
-emit/
+# JavaScript
+dist/
