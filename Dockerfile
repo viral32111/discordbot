@@ -22,4 +22,4 @@ WORKDIR ${DISCORD_BOT_DATA_DIRECTORY}
 VOLUME ${DISCORD_BOT_DATA_DIRECTORY}
 
 # Launch the bot
-ENTRYPOINT [ "node", "/usr/local/bot" ]
+ENTRYPOINT [ "node", "/usr/local/discord-bot" ]
