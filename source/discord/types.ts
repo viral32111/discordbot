@@ -2,7 +2,7 @@ import { format } from "util"
 
 import { DISCORD_CDN_URL } from "../config.js"
 import { request } from "./api.js"
-import { Gateway } from "./gateway/gateway.js"
+//import { Gateway } from "./gateway/gateway.js"
 
 // https://discord.com/developers/docs/resources/user#user-object-user-structure
 /*export interface User {
@@ -62,7 +62,7 @@ export class Snowflake {
 
 // https://discord.com/developers/docs/resources/user#user-object-user-structure
 export class User {
-	private client: Gateway
+	//private client: Gateway
 
 	public Identifier!: Snowflake
 
@@ -79,8 +79,8 @@ export class User {
 
 	public PremiumType?: number
 
-	constructor( data: any, client: Gateway ) {
-		this.client = client
+	constructor( data: any ) { // , client: Gateway
+		//this.client = client
 
 		this.Update( data )
 	}
@@ -114,7 +114,7 @@ export class User {
 
 // https://discord.com/developers/docs/resources/channel#message-object
 export class Message {
-	private client: Gateway
+	//private client: Gateway
 
 	public identifier!: Snowflake
 
@@ -123,8 +123,8 @@ export class Message {
 	//public channel: Channel
 	private channelId!: Snowflake
 
-	constructor( data: any, client: Gateway ) {
-		this.client = client
+	constructor( data: any ) { // , client: Gateway
+		//this.client = client
 
 		this.update( data )
 	}

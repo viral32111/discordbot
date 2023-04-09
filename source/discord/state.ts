@@ -1,5 +1,5 @@
 // Import from my scripts
-import { Gateway } from "./gateway/gateway.js"
+//import { Gateway } from "./gateway/gateway.js"
 import { User, Application, Guild, Message } from "./types.js"
 
 // Internal state for all Discord objects
@@ -18,13 +18,13 @@ export const updateApplication = ( application: Application ) => {
 export const getApplication = () => cache.application
 
 // Users
-export const updateUser = ( data: any, client: Gateway ) => {
+export const updateUser = ( data: any ) => { // , client: Gateway
 	const identifier = data[ "id" ]
 
 	if ( cache.user.has( identifier ) ) {
 		cache.user.get( identifier )!.Update( data )
 	} else {
-		cache.user.set( identifier, new User( data, client ) )
+		cache.user.set( identifier, new User( data ) ) // , client
 	}
 
 	return cache.user.get( identifier )!
@@ -38,13 +38,13 @@ export const getGuild = ( identifier: string ) => cache.guild.get( identifier )
 export const getGuilds = () => Array.from( cache.guild.values() )
 
 // Messages
-export const updateMessage = ( data: any, client: Gateway ) => {
+export const updateMessage = ( data: any ) => { // , client: Gateway
 	const identifier = data[ "id" ]
 
 	if ( cache.message.has( identifier ) ) {
 		cache.message.get( identifier )!.update( data )
 	} else {
-		cache.message.set( identifier, new Message( data, client ) )
+		cache.message.set( identifier, new Message( data ) ) // , client
 	}
 
 	return cache.message.get( identifier )!

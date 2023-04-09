@@ -163,7 +163,7 @@ export class Gateway extends WebSocket {
 
 			// Update state
 			updateApplication( data[ "application" ] )
-			updateUser( data[ "user" ], this )
+			updateUser( data[ "user" ] ) // , this
 
 			// Add each unavailable guild ID to the lazy-load expectations
 			for ( const guild of data[ "guilds" ] ) this.lazyLoadedGuilds.set( guild[ "id" ], false )
@@ -211,7 +211,7 @@ export class Gateway extends WebSocket {
 			//const member = data[ "member" ]
 			//const mentions = data[ "mentions" ]
 
-			const message = updateMessage( data, this )
+			const message = updateMessage( data ) // , this
 			if ( !message ) return this.emit( "error", Error( "Message not available in state" ) )
 
 			this.emit( "messageCreate", message )

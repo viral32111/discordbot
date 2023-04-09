@@ -41,7 +41,7 @@ bot.once( "open", () => console.log( "Connected!" ) )
 
 // Asynchronously load each feature
 import( "./features/test.js" )
-import( "./features/joinleave.js" )
+//import( "./features/joinleave.js" )
 
 // Gracefully disconnect when an error occurs
 bot.once( "error", ( error: Error ) => {
