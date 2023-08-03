@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     paths:
-      - 'source/**'
+      - 'source/**/*'
       - '*.json'
       - 'Dockerfile'
       - '.dockerignore'
@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 19
+          node-version: 20
 
       - name: Install dependencies
         run: npm clean-install
@@ -48,9 +48,9 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: |
-            ./dist/
-            ./package.json
-            ./package-lock.json
+            dist/
+            package.json
+            package-lock.json
 
   docker:
     name: Docker
@@ -63,14 +63,16 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v3
 
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+
       - name: Setup Docker
         uses: docker/setup-buildx-action@v2
         with:
           platforms: linux/amd64
-          driver-opts: image=moby/buildkit:v0.10.6
 
       - name: Login to GitHub Container Registry
-        if: ${{ github.event_name == 'push' && github.event.pull_request == null && !startsWith( github.ref, 'refs/heads/dependabot/' ) }}
+        if: ${{ github.event_name != 'pull_request' && !startsWith( github.ref_name, 'dependabot/' ) }}
         uses: docker/login-action@v2
         with:
           registry: ${{ env.DOCKER_REGISTRY_DOMAIN }}
@@ -81,7 +83,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ./artifact/
+          path: artifact
 
       - name: Create metadata for Docker image
         id: metadata
@@ -104,22 +106,25 @@ jobs:
       - name: Build & push Docker image
         uses: docker/build-push-action@v4
         with:
-          push: ${{ github.event_name == 'push' && github.event.pull_request == null && !startsWith( github.ref, 'refs/heads/dependabot/' ) }}
-          file: ./Dockerfile
-          context: ./artifact/
+          push: ${{ github.event_name != 'pull_request' && !startsWith( github.ref_name, 'dependabot/' ) }}
+          file: Dockerfile
+          context: artifact
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
+          platforms: linux/amd64
+          provenance: false
           no-cache: true
           pull: true
 
-      - name: Delete untagged Docker images
-        if: ${{ github.event_name == 'push' && github.event.pull_request == null && !startsWith( github.ref, 'refs/heads/dependabot/' ) }}
+      - name: Delete old Docker images
+        if: ${{ github.event_name != 'pull_request' && !startsWith( github.ref_name, 'dependabot/' ) }}
         uses: snok/container-retention-policy@v2
         with:
           image-names: ${{ env.DOCKER_IMAGE_NAME }}
-          cut-off: 0 seconds ago UTC
-          keep-at-least: 0
+          cut-off: 24 hours ago UTC
+          keep-at-least: 1
           untagged-only: true
+          skip-tags: latest
           account-type: personal
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN_PACKAGES }}
 
@@ -127,7 +132,7 @@ jobs:
     name: Release
     runs-on: ubuntu-22.04
     needs: docker
-    if: ${{ github.event_name == 'push' && github.event.pull_request == null && !startsWith( github.ref, 'refs/heads/dependabot/' ) && github.ref_type == 'tag' }}
+    if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
     permissions:
       contents: write
     steps:
@@ -138,18 +143,15 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ./artifact/
+          path: artifact
 
-      - name: Bundle build artifacts
-        run: |
-          cd ./artifact/
-          zip -r ../${{ env.ARTIFACT_NAME }}.zip $(find ./)
+      - name: Bundle build artifact
+        run: zip -r ${{ env.ARTIFACT_NAME }}.zip artifact
 
       - name: Create draft release
         uses: softprops/action-gh-release@v1
         with:
           draft: true
           tag_name: ${{ github.ref_name }}
-          body: ${{ github.ref_name }}
-          files: ./${{ env.ARTIFACT_NAME }}.zip
+          files: ${{ env.ARTIFACT_NAME }}.zip
           token: ${{ secrets.GITHUB_TOKEN }}
