@@ -3,11 +3,7 @@ name: CI
 on:
   push:
     paths:
-      - 'source/**/*'
-      - '*.json'
-      - 'Dockerfile'
-      - '.dockerignore'
-      - '.github/workflows/ci.yml'
+      - '**'
     branches:
       - '**'
     tags:
@@ -90,7 +86,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.DOCKER_REGISTRY_DOMAIN }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}
-          flavor: latest=true
+          flavor: latest=${{ github.ref_name == 'main' }}
           tags: |
             type=ref,event=pr
             type=ref,event=branch
